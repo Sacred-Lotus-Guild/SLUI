@@ -5,6 +5,9 @@
 ## Author: Lavernius
 ## IconTexture: Interface\AddOns\SLUI\Media\Textures\logo.blp
 
+# Dependencies
 embeds.xml
 
 SLUI.lua
+AnchorSettings.lua
+Aliases.lua
