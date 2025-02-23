@@ -3,28 +3,21 @@ local SLUI = select(2, ...)
 
 local roster = {
     --
-    -- Sacred Lotus Roster
-    -- TODO: UPDATE WITH BTAGS
+    -- G1 Roster
     --
     ["Faulks"] = "Faulks",
     --
     ["Notdravus"] = "Dravus",
-    ["Kiñgdravus"] = "Dravus",
-    ["Quesõ"] = "Dravus",
     ["Eldravus"] = "Dravus",
-    ["Likelydravus"] = "Dravus",
+    ["Kiñgdravus"] = "Dravus",
     --
     ["Biopriest"] = "Bio",
-    ["Biopriesty"] = "Bio",
     ["Biomediocre"] = "Bio",
     --
     ["Treemotron"] = "Tree",
-    ["Treelectron"] = "Tree",
+    ["Treelectron"] = "Tree"
     --
-    ["Shukio"] = "Shuk",
-    ["Shuwuk"] = "Shuk",
-    ["Scaleywaley"] = "Shuk",
-    ["Shuky"] = "Shuk",
+    ["Ferritossham"] = "Ferritos",
     --
     ["Holypud"] = "Pud",
     --
@@ -36,24 +29,20 @@ local roster = {
     --
     ["Shirly"] = "Shirly",
     --
-    ["Bigpoopyhaha"] = "Bor",
+    ["Deathcen"] = "Death",
     --
-    ["Tonkachonka"] = "Tonka",
+    ["Snoopxd"] = "Snoop",
     --
     ["Rykouu"] = "Ry",
-    ["Vanillascoop"] = "Ry",
     --
     ["Vyndendril"] = "Vyn",
     --
     ["Onewthmoney"] = "Voodoo",
     --
-    ["Fukli"] = "Fuk",
-    ["Fuklii"] = "Fuk",
-    ["Fukliie"] = "Fuk",
+    ["Víkk"] = "Vikk",
     --
     ["Bevyn"] = "Bevyn",
     ["Kymie"] = "Bevyn",
-    ["Shannye"] = "Bevyn",
     --
     ["Chøoch"] = "Chooch",
     --
@@ -68,18 +57,21 @@ local roster = {
     --
     ["Druidboy"] = "DB",
     --
-    ["Ffxivbadgame"] = "Mai",
+    ["Maifu"] = "Mai",
     ["Maidruid"] = "Mai",
     --
     ["Narkobear"] = "Narko",
     ["Narkobare"] = "Narko",
     --
     ["Stuckpoor"] = "Stuck",
+    ["Schlank"] = "Schlank",
+    -- <3
+    ["Shukio"] = "Shuk",
+    ["Shuwuk"] = "Shuk",
+    ["Scaleywaley"] = "Shuk",
+    ["Shuky"] = "Shuk",
 
-    -- 
-    -- GROUP 2 
-    --
-
+    -- G2 roster
     ["Gamerwords"] = "Drethus",
     --
     ["Jvsn"] = "Jussn",
@@ -161,28 +153,13 @@ local roster = {
     ["Reese"] = "Lincoln",
 }
 
----
----@param unit string UnitID
----@return string
+--- Retrieve a unit's configured nickname, given UnitID or character name.
+--- @param unit string UnitID
+--- @return string
 function SLUI:GetNickname(unit)
-    if not unit then return end
-    if not UnitExists(unit) then return end
-
-    local name = UnitName(unit)
-    local guid = UnitGUID(unit)
-
-    if name then
-        local bnetInfo = C_BattleNet.GetAccountInfoByGUID(guid)
-        local btag = bnetInfo and bnetInfo.battleTag or nil
-
-        if btag and roster[btag] then
-            name = roster[btag]
-        elseif roster[name] then
-            name = roster[name]
-        end
-
-        return name
-    end
+    if not unit or not UnitExists(unit) then return end
+    local name = UnitNameUnmodified(unit)
+    return roster[name] or name
 end
 
 -- Provide our Nickname functionality to LiquidWeakAuras
@@ -208,5 +185,65 @@ if C_AddOns.IsAddOnLoaded("ElvUI") then
         end)
         E:AddTagInfo(tag, 'Names',
             format('Nickname from the |cff00ff98%s|r (limited to %d letters)', "SLUI", length))
+    end
+end
+
+if C_AddOns.IsAddOnLoaded("Cell") then
+    if not CellDB or not CellDB.nicknames then return end
+
+    for name, nickname in pairs(roster) do
+        if tInsertUnique(CellDB.nicknames.list, string.format("%s:%s", name, nickname)) then
+            Cell:Fire("UpdateNicknames", "list-update", name, nickname)
+        end
+    end
+end
+
+if WeakAuras and not C_AddOns.IsAddOnLoaded("CustomNames") then
+    if WeakAuras.GetName then
+        WeakAuras.GetName = function(name)
+            if not name then return end
+
+            return SLUI:GetNickname(name) or name
+        end
+    end
+
+    if WeakAuras.UnitName then
+        WeakAuras.UnitName = function(unit)
+            if not unit then return end
+
+            local name, realm = UnitName(unit)
+
+            if not name then return end
+
+            return SLUI:GetNickname(unit) or name, realm
+        end
+    end
+
+    if WeakAuras.GetUnitName then
+        WeakAuras.GetUnitName = function(unit, showServerName)
+            if not unit then return end
+
+            if not UnitIsPlayer(unit) then
+                return GetUnitName(unit)
+            end
+
+            local name = UnitNameUnmodified(unit)
+            local nameRealm = GetUnitName(unit, showServerName)
+            local suffix = nameRealm:match(".+(%s%(%*%))") or nameRealm:match(".+(%-.+)") or ""
+
+            return string.format("%s%s", SLUI:GetNickname(unit) or name, suffix)
+        end
+    end
+
+    if WeakAuras.UnitFullName then
+        WeakAuras.UnitFullName = function(unit)
+            if not unit then return end
+
+            local name, realm = UnitFullName(unit)
+
+            if not name then return end
+
+            return SLUI:GetNickname(unit) or name, realm
+        end
     end
 end
