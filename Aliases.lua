@@ -75,6 +75,90 @@ local roster = {
     ["Narkobare"] = "Narko",
     --
     ["Stuckpoor"] = "Stuck",
+
+    -- 
+    -- GROUP 2 
+    --
+
+    ["Gamerwords"] = "Drethus",
+    --
+    ["Jvsn"] = "Jussn",
+    --
+    ["Kayzle"] = "Kayzle",
+    ["Kayzl"] = "Kayzle",
+    --
+    ["Squidword"] = "Squid",
+    ["Squided"] = "Squid",
+    ["Squidragosa"] = "Squid",
+    ["Squidwings"] = "Squid",
+    ["Squidkid"] = "Squid",
+    ["Squidmist"] = "Squid",
+    --
+    ["Ocharithm"] = "Pyro",
+    ["Pyrorithm"] = "Pyro",
+    ["Phytorithm"] = "Pyro",
+    ["Sanctorithm"] = "Pyro",
+    --
+    ["Dreeks"] = "Dreeks",
+    ["Dreekssham"] = "Dreeks",
+    --
+    ["Daenehrys"] = "Daenehrys",
+    --
+    ["Plazaa"] = "Plaza",
+    --
+    ["Azurepaly"] = "Azure",
+    ["Azuresham"] = "Azure",
+    ["Azuresdk"] = "Azure",
+    ["Azurewar"] = "Azure",
+    ["Azuredru"] = "Azure",
+    --
+    ["Tompally"] = "Tom",
+    ["Tomxpally"] = "Tom",
+    ["Tomsdh"] = "Tom",
+    ["Tomsdk"] = "Tom",
+    ["Tomspriestt"] = "Tom",
+    ["Tomshunterr"] = "Tom",
+    ["Tomxrogue"] = "Tom",
+    ["Tomshaman"] = "Tom",
+    ["Tomwarlockk"] = "Tom",
+    ["Tomdruid"] = "Tom",
+    ["Tomswarrior"] = "Tom",
+    ["Tomsmonk"] = "Tom",
+    ["Tommage"] = "Tom",
+    --
+    ["Fôrtune"] = "Fortune",
+    --
+    ["Låyne"] = "Layne",
+    --
+    ["Lilstiffsock"] = "Matt",
+    ["Skrimppeener"] = "Matt",
+    ["Pisspotpeter"] = "Matt",
+    --
+    ["Lebeak"] = "Leblond",
+    ["Leblond"] = "Leblond",
+    --
+    ["Gantark"] = "Gantark",
+    ["Gartrank"] = "Gantark",
+    ["Morescribers"] = "Gantark",
+    --
+    ["Grizzye"] = "Grizzye",
+    --
+    ["Asimage"] = "Asimage",
+    --
+    ["Whittzy"] = "Whittzy",
+    ["Whiittzz"] = "Whittzy",
+    --
+    ["Ceravex"] = "Crux",
+    ["Cruxia"] = "Crux",
+    ["Faelyndra"] = "Crux",
+    --
+    ["Tlbs"] = "Telbi",
+    ["Telbi"] = "Telbi",
+    --
+    ["Beilce"] = "Beilce",
+    ["Glaivebeilce"] = "Beilce",
+    --
+    ["Reese"] = "Lincoln",
 }
 
 ---
