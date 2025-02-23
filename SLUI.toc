@@ -5,4 +5,6 @@
 ## Author: Lavernius
 ## IconTexture: Interface\AddOns\SLUI\Media\Textures\logo.blp
 
+embeds.xml
+
 SLUI.lua
