@@ -132,7 +132,7 @@ local roster = {
     --
     ["Lilstiffsock"] = "Matt",
     ["Skrimppeener"] = "Matt",
-    ["Pisspotpeter"] = "Matt",
+    ["Pisspotpete"] = "Matt",
     --
     ["Lebeak"] = "Leblond",
     ["Leblond"] = "Leblond",
