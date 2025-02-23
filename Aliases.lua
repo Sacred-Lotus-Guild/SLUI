@@ -161,7 +161,7 @@ SLUI.roster = {
 function SLUI:GetNickname(unit)
     if not unit or not UnitExists(unit) then return end
     local name = UnitNameUnmodified(unit)
-    return roster[name] or name
+    return self.roster[name] or name
 end
 
 -- Provide our Nickname functionality to LiquidWeakAuras
@@ -193,7 +193,7 @@ end
 if C_AddOns.IsAddOnLoaded("Cell") then
     if not CellDB or not CellDB.nicknames then return end
 
-    for name, nickname in pairs(roster) do
+    for name, nickname in pairs(SLUI.roster) do
         if tInsertUnique(CellDB.nicknames.list, string.format("%s:%s", name, nickname)) then
             Cell:Fire("UpdateNicknames", "list-update", name, nickname)
         end
