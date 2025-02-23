@@ -15,7 +15,7 @@ SLUI.roster = {
     ["Biomediocre"] = "Bio",
     --
     ["Treemotron"] = "Tree",
-    ["Treelectron"] = "Tree"
+    ["Treelectron"] = "Tree",
     --
     ["Ferritossham"] = "Ferritos",
     --
