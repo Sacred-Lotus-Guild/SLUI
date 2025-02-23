@@ -71,7 +71,9 @@ SLUI.roster = {
     ["Scaleywaley"] = "Shuk",
     ["Shuky"] = "Shuk",
 
-    -- G2 roster
+    --
+    -- G2 Roster
+    --
     ["Gamerwords"] = "Drethus",
     --
     ["Jvsn"] = "Jussn",
