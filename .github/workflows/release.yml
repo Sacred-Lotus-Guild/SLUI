@@ -10,6 +10,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-dep: 0
+          fetch-depth: 0
       - name: Pacakge and release
         uses: BigWigsMods/packager@v2
