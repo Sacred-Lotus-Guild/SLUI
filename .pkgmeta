@@ -1,12 +1,10 @@
 package-as: SLUI
 
 embedded-libraries:
-  - AceComm-3.0
-  - AceConsole-3.0
-  - CallbackHandler-1.0
-  - ChatThrottleLib
-  - LibDeflate
-  - LibSerialize
-  - LibSharedMedia-3.0
-  - LibStub
-  - UTF8
+  - ace3
+  - callbackhandler
+  - chathrottlelib
+  - libdeflate
+  - libsharedmedia-3-0
+  - libstub
+  - utf8
