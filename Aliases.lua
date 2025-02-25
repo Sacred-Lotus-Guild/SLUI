@@ -169,7 +169,15 @@ function AuraUpdater:GetNickname(unit)
     return SLUI:GetNickname(unit)
 end
 
-if C_AddOns.IsAddOnLoaded("ElvUI") then
+if C_AddOns.IsAddOnLoaded("Cell") and CellDB and CellDB.nicknames then
+    for name, nickname in pairs(SLUI.roster) do
+        if tInsertUnique(CellDB.nicknames.list, string.format("%s:%s", name, nickname)) then
+            Cell:Fire("UpdateNicknames", "list-update", name, nickname)
+        end
+    end
+end
+
+if C_AddOns.IsAddOnLoaded("ElvUI") and ElvUI then
     local E = unpack(ElvUI)
 
     E:AddTag('name:alias', 'UNIT_NAME_UPDATE INSTANCE_ENCOUNTER_ENGAGE_UNIT', function(unit)
@@ -189,14 +197,12 @@ if C_AddOns.IsAddOnLoaded("ElvUI") then
     end
 end
 
-if C_AddOns.IsAddOnLoaded("Cell") then
-    if not CellDB or not CellDB.nicknames then return end
-
-    for name, nickname in pairs(SLUI.roster) do
-        if tInsertUnique(CellDB.nicknames.list, string.format("%s:%s", name, nickname)) then
-            Cell:Fire("UpdateNicknames", "list-update", name, nickname)
+if C_AddOns.IsAddOnLoaded("MRT") and GMRT and GMRT.F then
+    GMRT.F:RegisterCallback("RaidCooldowns_Bar_TextName", function(_, _, data)
+        if data and data.name then
+            data.name = SLUI:GetNickname(data.name) or data.name
         end
-    end
+    end)
 end
 
 if WeakAuras and not C_AddOns.IsAddOnLoaded("CustomNames") then

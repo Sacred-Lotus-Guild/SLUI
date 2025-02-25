@@ -4,8 +4,7 @@
 ## Notes: Sacred Lotus UI Utilities
 ## Author: Lavernius
 ## IconTexture: Interface\AddOns\SLUI\Media\Textures\logo.blp
-## OptionalDeps: Cell, ElvUI, WeakAuras
-
+## OptionalDeps: AuraUpdater, Cell, CustomNames, ElvUI, MRT, WeakAuras
 ## X-Curse-Project-ID: 1207905
 ## X-Wago-ID: QNlq986e
 
