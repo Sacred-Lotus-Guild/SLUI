@@ -175,7 +175,7 @@ if C_AddOns.IsAddOnLoaded("ElvUI") then
     E:AddTag('name:alias', 'UNIT_NAME_UPDATE INSTANCE_ENCOUNTER_ENGAGE_UNIT', function(unit)
         return SLUI:GetNickname(unit)
     end)
-    E:AddTagInfo('name:alias', 'Names', format('Nickname from the |cff00ff98%s|r', "SLUI"))
+    E:AddTagInfo('name:alias', 'Names', format('Nickname from |cff00ff98%s|r', "SLUI"))
 
     for textFormat, length in pairs({ veryshort = 5, short = 10, medium = 15, long = 20 }) do
         local tag = format('name:alias:%s', textFormat)
@@ -185,8 +185,7 @@ if C_AddOns.IsAddOnLoaded("ElvUI") then
                 return E:ShortenString(name, length)
             end
         end)
-        E:AddTagInfo(tag, 'Names',
-            format('Nickname from the |cff00ff98%s|r (limited to %d letters)', "SLUI", length))
+        E:AddTagInfo(tag, 'Names', format('Nickname from |cff00ff98%s|r (limited to %d letters)', "SLUI", length))
     end
 end
 
