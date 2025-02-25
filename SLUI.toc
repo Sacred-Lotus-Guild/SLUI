@@ -5,8 +5,9 @@
 ## Author: Lavernius
 ## IconTexture: Interface\AddOns\SLUI\Media\Textures\logo.blp
 ## OptionalDeps: Cell, ElvUI, WeakAuras
-##
+
 ## X-Curse-Project-ID: 1207905
+## X-Wago-ID: QNlq986e
 
 # Dependencies
 embeds.xml
