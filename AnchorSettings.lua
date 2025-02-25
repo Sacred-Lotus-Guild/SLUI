@@ -405,9 +405,9 @@ applyAnchorFunctions.TankWarnings = function(newPositions, activeRegions)
 
             if not skipPosition then
                 local width = regionType == "aurabar" and barSettings.width or
-                regionType == "text" and textSettings.width or regionData.region.width
+                    regionType == "text" and textSettings.width or regionData.region.width
                 local height = regionType == "aurabar" and barSettings.height or
-                regionType == "text" and textSettings.height or regionData.region.height
+                    regionType == "text" and textSettings.height or regionData.region.height
 
                 nextPosition = {
                     nextPosition[1] + directionX * (width + barSettings.space),
