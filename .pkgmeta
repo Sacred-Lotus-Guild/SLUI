@@ -2,9 +2,7 @@ package-as: SLUI
 
 embedded-libraries:
   - ace3
-  - callbackhandler
   - chathrottlelib
   - libdeflate
   - libsharedmedia-3-0
-  - libstub
   - utf8
