@@ -12,8 +12,8 @@ externals:
   Libs/UTF8: https://repos.wowace.com/wow/utf8/trunk
 
 ignore:
-  - scripts/*
   - Libs/LibDeflate/docs
   - Libs/LibDeflate/examples
   - Libs/LibDeflate/*.md
   - Libs/LibStub/tests
+  - *.sh
