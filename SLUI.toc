@@ -4,6 +4,8 @@
 ## Notes: Sacred Lotus UI Utilities
 ## Author: Lavernius
 ## IconTexture: Interface\AddOns\SLUI\Media\Textures\logo.blp
+##
+## X-Curse-Project-ID: 1207905
 
 # Dependencies
 embeds.xml
