@@ -1,6 +1,6 @@
 ## Interface: 110007, 110100
 ## Title: |cff00ff98SLUI|r
-## Version: @package-version@
+## Version: @project-version@
 ## Notes: Sacred Lotus UI Utilities
 ## Author: Lavernius
 ## IconTexture: Interface\AddOns\SLUI\Media\Textures\logo.blp
