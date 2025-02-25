@@ -1,9 +1,10 @@
-## Interface: 110002
+## Interface: 110007, 110100
 ## Title: |cff00ff98SLUI|r
-## Version: 0.1.0
+## Version: @package-version@
 ## Notes: Sacred Lotus UI Utilities
 ## Author: Lavernius
 ## IconTexture: Interface\AddOns\SLUI\Media\Textures\logo.blp
+## OptionalDeps: Cell, ElvUI, WeakAuras
 ##
 ## X-Curse-Project-ID: 1207905
 
