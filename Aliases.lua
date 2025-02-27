@@ -17,7 +17,9 @@ SLUI.roster = {
     ["Treemotron"] = "Tree",
     ["Treelectron"] = "Tree",
     --
-    ["Ferritossham"] = "Ferritos",
+    ["Feritos"] = "Ferritos",
+    ["Feritossham"] = "Ferritos",
+    ["Feritosshamm"] = "Ferritos",
     --
     ["Holypud"] = "Pud",
     --
@@ -157,7 +159,7 @@ SLUI.roster = {
 
 --- Retrieve a unit's configured nickname, given UnitID or character name.
 --- @param unit string UnitID
---- @return string
+--- @return string|nil
 function SLUI:GetNickname(unit)
     if not unit or not UnitExists(unit) then return end
     local name = UnitNameUnmodified(unit)
