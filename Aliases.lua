@@ -17,9 +17,9 @@ SLUI.roster = {
     ["Treemotron"] = "Tree",
     ["Treelectron"] = "Tree",
     --
-    ["Feritos"] = "Ferritos",
-    ["Feritossham"] = "Ferritos",
-    ["Feritosshamm"] = "Ferritos",
+    ["Feritos"] = "Feritos",
+    ["Feritossham"] = "Feritos",
+    ["Feritosshamm"] = "Feritos",
     --
     ["Holypud"] = "Pud",
     --
