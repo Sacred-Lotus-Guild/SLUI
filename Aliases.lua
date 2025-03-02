@@ -90,10 +90,10 @@ SLUI.roster = {
     ["Squidkid"] = "Squid",
     ["Squidmist"] = "Squid",
     --
-    ["Ocharithm"] = "Pyro",
-    ["Pyrorithm"] = "Pyro",
-    ["Phytorithm"] = "Pyro",
-    ["Sanctorithm"] = "Pyro",
+    ["Ocharithm"] = "Ryan",
+    ["Pyrorithm"] = "Ryan",
+    ["Phytorithm"] = "Ryan",
+    ["Sanctorithm"] = "Ryan",
     --
     ["Dreeks"] = "Dreeks",
     ["Dreekssham"] = "Dreeks",
