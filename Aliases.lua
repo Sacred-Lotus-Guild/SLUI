@@ -94,6 +94,7 @@ SLUI.roster = {
     ["Pyrorithm"] = "Ryan",
     ["Phytorithm"] = "Ryan",
     ["Sanctorithm"] = "Ryan",
+    ["Matcharithm"] = "Ryan",
     --
     ["Dreeks"] = "Dreeks",
     ["Dreekssham"] = "Dreeks",
