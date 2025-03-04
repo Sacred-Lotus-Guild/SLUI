@@ -171,14 +171,22 @@ function AuraUpdater:GetNickname(unit)
     return SLUI:GetNickname(unit)
 end
 
-if C_AddOns.IsAddOnLoaded("Cell") and CellDB and CellDB.nicknames then
-    for name, nickname in pairs(SLUI.roster) do
+local isCellInstalled = C_AddOns.IsAddOnLoaded("Cell") and Cell and CellDB and CellDB.nicknames
+local CustomNames = C_AddOns.IsAddOnLoaded("CustomNames") and LibStub("CustomNames")
+for name, nickname in pairs(SLUI.roster) do
+    -- Add nickname to Cell's nickname database.
+    if isCellInstalled then
         if tInsertUnique(CellDB.nicknames.list, string.format("%s:%s", name, nickname)) then
             Cell:Fire("UpdateNicknames", "list-update", name, nickname)
         end
     end
+
+    if CustomNames then
+        CustomNames.Set(name, nickname)
+    end
 end
 
+-- Add ElvUI tags
 if C_AddOns.IsAddOnLoaded("ElvUI") and ElvUI then
     local E = unpack(ElvUI)
 
@@ -199,6 +207,7 @@ if C_AddOns.IsAddOnLoaded("ElvUI") and ElvUI then
     end
 end
 
+-- Replace names in MRT cooldown bars.
 if C_AddOns.IsAddOnLoaded("MRT") and GMRT and GMRT.F then
     GMRT.F:RegisterCallback("RaidCooldowns_Bar_TextName", function(_, _, data)
         if data and data.name then
@@ -207,7 +216,8 @@ if C_AddOns.IsAddOnLoaded("MRT") and GMRT and GMRT.F then
     end)
 end
 
-if WeakAuras and not C_AddOns.IsAddOnLoaded("CustomNames") then
+-- Override WeakAura functions if CustomNames is not already installed and doing the same.
+if WeakAuras and not CustomNames then
     if WeakAuras.GetName then
         WeakAuras.GetName = function(name)
             if not name then return end
