@@ -6,8 +6,27 @@ local anchorSettings = {}
 local updateAnchorFunctions = {}
 local applyAnchorFunctions = {}
 
+-- Number of clones that show in preview mode (with options open)
+-- Used for correcting aura positions during preview
+local previewCounts = {
+    bars = 3,
+    specialBars = 1,
+    lists = 10,
+    raidLeaderLists = 4,
+    bigIcons = 1,
+    icons = 3,
+    assignments = 1,
+    texts = 1,
+    tankWarningsBars = 2, -- It's actually 1, but needs to be 2 here to account for the group having both texts and bars
+    tankWarningsTexts = 1,
+    coTankWarnings = 2,
+    tankIcons = 2,
+    coTankIcons = 2
+}
+
 local function PositionAuras(settings, newPositions, activeRegions)
-    local nextPosition = { 0, 0 }
+    local nextPosition = WeakAuras.IsOptionsOpen() and settings.optionsOffsets and CopyTable(settings.optionsOffsets) or
+    { 0, 0 }
     local limit = settings.limit or #activeRegions
     local directionX = settings.grow == "RIGHT" and 1 or settings.grow == "LEFT" and -1 or 0
     local directionY = settings.grow == "UP" and 1 or settings.grow == "DOWN" and -1 or 0
@@ -77,7 +96,7 @@ end
 
 -- Generic functions
 -- Bars
-local function GetBarSettings(groupName, auraName)
+local function GetBarSettings(groupName, auraName, previewCount)
     local groupData = WeakAuras.GetData(groupName)
     local auraData = WeakAuras.GetData(auraName)
 
@@ -111,6 +130,13 @@ local function GetBarSettings(groupName, auraName)
         end
     end
 
+    -- Calculate options offsets
+    settings.optionsOffsets = { 0, 0 }
+
+    if settings.grow == "UP" then
+        settings.optionsOffsets[2] = -(previewCount - 1) * (settings.height + settings.space)
+    end
+
     return settings
 end
 
@@ -133,7 +159,7 @@ local function ApplyBarSettings(settings, newPositions, activeRegions)
 end
 
 -- Icons
-local function GetIconSettings(groupName, auraName)
+local function GetIconSettings(groupName, auraName, previewCount)
     local groupData = WeakAuras.GetData(groupName)
     local auraData = WeakAuras.GetData(auraName)
 
@@ -163,6 +189,15 @@ local function GetIconSettings(groupName, auraName)
         end
     end
 
+    -- Calculate options offsets
+    settings.optionsOffsets = { 0, 0 }
+
+    if settings.grow == "UP" then
+        settings.optionsOffsets[2] = -settings.height - settings.space
+    elseif settings.grow == "RIGHT" then
+        settings.optionsOffsets[1] = -(previewCount - 1) * (settings.width + settings.space)
+    end
+
     return settings
 end
 
@@ -182,7 +217,7 @@ local function ApplyIconSettings(settings, newPositions, activeRegions)
 end
 
 -- Texts
-local function GetTextSettings(groupName, auraName)
+local function GetTextSettings(groupName, auraName, previewCount)
     local groupData = WeakAuras.GetData(groupName)
     local auraData = WeakAuras.GetData(auraName)
 
@@ -197,6 +232,13 @@ local function GetTextSettings(groupName, auraName)
     settings.fontPath = SharedMedia:Fetch("font", auraData.font)
     settings.height = auraData.fontSize
     settings.fontType = auraData.outline
+
+    -- Calculate options offsets
+    settings.optionsOffsets = { 0, 0 }
+
+    if settings.grow == "UP" then
+        settings.optionsOffsets[2] = -(previewCount - 1) * (settings.height + settings.space)
+    end
 
     return settings
 end
@@ -225,7 +267,8 @@ end
 updateAnchorFunctions.Bars = function()
     anchorSettings.bars = GetBarSettings(
         "Liquid Anchor - Bars",
-        "Liquid Anchor - Bar"
+        "Liquid Anchor - Bar",
+        previewCounts.bars
     )
 end
 
@@ -237,7 +280,8 @@ end
 updateAnchorFunctions.SpecialBars = function()
     anchorSettings.specialBars = GetBarSettings(
         "Liquid Anchor - Special Bars",
-        "Liquid Anchor - Special Bar"
+        "Liquid Anchor - Special Bar",
+        previewCounts.specialBars
     )
 end
 
@@ -249,7 +293,8 @@ end
 updateAnchorFunctions.Lists = function()
     anchorSettings.lists = GetBarSettings(
         "Liquid Anchor - Lists",
-        "Liquid Anchor - List"
+        "Liquid Anchor - List",
+        previewCounts.lists
     )
 end
 
@@ -261,7 +306,8 @@ end
 updateAnchorFunctions.RaidLeaderLists = function()
     anchorSettings.raidLeaderLists = GetBarSettings(
         "Liquid Anchor - Raid Leader Lists",
-        "Liquid Anchor - Raid Leader List"
+        "Liquid Anchor - Raid Leader List",
+        previewCounts.raidLeaderLists
     )
 end
 
@@ -273,7 +319,8 @@ end
 updateAnchorFunctions.BigIcons = function()
     anchorSettings.bigIcons = GetIconSettings(
         "Liquid Anchor - Big Icons",
-        "Liquid Anchor - Big Icon"
+        "Liquid Anchor - Big Icon",
+        previewCounts.bigIcons
     )
 end
 
@@ -285,7 +332,8 @@ end
 updateAnchorFunctions.Icons = function()
     anchorSettings.icons = GetIconSettings(
         "Liquid Anchor - Icons",
-        "Liquid Anchor - Icon"
+        "Liquid Anchor - Icon",
+        previewCounts.icons
     )
 end
 
@@ -344,7 +392,8 @@ end
 updateAnchorFunctions.Texts = function()
     anchorSettings.texts = GetTextSettings(
         "Liquid Anchor - Texts",
-        "Liquid Anchor - Text"
+        "Liquid Anchor - Text",
+        previewCounts.texts
     )
 end
 
@@ -356,7 +405,8 @@ end
 updateAnchorFunctions.Assignments = function()
     anchorSettings.assignments = GetTextSettings(
         "Liquid Anchor - Assignments",
-        "Liquid Anchor - Assignment"
+        "Liquid Anchor - Assignment",
+        previewCounts.assignments
     )
 end
 
@@ -368,14 +418,16 @@ end
 updateAnchorFunctions.TankWarningsBars = function()
     anchorSettings.tankWarningsBars = GetBarSettings(
         "Liquid Anchor - Tank Warnings",
-        "Liquid Anchor - Tank Warning Bar"
+        "Liquid Anchor - Tank Warning Bar",
+        previewCounts.tankWarningsBars
     )
 end
 
 updateAnchorFunctions.TankWarningsTexts = function()
     anchorSettings.tankWarningsTexts = GetTextSettings(
         "Liquid Anchor - Tank Warnings",
-        "Liquid Anchor - Tank Warning Text"
+        "Liquid Anchor - Tank Warning Text",
+        previewCounts.tankWarningsTexts
     )
 end
 
@@ -383,11 +435,16 @@ applyAnchorFunctions.TankWarnings = function(newPositions, activeRegions)
     local barSettings = anchorSettings.tankWarningsBars
     local textSettings = anchorSettings.tankWarningsTexts
 
+    local optionsOffsets = {
+        barSettings.optionsOffsets[1] + textSettings.optionsOffsets[1],
+        barSettings.optionsOffsets[2] + textSettings.optionsOffsets[2],
+    }
+
     if not (barSettings and textSettings) then return end
 
     -- Position is not done using PositionAuras(), since tank warnings are unique in that they have both bars and texts
     -- Both barSettings and textSettings contains identical group settings data. We just use barSettings to fetch things like limit, spacing, etc.
-    local nextPosition = { 0, 0 }
+    local nextPosition = WeakAuras.IsOptionsOpen() and optionsOffsets and CopyTable(optionsOffsets) or { 0, 0 }
     local limit = barSettings.limit or #activeRegions
     local directionX = barSettings.grow == "RIGHT" and 1 or barSettings.grow == "LEFT" and -1 or 0
     local directionY = barSettings.grow == "UP" and 1 or barSettings.grow == "DOWN" and -1 or 0
@@ -439,7 +496,8 @@ end
 updateAnchorFunctions.TankIcons = function()
     anchorSettings.tankIcons = GetIconSettings(
         "Liquid Anchor - Tank Icons",
-        "Liquid Anchor - Tank Icon"
+        "Liquid Anchor - Tank Icon",
+        previewCounts.tankIcons
     )
 end
 
@@ -451,7 +509,8 @@ end
 updateAnchorFunctions.CoTankIcons = function()
     anchorSettings.coTankIcons = GetIconSettings(
         "Liquid Anchor - Co-Tank Icons",
-        "Liquid Anchor - Co-Tank Icon"
+        "Liquid Anchor - Co-Tank Icon",
+        previewCounts.coTankIcons
     )
 end
 
@@ -469,4 +528,9 @@ function AuraUpdater:ApplyAnchorSettings(anchorType, newPositions, activeRegions
     if not applyAnchorFunctions[anchorType] then return end
 
     applyAnchorFunctions[anchorType](newPositions, activeRegions)
+end
+
+-- Update all anchors
+for _, updateAnchorFunction in pairs(updateAnchorFunctions) do
+    updateAnchorFunction()
 end
