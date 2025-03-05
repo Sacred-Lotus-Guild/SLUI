@@ -219,51 +219,36 @@ end
 
 -- Override WeakAura functions if CustomNames is not already installed and doing the same.
 if WeakAuras and not CustomNames then
-    if WeakAuras.GetName then
-        WeakAuras.GetName = function(name)
-            if not name then return end
-
-            return SLUI:GetNickname(name) or name
-        end
+    function WeakAuras.GetName(name)
+        return SLUI:GetNickname(name)
     end
 
-    if WeakAuras.UnitName then
-        WeakAuras.UnitName = function(unit)
-            if not unit then return end
-
-            local name, realm = UnitName(unit)
-
-            if not name then return end
-
-            return SLUI:GetNickname(unit) or name, realm
-        end
+    function WeakAuras.UnitName(unit)
+        local _, realm = UnitName(unit)
+        return SLUI:GetNickname(unit), realm
     end
 
-    if WeakAuras.GetUnitName then
-        WeakAuras.GetUnitName = function(unit, showServerName)
-            if not unit then return end
-
-            if not UnitIsPlayer(unit) then
-                return GetUnitName(unit)
+    function WeakAuras.GetUnitName(unit, showServerName)
+        local name = SLUI:GetNickname(unit)
+        local _, realm = UnitName(unit);
+        local relationship = UnitRealmRelationship(unit);
+        if (realm and realm ~= "") then
+            if (showServerName) then
+                return name .. "-" .. realm;
+            else
+                if (relationship == LE_REALM_RELATION_VIRTUAL) then
+                    return name;
+                else
+                    return name .. FOREIGN_SERVER_LABEL;
+                end
             end
-
-            local name = UnitNameUnmodified(unit)
-            local nameRealm = GetUnitName(unit, showServerName)
-            local suffix = nameRealm:match(".+(%s%(%*%))") or nameRealm:match(".+(%-.+)") or ""
-
-            return string.format("%s%s", SLUI:GetNickname(unit) or name, suffix)
+        else
+            return name;
         end
     end
 
-    if WeakAuras.UnitFullName then
-        WeakAuras.UnitFullName = function(unit)
-            if not unit then return end
-
-            local name, realm = UnitFullName(unit)
-
-            if not name then return end
-
-            return SLUI:GetNickname(unit) or name, realm
-        end
+    function WeakAuras.UnitFullName(unit)
+        local _, realm = UnitFullName(unit)
+        return SLUI:GetNickname(unit), realm
     end
 end
