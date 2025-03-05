@@ -25,8 +25,8 @@ local previewCounts = {
 }
 
 local function PositionAuras(settings, newPositions, activeRegions)
-    local nextPosition = WeakAuras.IsOptionsOpen() and settings.optionsOffsets and CopyTable(settings.optionsOffsets) or
-    { 0, 0 }
+    local nextPosition = WeakAuras.IsOptionsOpen() and settings.optionsOffsets
+        and CopyTable(settings.optionsOffsets) or { 0, 0 }
     local limit = settings.limit or #activeRegions
     local directionX = settings.grow == "RIGHT" and 1 or settings.grow == "LEFT" and -1 or 0
     local directionY = settings.grow == "UP" and 1 or settings.grow == "DOWN" and -1 or 0
