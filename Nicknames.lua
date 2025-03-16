@@ -1,163 +1,6 @@
----@class SLUI
-local SLUI = LibStub("AceAddon-3.0"):GetAddon("SLUI")
+--- @class SLUI
+local SLUI = select(2, ...)
 local CustomNames = C_AddOns.IsAddOnLoaded("CustomNames") and LibStub("CustomNames")
-
-SLUI.roster = {
-    --
-    -- G1 Roster
-    --
-    ["Faulks"] = "Faulks",
-    --
-    ["Notdravus"] = "Dravus",
-    ["Eldravus"] = "Dravus",
-    ["Kiñgdravus"] = "Dravus",
-    --
-    ["Biopriest"] = "Bio",
-    ["Biomediocre"] = "Bio",
-    --
-    ["Treemotron"] = "Tree",
-    ["Treelectron"] = "Tree",
-    --
-    ["Feritos"] = "Feritos",
-    ["Feritossham"] = "Feritos",
-    ["Feritosshamm"] = "Feritos",
-    --
-    ["Holypud"] = "Pud",
-    --
-    ["Deathdraco"] = "Draco",
-    --
-    ["Lavernius"] = "Lav",
-    ["Lavrogue"] = "Lav",
-    ["Lavdk"] = "Lav",
-    --
-    ["Shirly"] = "Shirly",
-    --
-    ["Deathcen"] = "Death",
-    --
-    ["Snoopxd"] = "Snoop",
-    --
-    ["Rykouu"] = "Ry",
-    --
-    ["Vyndendril"] = "Vyn",
-    --
-    ["Onewthmoney"] = "Voodoo",
-    --
-    ["Víkk"] = "Vikk",
-    --
-    ["Bevyn"] = "Bevyn",
-    ["Kymie"] = "Bevyn",
-    --
-    ["Chøoch"] = "Chooch",
-    --
-    ["Terrapher"] = "Thomas",
-    --
-    ["Podooshka"] = "Tao",
-    ["Taoroinai"] = "Tao",
-    --
-    ["Calemi"] = "Cal",
-    --
-    ["Dubsauce"] = "Dub",
-    --
-    ["Druidboy"] = "DB",
-    --
-    ["Maifu"] = "Mai",
-    ["Maidruid"] = "Mai",
-    --
-    ["Narkobear"] = "Narko",
-    ["Narkobare"] = "Narko",
-    --
-    ["Stuckpoor"] = "Stuck",
-    ["Schlank"] = "Schlank",
-    -- <3
-    ["Shukio"] = "Shuk",
-    ["Shuwuk"] = "Shuk",
-    ["Scaleywaley"] = "Shuk",
-    ["Shuky"] = "Shuk",
-
-    --
-    -- G2 Roster
-    --
-    ["Gamerwords"] = "Drethus",
-    --
-    ["Jvsn"] = "Jussn",
-    --
-    ["Kayzle"] = "Kayzle",
-    ["Kayzl"] = "Kayzle",
-    --
-    ["Squidword"] = "Squid",
-    ["Squided"] = "Squid",
-    ["Squidragosa"] = "Squid",
-    ["Squidwings"] = "Squid",
-    ["Squidkid"] = "Squid",
-    ["Squidmist"] = "Squid",
-    --
-    ["Ocharithm"] = "Ryan",
-    ["Pyrorithm"] = "Ryan",
-    ["Phytorithm"] = "Ryan",
-    ["Sanctorithm"] = "Ryan",
-    ["Matcharithm"] = "Ryan",
-    --
-    ["Dreeks"] = "Dreeks",
-    ["Dreekssham"] = "Dreeks",
-    --
-    ["Daenehrys"] = "Daenehrys",
-    --
-    ["Plazaa"] = "Plaza",
-    --
-    ["Azurepaly"] = "Azure",
-    ["Azuresham"] = "Azure",
-    ["Azuresdk"] = "Azure",
-    ["Azurewar"] = "Azure",
-    ["Azuredru"] = "Azure",
-    --
-    ["Tompally"] = "Tom",
-    ["Tomxpally"] = "Tom",
-    ["Tomsdh"] = "Tom",
-    ["Tomsdk"] = "Tom",
-    ["Tomspriestt"] = "Tom",
-    ["Tomshunterr"] = "Tom",
-    ["Tomxrogue"] = "Tom",
-    ["Tomshaman"] = "Tom",
-    ["Tomwarlockk"] = "Tom",
-    ["Tomdruid"] = "Tom",
-    ["Tomswarrior"] = "Tom",
-    ["Tomsmonk"] = "Tom",
-    ["Tommage"] = "Tom",
-    --
-    ["Fôrtune"] = "Fortune",
-    --
-    ["Låyne"] = "Layne",
-    --
-    ["Lilstiffsock"] = "Matt",
-    ["Skrimppeener"] = "Matt",
-    ["Pisspotpete"] = "Matt",
-    --
-    ["Lebeak"] = "Leblond",
-    ["Leblond"] = "Leblond",
-    --
-    ["Gantark"] = "Gantark",
-    ["Gartrank"] = "Gantark",
-    ["Morescribers"] = "Gantark",
-    --
-    ["Grizzye"] = "Grizzye",
-    --
-    ["Asimage"] = "Asimage",
-    --
-    ["Whittzy"] = "Whittzy",
-    ["Whiittzz"] = "Whittzy",
-    --
-    ["Ceravex"] = "Crux",
-    ["Cruxia"] = "Crux",
-    ["Faelyndra"] = "Crux",
-    --
-    ["Tlbs"] = "Telbi",
-    ["Telbi"] = "Telbi",
-    --
-    ["Beilce"] = "Beilce",
-    ["Glaivebeilce"] = "Beilce",
-    --
-    ["Reese"] = "Lincoln",
-}
 
 --- Retrieve a unit's configured nickname, given UnitID or character name.
 --- @param unit string UnitID
@@ -246,6 +89,12 @@ function SLUI:EnableMRT()
             GMRT.F:RegisterCallback("Note_UpdateText", function(_, noteFrame)
                 local text = noteFrame.text:GetText()
                 if not text then return end
+
+                --[[ is this more or less efficient? how can i test?
+                for name, nickname in pairs(SLUI.roster) do
+                    text = text:gsub("([^%a])" .. name .. "([^%a])", "%1" .. nickname .. "%2")
+                end
+                --]]
 
                 local replacements = {}
                 for name in text:gmatch("|c%x%x%x%x%x%x%x%x(.-)|r") do -- match all color coded phrases
