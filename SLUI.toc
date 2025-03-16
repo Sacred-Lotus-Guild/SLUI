@@ -6,6 +6,7 @@
 ## IconTexture: Interface\AddOns\SLUI\Media\Textures\logo.blp
 ## Dependencies: WeakAuras
 ## OptionalDeps: AuraUpdater, Cell, CustomNames, ElvUI, MRT
+## SavedVariables: SLUIDB
 ## X-Curse-Project-ID: 1207905
 ## X-Wago-ID: QNlq986e
 
@@ -14,4 +15,4 @@ embeds.xml
 
 SLUI.lua
 AnchorSettings.lua
-Aliases.lua
+Nicknames.lua

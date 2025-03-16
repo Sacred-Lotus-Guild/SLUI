@@ -5,8 +5,16 @@
   <Script file="Libs\LibStub.lua"/>
   <Script file="Libs\CallbackHandler-1.0.lua"/>
   <Script file="Libs\ChatThrottleLib.lua"/>
+  <Script file="Libs\AceAddon-3.0.lua"/>
   <Script file="Libs\AceComm-3.0.lua"/>
+  <Script file="Libs\AceConfigRegistry-3.0.lua"/>
+  <Script file="Libs\AceConfigCmd-3.0.lua"/>
+  <Script file="Libs\AceConfigDialog-3.0.lua"/>
+  <Script file="Libs\AceConfig-3.0.lua"/>
   <Script file="Libs\AceConsole-3.0.lua"/>
+  <Script file="Libs\AceDB-3.0.lua"/>
+  <Script file="Libs\AceEvent-3.0.lua"/>
+  <Script file="Libs\AceHook-3.0.lua"/>
   <Script file="Libs\LibDeflate.lua"/>
   <Script file="Libs\LibSerialize.lua"/>
   <Script file="Libs\LibSharedMedia-3.0.lua"/>
