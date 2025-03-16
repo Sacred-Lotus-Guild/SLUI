@@ -241,6 +241,31 @@ function SLUI:EnableMRT()
                 end
             end)
         end
+
+        if self.db.global.nicknames.mrt.note then
+            GMRT.F:RegisterCallback("Note_UpdateText", function(_, noteFrame)
+                local text = noteFrame.text:GetText()
+                if not text then return end
+
+                local replacements = {}
+                for name in text:gmatch("|c%x%x%x%x%x%x%x%x(.-)|r") do -- match all color coded phrases
+                    if not replacements[name] then
+                        local nickname = SLUI:GetNickname(name)
+                        if nickname ~= name then
+                            replacements[name] = nickname
+                        end
+                    end
+                end
+
+                for name, nickname in pairs(replacements) do
+                    text = text:gsub("|c(%x%x%x%x%x%x%x%x)" .. name .. "|r", "|c%1" .. nickname .. "|r")
+                end
+
+                if text ~= noteFrame.text:GetText() then
+                    noteFrame.text:SetText(text)
+                end
+            end)
+        end
     end
 end
 

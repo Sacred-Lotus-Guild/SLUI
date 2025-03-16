@@ -35,12 +35,6 @@ function SLUI:OnInitialize()
                 type = "group",
                 inline = true,
                 args = {
-                    description = {
-                        order = 1,
-                        type = "description",
-                        fontSize = "medium",
-                        name = "Enable nickname functionality for your AddOns.",
-                    },
                     cell = {
                         name = "Cell",
                         desc = "Add our nicknames to Cell's nickname database.",
@@ -51,8 +45,8 @@ function SLUI:OnInitialize()
                     },
                     customnames = {
                         name = "CustomNames",
-                        desc =
-                        "Add our nicknames to CustomNames nickname database. If using this functionality, you probably want to disable our nickname functionality for those addons which use CustomNames to avoid conficts.",
+                        desc = "Add our nicknames to CustomNames.\n\n" ..
+                            "When doing so you probably want to disable our nickname functionality for those addons which use CustomNames in order to avoid conficts.",
                         type = "toggle",
                         width = "full",
                         get = function() return self.db.global.nicknames.customnames end,
@@ -80,8 +74,8 @@ function SLUI:OnInitialize()
                                 set = function(_, val) self.db.global.nicknames.mrt.cooldowns = val end,
                             },
                             note = {
-                                name = "Note (NYI)",
-                                desc = "Replace names in MRT notes -- THIS COULD HAVE SIDE EFFECTS!",
+                                name = "Note",
+                                desc = "Replace names in MRT notes. Should not change the actual note text as read by WeakAuras.",
                                 type = "toggle",
                                 get = function() return self.db.global.nicknames.mrt.note end,
                                 set = function(_, val) self.db.global.nicknames.mrt.note = val end,
