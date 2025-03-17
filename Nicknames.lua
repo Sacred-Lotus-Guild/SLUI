@@ -20,11 +20,6 @@ function SLUI:AddNickname(name, nickname)
     self:AddCustomName(name, nickname)
 end
 
---- Provide our Nickname functionality to LiquidWeakAuras
-function AuraUpdater:GetNickname(unit)
-    return SLUI:GetNickname(unit)
-end
-
 --- Add a nickname to Cell's nickname database.
 --- @param name string
 --- @param nickname string
@@ -51,14 +46,14 @@ function SLUI:EnableElvUI()
         local E = unpack(ElvUI)
 
         E:AddTag('name:alias', 'UNIT_NAME_UPDATE INSTANCE_ENCOUNTER_ENGAGE_UNIT', function(unit)
-            return SLUI:GetNickname(unit)
+            return self:GetNickname(unit)
         end)
         E:AddTagInfo('name:alias', 'Names', format('Nickname from |cff00ff98%s|r', "SLUI"))
 
         for textFormat, length in pairs({ veryshort = 5, short = 10, medium = 15, long = 20 }) do
             local tag = format('name:alias:%s', textFormat)
             E:AddTag(tag, 'UNIT_NAME_UPDATE INSTANCE_ENCOUNTER_ENGAGE_UNIT', function(unit)
-                local name = SLUI:GetNickname(unit)
+                local name = self:GetNickname(unit)
                 if name then
                     return E:ShortenString(name, length)
                 end
@@ -74,7 +69,7 @@ function SLUI:EnableMRT()
         -- Replace names in MRT cooldown bars.
         if self.db.global.nicknames.mrt.cooldowns then
             GMRT.F:RegisterCallback("RaidCooldowns_Bar_TextName", function(_, bar, gsubData, barData)
-                local name = SLUI:GetNickname(barData.name)
+                local name = self:GetNickname(barData.name)
                 gsubData.name = name
                 if gsubData.name_time == barData.name then
                     gsubData.name_time = name
@@ -99,7 +94,7 @@ function SLUI:EnableMRT()
                 local replacements = {}
                 for name in text:gmatch("|c%x%x%x%x%x%x%x%x(.-)|r") do -- match all color coded phrases
                     if not replacements[name] then
-                        local nickname = SLUI:GetNickname(name)
+                        local nickname = self:GetNickname(name)
                         if nickname ~= name then
                             replacements[name] = nickname
                         end
@@ -121,18 +116,59 @@ end
 --- Replace OmniCD Names
 function SLUI:EnableOmniCD()
     if self.db.global.nicknames.omnicd and C_AddOns.IsAddOnLoaded("OmniCD") and OmniCD then
-        local P = OmniCD[1].Party
-
-        -- Patch the existing `UpdateUnitBar` function to overwrite `name` and
-        -- `nameWithoutRealm` before it executes.
-        local UpdateUnitBar = P.UpdateUnitBar
-        function P:UpdateUnitBar(guid, isUpdateBarsOrGRU)
-            local info = self.groupInfo[guid]
-            info.name = SLUI:GetNickname(info.unit)
+        self:Hook(OmniCD[1].Party, "UpdateUnitBar", function(_self, guid)
+            local info = _self.groupInfo[guid]
+            info.name = self:GetNickname(info.unit)
             info.nameWithoutRealm = info.name
+        end)
+    end
+end
 
-            return UpdateUnitBar(self, guid, isUpdateBarsOrGRU)
+--- @param unit string
+--- @param nameText FontString
+--- @param buttonName string
+function SLUI:UpdateVuhDoName(unit, nameText, buttonName)
+    local name = self:GetNickname(unit)
+
+    -- Respect the max character option (if set)
+    local panelNumber = buttonName and buttonName:match("^Vd(%d+)")
+    panelNumber = tonumber(panelNumber)
+
+    local maxChars = panelNumber and self.vuhDoPanelSettings[panelNumber] and
+        self.vuhDoPanelSettings[panelNumber].maxChars
+    if name and maxChars and maxChars > 0 then
+        name = name:sub(1, maxChars)
+    end
+
+    nameText:SetFormattedText(name or "") -- SetText is hooked, so we use this instead
+end
+
+--- Hook VUHDO_getBarText function to apply our nicknames.
+function SLUI:EnableVuhDo()
+    if self.db.global.nicknames.vuhdo and C_AddOns.IsAddOnLoaded("VuhDo") and VUHDO_PANEL_SETUP then
+        self.vuhDoPanelSettings = {}
+
+        if VUHDO_PANEL_SETUP then
+            for i, settings in pairs(VUHDO_PANEL_SETUP) do
+                self.vuhDoPanelSettings[i] = settings.PANEL_COLOR and settings.PANEL_COLOR.TEXT
+            end
         end
+
+        self:SecureHook("VUHDO_getBarText", function(unitHealthBar)
+            local unitFrameName = unitHealthBar and unitHealthBar.GetName and unitHealthBar:GetName()
+            if not unitFrameName then return end
+
+            local nameText = _G[unitFrameName .. "TxPnlUnN"]
+            if not nameText then return end
+            if self:IsHooked(nameText, "SetText") then return end
+
+            local unitButton = _G[unitFrameName:match("(.+)BgBarIcBarHlBar")]
+            if not unitButton then return end
+
+            self:SecureHook(nameText, "SetText", function(_self)
+                self:UpdateVuhDoName(unitButton.raidid, _self, unitFrameName)
+            end)
+        end)
     end
 end
 
@@ -140,16 +176,16 @@ end
 function SLUI:EnableWeakAuras()
     if self.db.global.nicknames.weakauras and WeakAuras and not CustomNames then
         function WeakAuras.GetName(name)
-            return SLUI:GetNickname(name)
+            return self:GetNickname(name)
         end
 
         function WeakAuras.UnitName(unit)
             local _, realm = UnitName(unit)
-            return SLUI:GetNickname(unit), realm
+            return self:GetNickname(unit), realm
         end
 
         function WeakAuras.GetUnitName(unit, showServerName)
-            local name = SLUI:GetNickname(unit)
+            local name = self:GetNickname(unit)
             local _, realm = UnitName(unit);
             local relationship = UnitRealmRelationship(unit);
             if (realm and realm ~= "") then
@@ -169,12 +205,17 @@ function SLUI:EnableWeakAuras()
 
         function WeakAuras.UnitFullName(unit)
             local _, realm = UnitFullName(unit)
-            return SLUI:GetNickname(unit), realm
+            return self:GetNickname(unit), realm
         end
     end
 end
 
 function SLUI:EnableNicknames()
+    --- Provide our Nickname functionality to LiquidWeakAuras
+    function AuraUpdater:GetNickname(unit)
+        return self:GetNickname(unit)
+    end
+
     for name, nickname in pairs(self.roster) do
         self:AddCellNickname(name, nickname)
         self:AddCustomName(name, nickname)
@@ -183,5 +224,6 @@ function SLUI:EnableNicknames()
     self:EnableElvUI()
     self:EnableMRT()
     self:EnableOmniCD()
+    self:EnableVuhDo()
     self:EnableWeakAuras()
 end

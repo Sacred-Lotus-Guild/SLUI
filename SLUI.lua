@@ -1,7 +1,7 @@
 local addon = select(2, ...)
 
---- @class SLUI: AceAddon
-local SLUI = LibStub("AceAddon-3.0"):NewAddon(addon, "SLUI")
+--- @class SLUI: AceAddon, AceHook-3.0
+local SLUI = LibStub("AceAddon-3.0"):NewAddon(addon, "SLUI", "AceHook-3.0")
 setglobal("SLUI", SLUI)
 
 SLUI.defaults = {
@@ -15,6 +15,7 @@ SLUI.defaults = {
                 note = false,
             },
             omnicd = true,
+            vuhdo = true,
             weakauras = true,
             roster = {
                 --
@@ -184,8 +185,8 @@ function SLUI:OptionsTable()
         type = "group",
         -- icon = [[Interface\AddOns\SLUI\Media\Textures\logo.blp]],
         handler = self,
-        get = function (info) return self.db.global[info[#info]] end,
-        set = function (info, val) self.db.global[info[#info]] = val end,
+        get = function(info) return self.db.global[info[#info]] end,
+        set = function(info, val) self.db.global[info[#info]] = val end,
         args = {
             nicknames = {
                 name = "Nicknames",
@@ -211,8 +212,8 @@ function SLUI:OptionsTable()
                     },
                     elvui = {
                         name = "ElvUI",
-                        desc =
-                        "Add [name:alias] tags to ElvUI. See Available Tags > Names for the available length options.",
+                        desc = "Add [name:alias] tags to ElvUI. " ..
+                            "See Available Tags > Names for the available length options.",
                         type = "toggle",
                         width = "full",
                         get = function() return self.db.global.nicknames.elvui end,
@@ -232,8 +233,8 @@ function SLUI:OptionsTable()
                             },
                             note = {
                                 name = "Note",
-                                desc =
-                                "Replace names in MRT notes. Should not change the actual note text as read by WeakAuras.",
+                                desc = "Replace names in MRT notes. " ..
+                                    "Should not change the actual note text as read by WeakAuras.",
                                 type = "toggle",
                                 get = function() return self.db.global.nicknames.mrt.note end,
                                 set = function(_, val) self.db.global.nicknames.mrt.note = val end,
@@ -248,10 +249,18 @@ function SLUI:OptionsTable()
                         get = function() return self.db.global.nicknames.omnicd end,
                         set = function(_, val) self.db.global.nicknames.omnicd = val end,
                     },
+                    vuhdo = {
+                        name = "VuhDo",
+                        desc = "Replace names in VuhDo bars.",
+                        type = "toggle",
+                        width = "full",
+                        get = function() return self.db.global.nicknames.vuhdo end,
+                        set = function(_, val) self.db.global.nicknames.vuhdo = val end,
+                    },
                     weakauras = {
                         name = "WeakAuras",
-                        desc =
-                        "Replace the default name handlers in WeakAuras. This will effect most WeakAuras by default, but some might have custom code for displaying names.",
+                        desc = "Replace the default name handlers in WeakAuras. " ..
+                            "This will effect most WeakAuras by default, but some might have custom code for displaying names.",
                         type = "toggle",
                         width = "full",
                         get = function() return self.db.global.nicknames.weakauras end,
