@@ -1,16 +1,18 @@
-## Interface: 110007, 110100
+## Interface: 110100
 ## Title: |cff00ff98SLUI|r
 ## Version: @project-version@
 ## Notes: Sacred Lotus UI Utilities
 ## Author: Lavernius
 ## IconTexture: Interface\AddOns\SLUI\Media\Textures\logo.blp
-## OptionalDeps: Cell, ElvUI, WeakAuras
-##
+## Dependencies: WeakAuras
+## OptionalDeps: AuraUpdater, Cell, CustomNames, ElvUI, MRT, OmniCD, VuhDo
+## SavedVariables: SLUIDB
 ## X-Curse-Project-ID: 1207905
+## X-Wago-ID: QNlq986e
 
 # Dependencies
 embeds.xml
 
 SLUI.lua
 AnchorSettings.lua
-Aliases.lua
+Nicknames.lua
