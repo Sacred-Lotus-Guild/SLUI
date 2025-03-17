@@ -20,6 +20,19 @@ function SLUI:AddNickname(name, nickname)
     self:AddCustomName(name, nickname)
 end
 
+--- Remove duplicate nicknames from the Cell database.
+function SLUI:PruneCellNicknames()
+    if self.db.global.nicknames.cell and C_AddOns.IsAddOnLoaded("Cell") and CellDB then
+        for i, entry in pairs(CellDB.nicknames.list) do
+            local name, nickname = entry:match("([^:]+):([^:]+)")
+
+            if nickname ~= self.roster[name] then
+                table.remove(CellDB.nicknames.list, i)
+            end
+        end
+    end
+end
+
 --- Add a nickname to Cell's nickname database.
 --- @param name string
 --- @param nickname string
@@ -262,6 +275,7 @@ function SLUI:EnableNicknames()
         return self:GetNickname(unit)
     end
 
+    self:PruneCellNicknames()
     for name, nickname in pairs(self.roster) do
         self:AddCellNickname(name, nickname)
         self:AddCustomName(name, nickname)
