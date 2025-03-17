@@ -63,6 +63,52 @@ function SLUI:EnableElvUI()
     end
 end
 
+---
+function SLUI:EnableGrid2()
+    if self.db.global.nicknames.grid2 and C_AddOns.IsAddOnLoaded("Grid2") and Grid2 then
+        local Nickname = Grid2.statusPrototype:new("nickname")
+        Nickname.IsActive = Grid2.statusLibrary.IsActive
+
+        function Nickname:UNIT_NAME_UPDATE(_, unit)
+            self:UpdateIndicators(unit)
+        end
+
+        function Nickname:OnEnable()
+            self:RegisterEvent("UNIT_NAME_UPDATE")
+        end
+
+        function Nickname:OnDisable()
+            self:UnregisterEvent("UNIT_NAME_UPDATE")
+        end
+
+        function Nickname:GetText(unit)
+            return SLUI:GetNickname(unit)
+        end
+
+        function Nickname:GetTooltip(unit, tip)
+            tip:SetUnit(unit)
+        end
+
+        Grid2.setupFunc["nickname"] = function(baseKey, dbx)
+            Grid2:RegisterStatus(Nickname, { "text", "tooltip" }, baseKey, dbx)
+            return Nickname
+        end
+
+        Grid2:DbSetStatusDefaultValue("nickname", { type = "nickname" })
+
+        -- this doesn't seem to be called automatically, maybe we're running too late?
+        Grid2.setupFunc["nickname"]("nickname", { type = "nickname" })
+
+        self:RegisterEvent("ADDON_LOADED", function(_, addOnName)
+            if addOnName == "Grid2Options" and Grid2Options then
+                Grid2Options:RegisterStatusOptions("nickname", "misc", function() end, {
+                    titleIcon = "Interface\\AddOns\\SLUI\\Media\\Textures\\logo.blp",
+                })
+            end
+        end)
+    end
+end
+
 --- Enable (the enabled) MRT overrides
 function SLUI:EnableMRT()
     if C_AddOns.IsAddOnLoaded("MRT") and GMRT then
@@ -222,6 +268,7 @@ function SLUI:EnableNicknames()
     end
 
     self:EnableElvUI()
+    self:EnableGrid2()
     self:EnableMRT()
     self:EnableOmniCD()
     self:EnableVuhDo()

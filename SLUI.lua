@@ -1,7 +1,7 @@
 local addon = select(2, ...)
 
---- @class SLUI: AceAddon, AceHook-3.0
-local SLUI = LibStub("AceAddon-3.0"):NewAddon(addon, "SLUI", "AceHook-3.0")
+--- @class SLUI: AceAddon, AceEvent-3.0, AceHook-3.0
+local SLUI = LibStub("AceAddon-3.0"):NewAddon(addon, "SLUI", "AceEvent-3.0", "AceHook-3.0")
 setglobal("SLUI", SLUI)
 
 SLUI.defaults = {
@@ -10,6 +10,7 @@ SLUI.defaults = {
             cell = true,
             customnames = false,
             elvui = true,
+            grid2 = true,
             mrt = {
                 cooldowns = true,
                 note = false,
@@ -218,6 +219,14 @@ function SLUI:OptionsTable()
                         width = "full",
                         get = function() return self.db.global.nicknames.elvui end,
                         set = function(_, val) self.db.global.nicknames.elvui = val end,
+                    },
+                    grid2 = {
+                        name = "Grid2",
+                        desc = "Add \"nickname\" status to Grid2.",
+                        type = "toggle",
+                        width = "full",
+                        get = function() return self.db.global.nicknames.grid2 end,
+                        set = function(_, val) self.db.global.nicknames.grid2 = val end,
                     },
                     mrt = {
                         name = "MRT",
