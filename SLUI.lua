@@ -182,9 +182,8 @@ SLUI.defaults = {
 function SLUI:OptionsTable()
     --- @type AceConfig.OptionsTable
     self.options = {
-        name = "SLUI",
+        name = format("|cff00ff98%s|r v%s", "SLUI", C_AddOns.GetAddOnMetadata("SLUI", "Version")),
         type = "group",
-        -- icon = [[Interface\AddOns\SLUI\Media\Textures\logo.blp]],
         handler = self,
         get = function(info) return self.db.global[info[#info]] end,
         set = function(info, val) self.db.global[info[#info]] = val end,
@@ -200,9 +199,9 @@ function SLUI:OptionsTable()
                         args = {
                             desc = {
                                 order = 0,
-                                name = "To enable Cell nicknames, open \"/cell options\"\n" ..
-                                    "   General > Nickname > Custom Nicknames\n" ..
-                                    "   Enable the \"Custom Nicknames\" checkbox",
+                                name = "To enable Cell nicknames, open \"/cell options\":\n" ..
+                                    "  General > Nickname > Custom Nicknames\n" ..
+                                    "  Enable the \"Custom Nicknames\" checkbox",
                                 type = "description",
                                 fontSize = "medium",
                             },
@@ -245,9 +244,9 @@ function SLUI:OptionsTable()
                             desc = {
                                 order = 0,
                                 name = "To enable ElvUI nicknames, open \"/elvui\":\n" ..
-                                    "   Unit Frames > Group Units > Party, Raid 2, Raid 2, or Raid 3 > Name\n" ..
-                                    "   Replace [name] with [name:alias] in the \"Text Format\" input box.\n" ..
-                                    "   See Available Tags > Names for the available length options.",
+                                    "  Unit Frames > Group Units > Party, Raid 2, Raid 2, or Raid 3 > Name\n" ..
+                                    "  Replace \"[name]\" with \"[name:alias]\" in the \"Text Format\" input box.\n" ..
+                                    "  See Available Tags > Names for the available length options.",
                                 type = "description",
                                 fontSize = "medium",
                             },
@@ -268,10 +267,10 @@ function SLUI:OptionsTable()
                             desc = {
                                 order = 0,
                                 name = "To enable Grid2 nicknames, open \"/grid2\":\n" ..
-                                    "   Statuses > Miscellaneous > name > Indicators\n" ..
-                                    "   Disable the text indicators\n" ..
-                                    "   Statuses > Miscellaneous > nickname > Indicators\n" ..
-                                    "   Enable the text indicator where \"name\" was previously enabled",
+                                    "  Statuses > Miscellaneous > name > Indicators\n" ..
+                                    "  Disable the default name indicator\n" ..
+                                    "  Statuses > Miscellaneous > nickname > Indicators\n" ..
+                                    "  Enable the text indicator where \"name\" was previously enabled",
                                 type = "description",
                                 fontSize = "medium",
                             },
@@ -307,7 +306,7 @@ function SLUI:OptionsTable()
                             note = {
                                 name = "Note",
                                 desc = "Replace names in MRT notes. " ..
-                                    "Should not change the actual note text as read by WeakAuras.",
+                                    "This should not change the actual note text as parsed by WeakAuras.",
                                 type = "toggle",
                                 get = function() return self.db.global.nicknames.mrt.note end,
                                 set = function(_, val) self.db.global.nicknames.mrt.note = val end,
@@ -429,7 +428,7 @@ function SLUI:OptionsTable()
         local isDefault = self.defaults.global.nicknames.roster[k] ~= nil
         self.options.args.nicknames.args.roster.args[k] = {
             order = isDefault and 1 or 100,
-            name = string.format("%s:%s", k, v),
+            name = format("%s:%s", k, v),
             type = "toggle",
             width = "full",
             disabled = isDefault,
@@ -440,7 +439,7 @@ function SLUI:OptionsTable()
                 end
             end,
             confirm = true,
-            confirmText = string.format("Delete the configured nickname for %s?", k),
+            confirmText = format("Delete the configured nickname for %s?", k),
         }
     end
 
@@ -456,7 +455,7 @@ function SLUI:OnInitialize()
     self.roster = self.db.global.nicknames.roster
 
     LibStub("AceConfig-3.0"):RegisterOptionsTable("SLUI", function() return self:OptionsTable() end)
-    LibStub("AceConfigDialog-3.0"):AddToBlizOptions("SLUI", "SLUI")
+    LibStub("AceConfigDialog-3.0"):AddToBlizOptions("SLUI")
     LibStub("AceConsole-3.0"):RegisterChatCommand("slui", function(input)
         if not input or input:trim() == "" then
             Settings.OpenToCategory("SLUI")

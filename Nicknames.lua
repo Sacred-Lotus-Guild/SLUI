@@ -38,7 +38,7 @@ end
 --- @param nickname string
 function SLUI:AddCellNickname(name, nickname)
     if self.db.global.nicknames.cell and C_AddOns.IsAddOnLoaded("Cell") and Cell and CellDB then
-        if tInsertUnique(CellDB.nicknames.list, string.format("%s:%s", name, nickname)) then
+        if tInsertUnique(CellDB.nicknames.list, format("%s:%s", name, nickname)) then
             Cell.Fire("UpdateNicknames", "list-update", name, nickname)
         end
     end
