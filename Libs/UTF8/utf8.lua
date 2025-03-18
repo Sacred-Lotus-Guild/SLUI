@@ -41,8 +41,6 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 --]]
 
-local _
-
 -- ABNF from RFC 3629
 --
 -- UTF8-octets = *( UTF8-char )
@@ -56,9 +54,11 @@ local _
 -- UTF8-tail   = %x80-BF
 --
 
+local strbyte, strlen, strsub, type = string.byte, string.len, string.sub, type
+
 -- returns the number of bytes used by the UTF-8 character at byte i in s
 -- also doubles as a UTF-8 character validator
-local function utf8charbytes (s, i)
+local function utf8charbytes(s, i)
 	-- argument defaults
 	i = i or 1
 
@@ -70,7 +70,7 @@ local function utf8charbytes (s, i)
 		error("bad argument #2 to 'utf8charbytes' (number expected, got ".. type(i).. ")")
 	end
 
-	local c = s:byte(i)
+	local c = strbyte(s, i)
 
 	-- determine bytes needed for character, based on RFC 3629
 	-- validate byte 1
@@ -80,7 +80,7 @@ local function utf8charbytes (s, i)
 
 	elseif c >= 194 and c <= 223 then
 		-- UTF8-2
-		local c2 = s:byte(i + 1)
+		local c2 = strbyte(s, i + 1)
 
 		if not c2 then
 			error("UTF-8 string terminated early")
@@ -95,8 +95,8 @@ local function utf8charbytes (s, i)
 
 	elseif c >= 224 and c <= 239 then
 		-- UTF8-3
-		local c2 = s:byte(i + 1)
-		local c3 = s:byte(i + 2)
+		local c2 = strbyte(s, i + 1)
+		local c3 = strbyte(s, i + 2)
 
 		if not c2 or not c3 then
 			error("UTF-8 string terminated early")
@@ -120,9 +120,9 @@ local function utf8charbytes (s, i)
 
 	elseif c >= 240 and c <= 244 then
 		-- UTF8-4
-		local c2 = s:byte(i + 1)
-		local c3 = s:byte(i + 2)
-		local c4 = s:byte(i + 3)
+		local c2 = strbyte(s, i + 1)
+		local c3 = strbyte(s, i + 2)
+		local c4 = strbyte(s, i + 3)
 
 		if not c2 or not c3 or not c4 then
 			error("UTF-8 string terminated early")
@@ -154,16 +154,15 @@ local function utf8charbytes (s, i)
 	end
 end
 
-
 -- returns the number of characters in a UTF-8 string
-local function utf8len (s)
+local function utf8len(s)
 	-- argument checking
 	if type(s) ~= "string" then
 		error("bad argument #1 to 'utf8len' (string expected, got ".. type(s).. ")")
 	end
 
 	local pos = 1
-	local bytes = s:len()
+	local bytes = strlen(s)
 	local len = 0
 
 	while pos <= bytes do
@@ -179,10 +178,9 @@ if not string.utf8len then
 	string.utf8len = utf8len
 end
 
-
 -- functions identically to string.sub except that i and j are UTF-8 characters
 -- instead of bytes
-local function utf8sub (s, i, j)
+local function utf8sub(s, i, j)
 	-- argument defaults
 	j = j or -1
 
@@ -198,11 +196,11 @@ local function utf8sub (s, i, j)
 	end
 
 	local pos = 1
-	local bytes = s:len()
+	local bytes = strlen(s)
 	local len = 0
 
 	-- only set l if i or j is negative
-	local l = (i >= 0 and j >= 0) or s:utf8len()
+	local l = (i >= 0 and j >= 0) or utf8len(s)
 	local startChar = (i >= 0) and i or l + i + 1
 	local endChar   = (j >= 0) and j or l + j + 1
 
@@ -229,7 +227,7 @@ local function utf8sub (s, i, j)
 		end
 	end
 
-	return s:sub(startByte, endByte)
+	return strsub(s, startByte, endByte)
 end
 
 -- install in the string library
@@ -237,9 +235,8 @@ if not string.utf8sub then
 	string.utf8sub = utf8sub
 end
 
-
 -- replace UTF-8 characters based on a mapping table
-local function utf8replace (s, mapping)
+local function utf8replace(s, mapping)
 	-- argument checking
 	if type(s) ~= "string" then
 		error("bad argument #1 to 'utf8replace' (string expected, got ".. type(s).. ")")
@@ -249,13 +246,13 @@ local function utf8replace (s, mapping)
 	end
 
 	local pos = 1
-	local bytes = s:len()
+	local bytes = strlen(s)
 	local charbytes
 	local newstr = ""
 
 	while pos <= bytes do
 		charbytes = utf8charbytes(s, pos)
-		local c = s:sub(pos, pos + charbytes - 1)
+		local c = strsub(s, pos, pos + charbytes - 1)
 
 		newstr = newstr .. (mapping[c] or c)
 
@@ -265,9 +262,8 @@ local function utf8replace (s, mapping)
 	return newstr
 end
 
-
 -- identical to string.upper except it knows about unicode simple case conversions
-local function utf8upper (s)
+local function utf8upper(s)
 	return utf8replace(s, utf8_lc_uc)
 end
 
@@ -276,9 +272,8 @@ if not string.utf8upper and utf8_lc_uc then
 	string.utf8upper = utf8upper
 end
 
-
 -- identical to string.lower except it knows about unicode simple case conversions
-local function utf8lower (s)
+local function utf8lower(s)
 	return utf8replace(s, utf8_uc_lc)
 end
 
@@ -287,29 +282,28 @@ if not string.utf8lower and utf8_uc_lc then
 	string.utf8lower = utf8lower
 end
 
-
 -- identical to string.reverse except that it supports UTF-8
-local function utf8reverse (s)
+local function utf8reverse(s)
 	-- argument checking
 	if type(s) ~= "string" then
 		error("bad argument #1 to 'utf8reverse' (string expected, got ".. type(s).. ")")
 	end
 
-	local bytes = s:len()
+	local bytes = strlen(s)
 	local pos = bytes
 	local charbytes
 	local newstr = ""
 
 	while pos > 0 do
-		c = s:byte(pos)
+		local c = strbyte(s, pos)
 		while c >= 128 and c <= 191 do
 			pos = pos - 1
-			c = s:byte(pos)
+			c = strbyte(pos)
 		end
 
 		charbytes = utf8charbytes(s, pos)
 
-		newstr = newstr .. s:sub(pos, pos + charbytes - 1)
+		newstr = newstr .. strsub(s, pos, pos + charbytes - 1)
 
 		pos = pos - 1
 	end
