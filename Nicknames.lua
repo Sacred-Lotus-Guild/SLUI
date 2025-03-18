@@ -272,7 +272,7 @@ end
 function SLUI:EnableNicknames()
     --- Provide our Nickname functionality to LiquidWeakAuras
     function AuraUpdater:GetNickname(unit)
-        return self:GetNickname(unit)
+        return SLUI:GetNickname(unit)
     end
 
     self:PruneCellNicknames()
