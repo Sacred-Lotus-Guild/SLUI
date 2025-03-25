@@ -175,10 +175,10 @@ end
 --- Replace OmniCD Names
 function SLUI:EnableOmniCD()
     if self.db.global.nicknames.omnicd and C_AddOns.IsAddOnLoaded("OmniCD") and OmniCD then
-        self:Hook(OmniCD[1].Party, "UpdateUnitBar", function(_self, guid)
-            local info = _self.groupInfo[guid]
-            info.name = self:GetNickname(info.unit)
-            info.nameWithoutRealm = info.name
+        local P = OmniCD[1].Party
+        self:RawHook(P, "CreateUnitInfo", function(_self, unit, guid, _, level, class, raceID, _)
+            local name = self:GetNickname(unit)
+            return self.hooks[P]["CreateUnitInfo"](_self, unit, guid, name, level, class, raceID, name)
         end)
     end
 end
