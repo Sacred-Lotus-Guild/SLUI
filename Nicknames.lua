@@ -6,9 +6,12 @@ local CustomNames = C_AddOns.IsAddOnLoaded("CustomNames") and LibStub("CustomNam
 --- @param unit string UnitID
 --- @return string|nil
 function SLUI:GetNickname(unit)
-    if not unit or not UnitExists(unit) then return end
-    local name = UnitNameUnmodified(unit)
-    return self.roster[name] or name
+    if unit and UnitExists(unit) then
+        local name = UnitNameUnmodified(unit)
+        return name and self.roster[name] or name
+    else
+        return self.roster[unit] or unit
+    end
 end
 
 --- Add a nickname to the existing roster.
