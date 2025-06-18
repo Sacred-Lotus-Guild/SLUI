@@ -27,6 +27,7 @@ SLUI.defaults = {
                 ["Notdravus"] = "Dravus",
                 ["Eldravus"] = "Dravus",
                 ["Kiñgdravus"] = "Dravus",
+                ["Dwavus"] = "Dravus",
                 --
                 ["Biopriest"] = "Bio",
                 ["Biomediocre"] = "Bio",
@@ -38,7 +39,10 @@ SLUI.defaults = {
                 ["Feritossham"] = "Feritos",
                 ["Feritosshamm"] = "Feritos",
                 --
-                ["Holypud"] = "Pud",
+                ["Shukio"] = "Shuk",
+                ["Shuwuk"] = "Shuk",
+                ["Scaleywaley"] = "Shuk",
+                ["Shuky"] = "Shuk",
                 --
                 ["Deathdraco"] = "Draco",
                 --
@@ -59,11 +63,6 @@ SLUI.defaults = {
                 ["Onewthmoney"] = "Voodoo",
                 --
                 ["Víkk"] = "Vikk",
-                --
-                ["Shukio"] = "Shuk",
-                ["Shuwuk"] = "Shuk",
-                ["Scaleywaley"] = "Shuk",
-                ["Shuky"] = "Shuk",
                 --
                 ["Bevyn"] = "Bevyn",
                 ["Kymie"] = "Bevyn",
