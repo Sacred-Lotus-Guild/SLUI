@@ -6,9 +6,12 @@ local CustomNames = C_AddOns.IsAddOnLoaded("CustomNames") and LibStub("CustomNam
 --- @param unit string UnitID
 --- @return string|nil
 function SLUI:GetNickname(unit)
-    if not unit or not UnitExists(unit) then return end
-    local name = UnitNameUnmodified(unit)
-    return self.roster[name] or name
+    if unit and UnitExists(unit) then
+        local name = UnitNameUnmodified(unit)
+        return name and self.roster[name] or name
+    else
+        return self.roster[unit] or unit
+    end
 end
 
 --- Add a nickname to the existing roster.
@@ -20,12 +23,25 @@ function SLUI:AddNickname(name, nickname)
     self:AddCustomName(name, nickname)
 end
 
+--- Remove duplicate nicknames from the Cell database.
+function SLUI:PruneCellNicknames()
+    if self.db.global.nicknames.cell and C_AddOns.IsAddOnLoaded("Cell") and CellDB then
+        for i, entry in pairs(CellDB.nicknames.list) do
+            local name, nickname = entry:match("([^:]+):([^:]+)")
+
+            if nickname ~= self.roster[name] then
+                table.remove(CellDB.nicknames.list, i)
+            end
+        end
+    end
+end
+
 --- Add a nickname to Cell's nickname database.
 --- @param name string
 --- @param nickname string
 function SLUI:AddCellNickname(name, nickname)
     if self.db.global.nicknames.cell and C_AddOns.IsAddOnLoaded("Cell") and Cell and CellDB then
-        if tInsertUnique(CellDB.nicknames.list, string.format("%s:%s", name, nickname)) then
+        if tInsertUnique(CellDB.nicknames.list, format("%s:%s", name, nickname)) then
             Cell.Fire("UpdateNicknames", "list-update", name, nickname)
         end
     end
@@ -60,6 +76,52 @@ function SLUI:EnableElvUI()
             end)
             E:AddTagInfo(tag, 'Names', format('Nickname from |cff00ff98%s|r (limited to %d letters)', "SLUI", length))
         end
+    end
+end
+
+---
+function SLUI:EnableGrid2()
+    if self.db.global.nicknames.grid2 and C_AddOns.IsAddOnLoaded("Grid2") and Grid2 then
+        local Nickname = Grid2.statusPrototype:new("nickname")
+        Nickname.IsActive = Grid2.statusLibrary.IsActive
+
+        function Nickname:UNIT_NAME_UPDATE(_, unit)
+            self:UpdateIndicators(unit)
+        end
+
+        function Nickname:OnEnable()
+            self:RegisterEvent("UNIT_NAME_UPDATE")
+        end
+
+        function Nickname:OnDisable()
+            self:UnregisterEvent("UNIT_NAME_UPDATE")
+        end
+
+        function Nickname:GetText(unit)
+            return SLUI:GetNickname(unit)
+        end
+
+        function Nickname:GetTooltip(unit, tip)
+            tip:SetUnit(unit)
+        end
+
+        Grid2.setupFunc["nickname"] = function(baseKey, dbx)
+            Grid2:RegisterStatus(Nickname, { "text", "tooltip" }, baseKey, dbx)
+            return Nickname
+        end
+
+        Grid2:DbSetStatusDefaultValue("nickname", { type = "nickname" })
+
+        -- this doesn't seem to be called automatically, maybe we're running too late?
+        Grid2.setupFunc["nickname"]("nickname", { type = "nickname" })
+
+        self:RegisterEvent("ADDON_LOADED", function(_, addOnName)
+            if addOnName == "Grid2Options" and Grid2Options then
+                Grid2Options:RegisterStatusOptions("nickname", "misc", function() end, {
+                    titleIcon = "Interface\\AddOns\\SLUI\\Media\\Textures\\logo.blp",
+                })
+            end
+        end)
     end
 end
 
@@ -116,10 +178,10 @@ end
 --- Replace OmniCD Names
 function SLUI:EnableOmniCD()
     if self.db.global.nicknames.omnicd and C_AddOns.IsAddOnLoaded("OmniCD") and OmniCD then
-        self:Hook(OmniCD[1].Party, "UpdateUnitBar", function(_self, guid)
-            local info = _self.groupInfo[guid]
-            info.name = self:GetNickname(info.unit)
-            info.nameWithoutRealm = info.name
+        local P = OmniCD[1].Party
+        self:RawHook(P, "CreateUnitInfo", function(_self, unit, guid, _, level, class, raceID, _)
+            local name = self:GetNickname(unit)
+            return self.hooks[P]["CreateUnitInfo"](_self, unit, guid, name, level, class, raceID, name)
         end)
     end
 end
@@ -213,15 +275,17 @@ end
 function SLUI:EnableNicknames()
     --- Provide our Nickname functionality to LiquidWeakAuras
     function AuraUpdater:GetNickname(unit)
-        return self:GetNickname(unit)
+        return SLUI:GetNickname(unit)
     end
 
+    self:PruneCellNicknames()
     for name, nickname in pairs(self.roster) do
         self:AddCellNickname(name, nickname)
         self:AddCustomName(name, nickname)
     end
 
     self:EnableElvUI()
+    self:EnableGrid2()
     self:EnableMRT()
     self:EnableOmniCD()
     self:EnableVuhDo()

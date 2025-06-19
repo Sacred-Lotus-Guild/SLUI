@@ -25,15 +25,14 @@ local previewCounts = {
 }
 
 local function PositionAuras(settings, newPositions, activeRegions)
-    local nextPosition = WeakAuras.IsOptionsOpen() and settings.optionsOffsets
-        and CopyTable(settings.optionsOffsets) or { 0, 0 }
+    local nextPosition = WeakAuras.IsOptionsOpen() and settings.optionsOffsets and CopyTable(settings.optionsOffsets) or {0, 0}
     local limit = settings.limit or #activeRegions
     local directionX = settings.grow == "RIGHT" and 1 or settings.grow == "LEFT" and -1 or 0
     local directionY = settings.grow == "UP" and 1 or settings.grow == "DOWN" and -1 or 0
 
     for regionCount, regionData in ipairs(activeRegions) do
         if regionCount > limit then
-            newPositions[regionCount] = { 0, 0, false }
+            newPositions[regionCount] = {0, 0, false}
         else
             local skipPosition = regionData.region.state.skipPosition
 
@@ -69,6 +68,8 @@ local function ApplySubtextSettings(settings, region)
             if not subtextSettings then break end
 
             subRegion.text:SetFont(subtextSettings.fontPath, subtextSettings.size, subtextSettings.type)
+            subRegion.text:SetShadowColor(unpack(subtextSettings.shadowColor))
+            subRegion.text:SetShadowOffset(subtextSettings.shadowXOffset, subtextSettings.shadowYOffset)
         end
     end
 end
@@ -124,14 +125,17 @@ local function GetBarSettings(groupName, auraName, previewCount)
                 {
                     fontPath = SharedMedia:Fetch("font", subRegion.text_font),
                     size = subRegion.text_fontSize,
-                    type = subRegion.text_fontType
+                    type = subRegion.text_fontType,
+                    shadowColor = subRegion.text_shadowColor,
+                    shadowXOffset = subRegion.text_shadowXOffset,
+                    shadowYOffset = subRegion.text_shadowYOffset
                 }
             )
         end
     end
 
     -- Calculate options offsets
-    settings.optionsOffsets = { 0, 0 }
+    settings.optionsOffsets = {0, 0}
 
     if settings.grow == "UP" then
         settings.optionsOffsets[2] = -(previewCount - 1) * (settings.height + settings.space)
@@ -183,14 +187,17 @@ local function GetIconSettings(groupName, auraName, previewCount)
                 {
                     fontPath = SharedMedia:Fetch("font", subRegion.text_font),
                     size = subRegion.text_fontSize,
-                    type = subRegion.text_fontType
+                    type = subRegion.text_fontType,
+                    shadowColor = subRegion.text_shadowColor,
+                    shadowXOffset = subRegion.text_shadowXOffset,
+                    shadowYOffset = subRegion.text_shadowYOffset
                 }
             )
         end
     end
 
     -- Calculate options offsets
-    settings.optionsOffsets = { 0, 0 }
+    settings.optionsOffsets = {0, 0}
 
     if settings.grow == "UP" then
         settings.optionsOffsets[2] = -settings.height - settings.space
@@ -232,9 +239,13 @@ local function GetTextSettings(groupName, auraName, previewCount)
     settings.fontPath = SharedMedia:Fetch("font", auraData.font)
     settings.height = auraData.fontSize
     settings.fontType = auraData.outline
+    
+    settings.shadowColor = auraData.shadowColor
+    settings.shadowXOffset = auraData.shadowXOffset
+    settings.shadowYOffset = auraData.shadowYOffset
 
     -- Calculate options offsets
-    settings.optionsOffsets = { 0, 0 }
+    settings.optionsOffsets = {0, 0}
 
     if settings.grow == "UP" then
         settings.optionsOffsets[2] = -(previewCount - 1) * (settings.height + settings.space)
@@ -254,6 +265,8 @@ local function ApplyTextSettings(settings, newPositions, activeRegions)
 
         if region.regionType == "text" then
             region.text:SetFont(settings.fontPath, settings.height, settings.fontType)
+            region.text:SetShadowOffset(settings.shadowXOffset, settings.shadowYOffset)
+            region.text:SetShadowColor(unpack(settings.shadowColor))
 
             -- Required to force text positioning when no text replacements are present
             region:SetHeight(settings.height)
@@ -362,7 +375,10 @@ updateAnchorFunctions.Circles = function()
                 {
                     fontPath = SharedMedia:Fetch("font", subRegion.text_font),
                     size = subRegion.text_fontSize,
-                    type = subRegion.text_fontType
+                    type = subRegion.text_fontType,
+                    shadowColor = subRegion.text_shadowColor,
+                    shadowXOffset = subRegion.text_shadowXOffset,
+                    shadowYOffset = subRegion.text_shadowYOffset
                 }
             )
         end
@@ -381,7 +397,7 @@ applyAnchorFunctions.Circles = function(newPositions, activeRegions)
 
         -- Circles are fairly unique in that they should always appear on the character, so they are not positioned "dynamically"
         -- This is the reason that we don't use PositionAuras() for circles
-        newPositions[regionCount] = { 0, 0 }
+        newPositions[regionCount] = {0, 0}
 
         ResizeAura(settings, region)
         ApplySubtextSettings(settings, region)
@@ -444,7 +460,7 @@ applyAnchorFunctions.TankWarnings = function(newPositions, activeRegions)
 
     -- Position is not done using PositionAuras(), since tank warnings are unique in that they have both bars and texts
     -- Both barSettings and textSettings contains identical group settings data. We just use barSettings to fetch things like limit, spacing, etc.
-    local nextPosition = WeakAuras.IsOptionsOpen() and optionsOffsets and CopyTable(optionsOffsets) or { 0, 0 }
+    local nextPosition = WeakAuras.IsOptionsOpen() and optionsOffsets and CopyTable(optionsOffsets) or {0, 0}
     local limit = barSettings.limit or #activeRegions
     local directionX = barSettings.grow == "RIGHT" and 1 or barSettings.grow == "LEFT" and -1 or 0
     local directionY = barSettings.grow == "UP" and 1 or barSettings.grow == "DOWN" and -1 or 0
@@ -454,17 +470,15 @@ applyAnchorFunctions.TankWarnings = function(newPositions, activeRegions)
         local regionType = region.regionType
 
         if regionCount > limit then
-            newPositions[regionCount] = { 0, 0, false }
+            newPositions[regionCount] = {0, 0, false}
         else
             local skipPosition = region.state.skipPosition
 
             newPositions[regionCount] = nextPosition
 
             if not skipPosition then
-                local width = regionType == "aurabar" and barSettings.width or
-                    regionType == "text" and textSettings.width or regionData.region.width
-                local height = regionType == "aurabar" and barSettings.height or
-                    regionType == "text" and textSettings.height or regionData.region.height
+                local width = regionType == "aurabar" and barSettings.width or regionType == "text" and textSettings.width or regionData.region.width
+                local height = regionType == "aurabar" and barSettings.height or regionType == "text" and textSettings.height or regionData.region.height
 
                 nextPosition = {
                     nextPosition[1] + directionX * (width + barSettings.space),

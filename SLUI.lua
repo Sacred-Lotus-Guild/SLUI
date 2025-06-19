@@ -1,7 +1,7 @@
 local addon = select(2, ...)
 
---- @class SLUI: AceAddon, AceHook-3.0
-local SLUI = LibStub("AceAddon-3.0"):NewAddon(addon, "SLUI", "AceHook-3.0")
+--- @class SLUI: AceAddon, AceEvent-3.0, AceHook-3.0
+local SLUI = LibStub("AceAddon-3.0"):NewAddon(addon, "SLUI", "AceEvent-3.0", "AceHook-3.0")
 setglobal("SLUI", SLUI)
 
 SLUI.defaults = {
@@ -10,6 +10,7 @@ SLUI.defaults = {
             cell = true,
             customnames = false,
             elvui = true,
+            grid2 = true,
             mrt = {
                 cooldowns = true,
                 note = false,
@@ -26,6 +27,7 @@ SLUI.defaults = {
                 ["Notdravus"] = "Dravus",
                 ["Eldravus"] = "Dravus",
                 ["Kiñgdravus"] = "Dravus",
+                ["Dwavus"] = "Dravus",
                 --
                 ["Biopriest"] = "Bio",
                 ["Biomediocre"] = "Bio",
@@ -37,7 +39,10 @@ SLUI.defaults = {
                 ["Feritossham"] = "Feritos",
                 ["Feritosshamm"] = "Feritos",
                 --
-                ["Holypud"] = "Pud",
+                ["Shukio"] = "Shuk",
+                ["Shuwuk"] = "Shuk",
+                ["Scaleywaley"] = "Shuk",
+                ["Shuky"] = "Shuk",
                 --
                 ["Deathdraco"] = "Draco",
                 --
@@ -58,11 +63,6 @@ SLUI.defaults = {
                 ["Onewthmoney"] = "Voodoo",
                 --
                 ["Víkk"] = "Vikk",
-                --
-                ["Shukio"] = "Shuk",
-                ["Shuwuk"] = "Shuk",
-                ["Scaleywaley"] = "Shuk",
-                ["Shuky"] = "Shuk",
                 --
                 ["Bevyn"] = "Bevyn",
                 ["Kymie"] = "Bevyn",
@@ -181,9 +181,8 @@ SLUI.defaults = {
 function SLUI:OptionsTable()
     --- @type AceConfig.OptionsTable
     self.options = {
-        name = "SLUI",
+        name = format("|cff00ff98%s|r v%s", "SLUI", C_AddOns.GetAddOnMetadata("SLUI", "Version")),
         type = "group",
-        -- icon = [[Interface\AddOns\SLUI\Media\Textures\logo.blp]],
         handler = self,
         get = function(info) return self.db.global[info[#info]] end,
         set = function(info, val) self.db.global[info[#info]] = val end,
@@ -194,36 +193,108 @@ function SLUI:OptionsTable()
                 inline = true,
                 args = {
                     cell = {
+                        type = "group",
                         name = "Cell",
-                        desc = "Add our nicknames to Cell's nickname database.",
-                        type = "toggle",
-                        width = "full",
-                        get = function() return self.db.global.nicknames.cell end,
-                        set = function(_, val) self.db.global.nicknames.cell = val end,
+                        args = {
+                            desc = {
+                                order = 0,
+                                name = "To enable Cell nicknames, open \"/cell options\":\n" ..
+                                    "  General > Nickname > Custom Nicknames\n" ..
+                                    "  Enable the \"Custom Nicknames\" checkbox",
+                                type = "description",
+                                fontSize = "medium",
+                            },
+                            toggle = {
+                                name = "Add nicknames",
+                                desc = "Synchronize our nicknames with Cell's nickname database.",
+                                type = "toggle",
+                                width = "full",
+                                get = function() return self.db.global.nicknames.cell end,
+                                set = function(_, val) self.db.global.nicknames.cell = val end,
+                            },
+                        },
                     },
                     customnames = {
                         name = "CustomNames",
-                        desc = "Add our nicknames to CustomNames.\n\n" ..
-                            "When doing so you probably want to disable our nickname functionality for those addons which use CustomNames in order to avoid conficts.",
-                        type = "toggle",
-                        width = "full",
-                        get = function() return self.db.global.nicknames.customnames end,
-                        set = function(_, val) self.db.global.nicknames.customnames = val end,
+                        type = "group",
+                        desc = "testing",
+                        args = {
+                            desc = {
+                                order = 0,
+                                name = "You probably want to disable our nickname functionality " ..
+                                    "for addons which use CustomNames in order to avoid conficts.",
+                                type = "description",
+                                fontSize = "medium",
+                            },
+                            toggle = {
+                                name = "Add nicknames",
+                                desc = "Synchronize our nicknames with CustomNames's nickname database.",
+                                type = "toggle",
+                                width = "full",
+                                get = function() return self.db.global.nicknames.customnames end,
+                                set = function(_, val) self.db.global.nicknames.customnames = val end,
+                            },
+                        },
                     },
                     elvui = {
                         name = "ElvUI",
-                        desc = "Add [name:alias] tags to ElvUI. " ..
-                            "See Available Tags > Names for the available length options.",
-                        type = "toggle",
-                        width = "full",
-                        get = function() return self.db.global.nicknames.elvui end,
-                        set = function(_, val) self.db.global.nicknames.elvui = val end,
+                        type = "group",
+                        args = {
+                            desc = {
+                                order = 0,
+                                name = "To enable ElvUI nicknames, open \"/elvui\":\n" ..
+                                    "  Unit Frames > Group Units > Party, Raid 2, Raid 2, or Raid 3 > Name\n" ..
+                                    "  Replace \"[name]\" with \"[name:alias]\" in the \"Text Format\" input box.\n" ..
+                                    "  See Available Tags > Names for the available length options.",
+                                type = "description",
+                                fontSize = "medium",
+                            },
+                            toggle = {
+                                name = "Add tags",
+                                desc = "Adds [name:alias] tags to ElvUI.",
+                                type = "toggle",
+                                width = "full",
+                                get = function() return self.db.global.nicknames.elvui end,
+                                set = function(_, val) self.db.global.nicknames.elvui = val end,
+                            },
+                        },
+                    },
+                    grid2 = {
+                        name = "Grid2",
+                        type = "group",
+                        args = {
+                            desc = {
+                                order = 0,
+                                name = "To enable Grid2 nicknames, open \"/grid2\":\n" ..
+                                    "  Statuses > Miscellaneous > name > Indicators\n" ..
+                                    "  Disable the default name indicator\n" ..
+                                    "  Statuses > Miscellaneous > nickname > Indicators\n" ..
+                                    "  Enable the text indicator where \"name\" was previously enabled",
+                                type = "description",
+                                fontSize = "medium",
+                            },
+                            toggle = {
+                                name = "Add nickname status",
+                                desc = "Add \"nickname\" status to Grid2.",
+                                type = "toggle",
+                                width = "full",
+                                get = function() return self.db.global.nicknames.grid2 end,
+                                set = function(_, val) self.db.global.nicknames.grid2 = val end,
+                            },
+                        },
                     },
                     mrt = {
+                        order = 9,
                         name = "MRT",
                         type = "group",
                         inline = true,
                         args = {
+                            desc = {
+                                order = 0,
+                                name = "When enabled, MRT nicknames are automatically applied.",
+                                type = "description",
+                                fontSize = "medium",
+                            },
                             cooldowns = {
                                 name = "Raid Cooldowns",
                                 desc = "Replace names in MRT Raid Cooldowns tracker.",
@@ -234,7 +305,7 @@ function SLUI:OptionsTable()
                             note = {
                                 name = "Note",
                                 desc = "Replace names in MRT notes. " ..
-                                    "Should not change the actual note text as read by WeakAuras.",
+                                    "This should not change the actual note text as parsed by WeakAuras.",
                                 type = "toggle",
                                 get = function() return self.db.global.nicknames.mrt.note end,
                                 set = function(_, val) self.db.global.nicknames.mrt.note = val end,
@@ -243,28 +314,63 @@ function SLUI:OptionsTable()
                     },
                     omnicd = {
                         name = "OmniCD",
-                        desc = "Replace names in OmniCD bars and icons.",
-                        type = "toggle",
-                        width = "full",
-                        get = function() return self.db.global.nicknames.omnicd end,
-                        set = function(_, val) self.db.global.nicknames.omnicd = val end,
+                        type = "group",
+                        args = {
+                            desc = {
+                                order = 0,
+                                name = "When enabled, OmniCD nicknames are automatically applied.",
+                                type = "description",
+                                fontSize = "medium",
+                            },
+                            toggle = {
+                                name = "Replace names",
+                                desc = "Replace names in OmniCD bars and icons.",
+                                type = "toggle",
+                                width = "full",
+                                get = function() return self.db.global.nicknames.omnicd end,
+                                set = function(_, val) self.db.global.nicknames.omnicd = val end,
+                            },
+                        },
                     },
                     vuhdo = {
                         name = "VuhDo",
-                        desc = "Replace names in VuhDo bars.",
-                        type = "toggle",
-                        width = "full",
-                        get = function() return self.db.global.nicknames.vuhdo end,
-                        set = function(_, val) self.db.global.nicknames.vuhdo = val end,
+                        type = "group",
+                        args = {
+                            desc = {
+                                order = 0,
+                                name = "When enabled, VuhDo nicknames are automatically applied.",
+                                type = "description",
+                                fontSize = "medium",
+                            },
+                            toggle = {
+                                name = "Replace names",
+                                desc = "Replace names in VuhDo bars.",
+                                type = "toggle",
+                                width = "full",
+                                get = function() return self.db.global.nicknames.vuhdo end,
+                                set = function(_, val) self.db.global.nicknames.vuhdo = val end,
+                            },
+                        },
                     },
                     weakauras = {
                         name = "WeakAuras",
-                        desc = "Replace the default name handlers in WeakAuras. " ..
-                            "This will effect most WeakAuras by default, but some might have custom code for displaying names.",
-                        type = "toggle",
-                        width = "full",
-                        get = function() return self.db.global.nicknames.weakauras end,
-                        set = function(_, val) self.db.global.nicknames.weakauras = val end,
+                        type = "group",
+                        args = {
+                            desc = {
+                                order = 0,
+                                name = "When enabled, WeakAura nicknames are automatically applied to *most* WeakAuras.",
+                                type = "description",
+                                fontSize = "medium",
+                            },
+                            toggle = {
+                                name = "Replace names",
+                                desc = "Replace the default name handlers in WeakAuras.",
+                                type = "toggle",
+                                width = "full",
+                                get = function() return self.db.global.nicknames.weakauras end,
+                                set = function(_, val) self.db.global.nicknames.weakauras = val end,
+                            },
+                        },
                     },
                     roster = {
                         order = -1,
@@ -277,7 +383,7 @@ function SLUI:OptionsTable()
                                 type = "input",
                                 width = "full",
                                 validate = function(_, val)
-                                    local name, nickname = val:trim():match("(%a+):(%a+)")
+                                    local name, nickname = val:trim():match("([^:]+):([^:]+)")
                                     if not name or not nickname then
                                         return "Enter a nickname in the format \"Name:Nickname\""
                                     elseif self.defaults.global.nicknames.roster[name] then
@@ -287,7 +393,7 @@ function SLUI:OptionsTable()
                                     end
                                 end,
                                 set = function(_, val)
-                                    local name, nickname = val:trim():match("(%a+):(%a+)")
+                                    local name, nickname = val:trim():match("([^:]+):([^:]+)")
                                     self:AddNickname(name, nickname)
                                 end,
                             }
@@ -321,7 +427,7 @@ function SLUI:OptionsTable()
         local isDefault = self.defaults.global.nicknames.roster[k] ~= nil
         self.options.args.nicknames.args.roster.args[k] = {
             order = isDefault and 1 or 100,
-            name = string.format("%s:%s", k, v),
+            name = format("%s:%s", k, v),
             type = "toggle",
             width = "full",
             disabled = isDefault,
@@ -332,7 +438,7 @@ function SLUI:OptionsTable()
                 end
             end,
             confirm = true,
-            confirmText = string.format("Delete the configured nickname for %s?", k),
+            confirmText = format("Delete the configured nickname for %s?", k),
         }
     end
 
@@ -348,7 +454,7 @@ function SLUI:OnInitialize()
     self.roster = self.db.global.nicknames.roster
 
     LibStub("AceConfig-3.0"):RegisterOptionsTable("SLUI", function() return self:OptionsTable() end)
-    LibStub("AceConfigDialog-3.0"):AddToBlizOptions("SLUI", "SLUI")
+    LibStub("AceConfigDialog-3.0"):AddToBlizOptions("SLUI")
     LibStub("AceConsole-3.0"):RegisterChatCommand("slui", function(input)
         if not input or input:trim() == "" then
             Settings.OpenToCategory("SLUI")
