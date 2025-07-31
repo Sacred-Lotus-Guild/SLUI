@@ -177,7 +177,10 @@ SLUI.defaults = {
                 --
                 ["Reese"] = "Lincoln",
             }
-        }
+        },
+        ui = {
+            scale = 1
+        },
     }
 }
 
@@ -465,6 +468,12 @@ function SLUI:OnInitialize()
             LibStub("AceConfigCmd-3.0").HandleCommand(self, "slui", "SLUI", input)
         end
     end)
+
+    LibStub("AceConsole-3.0"):RegisterChatCommand("slvc", function(input)
+        SLUI.VersionChecker:Toggle()
+    end)
+
+    SLUI.VersionChecker:Init()
 end
 
 function SLUI:OnEnable()

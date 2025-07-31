@@ -16,3 +16,5 @@ embeds.xml
 SLUI.lua
 AnchorSettings.lua
 Nicknames.lua
+Utils.lua
+VersionChecker.lua
