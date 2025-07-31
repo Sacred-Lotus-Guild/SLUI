@@ -71,6 +71,7 @@ SLUI.defaults = {
                 --
                 ["Terrapher"] = "Thomas",
                 --
+                ["Zvonock"] = "Tao",
                 ["Podooshka"] = "Tao",
                 ["Taoroinai"] = "Tao",
                 --
@@ -89,6 +90,8 @@ SLUI.defaults = {
                 ["Stuckpoor"] = "Stuck",
                 --
                 ["Schlank"] = "Schlank",
+                --
+                ["Impoopdollar"] = "Poopdollar",
 
                 --
                 -- G2 Roster

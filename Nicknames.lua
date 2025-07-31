@@ -125,6 +125,36 @@ function SLUI:EnableGrid2()
     end
 end
 
+local oldText, newText
+function SLUI:MRTNoteUpdateText(noteFrame)
+    local text = noteFrame and noteFrame.text and noteFrame.text:GetText()
+    if not text or not self.db.global.nicknames.mrt.note then return end
+    if oldText and text == oldText and newText then
+        noteFrame.text:SetText(newText)
+        return
+    end
+
+    oldText = text
+    local replacements = {}
+
+    -- match all color-coded name strings
+    for name in text:gmatch("|c%x%x%x%x%x%x%x%x(.-)|r") do
+        local nickname = self:GetNickname(name)
+        if nickname ~= name then
+            replacements[name] = nickname
+        end
+    end
+
+    for name, nickname in pairs(replacements) do
+        text = text:gsub("|c(%x%x%x%x%x%x%x%x)" .. name .. "|r", "|c%1" .. nickname .. "|r")
+    end
+
+    newText = text
+    if text ~= oldText then
+        noteFrame.text:SetText(text)
+    end
+end
+
 --- Enable (the enabled) MRT overrides
 function SLUI:EnableMRT()
     if C_AddOns.IsAddOnLoaded("MRT") and GMRT then
@@ -143,33 +173,9 @@ function SLUI:EnableMRT()
         end
 
         if self.db.global.nicknames.mrt.note then
+            SLUI:MRTNoteUpdateText(MRTNote)
             GMRT.F:RegisterCallback("Note_UpdateText", function(_, noteFrame)
-                local text = noteFrame.text:GetText()
-                if not text then return end
-
-                --[[ is this more or less efficient? how can i test?
-                for name, nickname in pairs(SLUI.roster) do
-                    text = text:gsub("([^%a])" .. name .. "([^%a])", "%1" .. nickname .. "%2")
-                end
-                --]]
-
-                local replacements = {}
-                for name in text:gmatch("|c%x%x%x%x%x%x%x%x(.-)|r") do -- match all color coded phrases
-                    if not replacements[name] then
-                        local nickname = self:GetNickname(name)
-                        if nickname ~= name then
-                            replacements[name] = nickname
-                        end
-                    end
-                end
-
-                for name, nickname in pairs(replacements) do
-                    text = text:gsub("|c(%x%x%x%x%x%x%x%x)" .. name .. "|r", "|c%1" .. nickname .. "|r")
-                end
-
-                if text ~= noteFrame.text:GetText() then
-                    noteFrame.text:SetText(text)
-                end
+                SLUI:MRTNoteUpdateText(noteFrame)
             end)
         end
     end
