@@ -16,6 +16,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - name: Install subversion
+        run: sudo apt-get install -yq subversion
       - name: Package and release
         uses: BigWigsMods/packager@v2
         env:
