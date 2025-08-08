@@ -215,12 +215,25 @@ local function GetIconSettings(groupName, auraName, previewCount)
     end
 
     -- Calculate options offsets
+    -- Tank icons are treated differently, because they have different anchor points
+    local isTankIcons = groupName:match("Tank Icons$")
+
     settings.optionsOffsets = {0, 0}
 
-    if settings.grow == "UP" then
-        settings.optionsOffsets[2] = -settings.height - settings.space
-    elseif settings.grow == "RIGHT" then
-        settings.optionsOffsets[1] = -(previewCount - 1) * (settings.width + settings.space)
+    if isTankIcons then
+        if settings.grow == "UP" then
+            settings.optionsOffsets[2] = -settings.height - settings.space
+        elseif settings.grow == "LEFT" then
+            settings.optionsOffsets[1] = 0.5 * settings.width
+        elseif settings.grow == "RIGHT" then
+            settings.optionsOffsets[1] = -(previewCount - 1) * (settings.width + settings.space) + 0.5 * settings.width
+        end
+    else
+        if settings.grow == "UP" then
+            settings.optionsOffsets[2] = -settings.height - settings.space
+        elseif settings.grow == "RIGHT" then
+            settings.optionsOffsets[1] = -(previewCount - 1) * (settings.width + settings.space)
+        end
     end
 
     return settings
