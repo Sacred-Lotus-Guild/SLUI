@@ -30,23 +30,39 @@ local function PositionAuras(settings, newPositions, activeRegions)
     local directionX = settings.grow == "RIGHT" and 1 or settings.grow == "LEFT" and -1 or 0
     local directionY = settings.grow == "UP" and 1 or settings.grow == "DOWN" and -1 or 0
 
+    local preAddPositions = settings.grow == "UP" or settings.grow == "RIGHT"
+    local postAddPositions = not preAddPositions
+    local skipNextPosition = false
+
     for regionCount, regionData in ipairs(activeRegions) do
+        local region = regionData.region
+
         if regionCount > limit then
             newPositions[regionCount] = {0, 0, false}
         else
-            local skipPosition = regionData.region.state.skipPosition
+            local skipPosition = region.state.skipPosition
+            local ignoreAnchor = regionData.data.config.ignoreAnchor
 
-            newPositions[regionCount] = nextPosition
-
-            if not skipPosition then
-                local width = settings.width or regionData.region.width
-                local height = settings.height or regionData.region.height
-
+            local width = not ignoreAnchor and settings.width or region.width
+            local height = not ignoreAnchor and settings.height or region.height
+            
+            if preAddPositions and not skipNextPosition and regionCount > 1 then
                 nextPosition = {
                     nextPosition[1] + directionX * (width + settings.space),
                     nextPosition[2] + directionY * (height + settings.space)
                 }
             end
+
+            newPositions[regionCount] = nextPosition
+
+            if postAddPositions and not skipPosition then
+                nextPosition = {
+                    nextPosition[1] + directionX * (width + settings.space),
+                    nextPosition[2] + directionY * (height + settings.space)
+                }
+            end
+
+            skipNextPosition = preAddPositions and skipPosition
         end
     end
 end
@@ -151,8 +167,10 @@ local function ApplyBarSettings(settings, newPositions, activeRegions)
 
     for _, regionData in ipairs(activeRegions) do
         local region = regionData.region
+        local isBar = region.regionType == "aurabar"
+        local ignoreAnchor = regionData.data.config.ignoreAnchor
 
-        if region.regionType == "aurabar" then
+        if isBar and not ignoreAnchor then
             ResizeAura(settings, region)
             ApplyBarTexture(settings, region)
             ApplySubtextSettings(settings, region)
@@ -215,8 +233,10 @@ local function ApplyIconSettings(settings, newPositions, activeRegions)
 
     for _, regionData in ipairs(activeRegions) do
         local region = regionData.region
+        local isIcon = region.regionType == "icon"
+        local ignoreAnchor = regionData.data.config.ignoreAnchor
 
-        if region.regionType == "icon" then
+        if isIcon and not ignoreAnchor then
             ResizeAura(settings, region)
             ApplySubtextSettings(settings, region)
         end
@@ -262,8 +282,10 @@ local function ApplyTextSettings(settings, newPositions, activeRegions)
     -- Apply font settings
     for _, regionData in ipairs(activeRegions) do
         local region = regionData.region
+        local isText = region.regionType == "text"
+        local ignoreAnchor = regionData.data.config.ignoreAnchor
 
-        if region.regionType == "text" then
+        if isText and not ignoreAnchor then
             region.text:SetFont(settings.fontPath, settings.height, settings.fontType)
             region.text:SetShadowOffset(settings.shadowXOffset, settings.shadowYOffset)
             region.text:SetShadowColor(unpack(settings.shadowColor))
@@ -367,6 +389,7 @@ updateAnchorFunctions.Circles = function()
 
     settings.width = auraData.width
     settings.height = auraData.height
+    settings.texture = auraData.foregroundTexture
 
     for _, subRegion in ipairs(auraData.subRegions) do
         if subRegion.type == "subtext" then
@@ -393,14 +416,29 @@ applyAnchorFunctions.Circles = function(newPositions, activeRegions)
     if not settings then return end
 
     for regionCount, regionData in ipairs(activeRegions) do
-        local region = regionData.region
+        local ignoreAnchor = regionData.data.config.ignoreAnchor
+
+        if not ignoreAnchor then
+            local region = regionData.region
+
+            -- Set textures
+            local texture = settings.texture
+
+            region.currentTexture = texture
+
+            region.foreground:SetTextureOrAtlas(texture)
+            region.foregroundSpinner:SetTextureOrAtlas(texture)
+
+            region.background:SetTextureOrAtlas(texture)
+            region.backgroundSpinner:SetTextureOrAtlas(texture)
+
+            ResizeAura(settings, region)
+            ApplySubtextSettings(settings, region)
+        end
 
         -- Circles are fairly unique in that they should always appear on the character, so they are not positioned "dynamically"
         -- This is the reason that we don't use PositionAuras() for circles
         newPositions[regionCount] = {0, 0}
-
-        ResizeAura(settings, region)
-        ApplySubtextSettings(settings, region)
     end
 end
 
@@ -465,43 +503,61 @@ applyAnchorFunctions.TankWarnings = function(newPositions, activeRegions)
     local directionX = barSettings.grow == "RIGHT" and 1 or barSettings.grow == "LEFT" and -1 or 0
     local directionY = barSettings.grow == "UP" and 1 or barSettings.grow == "DOWN" and -1 or 0
 
+    local preAddPositions = barSettings.grow == "UP"
+    local postAddPositions = not preAddPositions
+    local skipNextPosition = false
+
     for regionCount, regionData in ipairs(activeRegions) do
         local region = regionData.region
-        local regionType = region.regionType
+        local isBar = region.regionType == "aurabar"
+        local isText = region.regionType == "text"
 
         if regionCount > limit then
             newPositions[regionCount] = {0, 0, false}
         else
             local skipPosition = region.state.skipPosition
+            local ignoreAnchor = regionData.data.config.ignoreAnchor
 
-            newPositions[regionCount] = nextPosition
+            local width = not ignoreAnchor and (isBar and barSettings.width or isText and textSettings.width) or region.width
+            local height = not ignoreAnchor and (isBar and barSettings.height or isText and textSettings.height) or region.height
 
-            if not skipPosition then
-                local width = regionType == "aurabar" and barSettings.width or regionType == "text" and textSettings.width or regionData.region.width
-                local height = regionType == "aurabar" and barSettings.height or regionType == "text" and textSettings.height or regionData.region.height
-
+            if preAddPositions and not skipNextPosition and regionCount > 1 then
                 nextPosition = {
                     nextPosition[1] + directionX * (width + barSettings.space),
                     nextPosition[2] + directionY * (height + barSettings.space)
                 }
             end
+
+            newPositions[regionCount] = nextPosition
+
+            if postAddPositions and not skipPosition then
+                nextPosition = {
+                    nextPosition[1] + directionX * (width + barSettings.space),
+                    nextPosition[2] + directionY * (height + barSettings.space)
+                }
+            end
+
+            skipNextPosition = preAddPositions and skipPosition
         end
     end
 
     -- Applying bar/text settings
     for _, regionData in ipairs(activeRegions) do
         local region = regionData.region
+        local ignoreAnchor = regionData.data.config.ignoreAnchor
 
-        if region.regionType == "aurabar" then
-            ResizeAura(barSettings, region)
-            ApplyBarTexture(barSettings, region)
-            ApplySubtextSettings(barSettings, region)
-        elseif region.regionType == "text" then
-            region.text:SetFont(textSettings.fontPath, textSettings.height, textSettings.fontType)
-
-            -- Required to force text positioning when no text replacements are present
-            region:SetHeight(textSettings.height)
-            region:SetWidth(region.text:GetWidth())
+        if not ignoreAnchor then
+            if region.regionType == "aurabar" then
+                ResizeAura(barSettings, region)
+                ApplyBarTexture(barSettings, region)
+                ApplySubtextSettings(barSettings, region)
+            elseif region.regionType == "text" then
+                region.text:SetFont(textSettings.fontPath, textSettings.height, textSettings.fontType)
+    
+                -- Required to force text positioning when no text replacements are present
+                region:SetHeight(textSettings.height)
+                region:SetWidth(region.text:GetWidth())
+            end
         end
     end
 end
