@@ -287,7 +287,6 @@ function SLUI:OptionsTable()
                         },
                     },
                     mrt = {
-                        order = 9,
                         name = "MRT",
                         type = "group",
                         inline = true,
