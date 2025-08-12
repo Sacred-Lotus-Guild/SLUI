@@ -181,6 +181,19 @@ SLUI.defaults = {
     }
 }
 
+SLUI.breakImages = {}
+SLUI.breakImages.Common = {
+    "interface/AddOns/SLUI/Media/Textures/HorseBio.tga",
+}
+
+SLUI.breakImages.Group1 = {
+    
+}
+
+SLUI.breakImages.Group2 = {
+    
+}
+
 function SLUI:OptionsTable()
     --- @type AceConfig.OptionsTable
     self.options = {
