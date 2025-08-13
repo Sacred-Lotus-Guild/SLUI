@@ -23,4 +23,5 @@ ignore:
   - Libs/LibDeflate/examples
   - Libs/LibDeflate/*.md
   - Libs/LibStub/tests
+  - '*.cmd'
   - '*.sh'
