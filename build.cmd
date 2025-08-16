@@ -1,13 +1,10 @@
-:: WORK IN PROGRESS
 @echo off
 setlocal enabledelayedexpansion
 
-:: Create .release directory if it doesn't exist
-if not exist ".release" mkdir ".release"
-if not exist ".release\SLUI" mkdir ".release\SLUI"
+bash release.sh -dz
 
 :: Function to create directory structure in .release
-for /f "delims=" %%i in ('dir /b /s /a-d *.lua') do (
+for /f "delims=" %%i in ('dir /b /s /a-d *.lua ^| findstr /v .release') do (
     set "file=%%i"
     set "relpath=!file:%cd%\=!"
     set "targetdir=.release\SLUI\!relpath!"
@@ -23,5 +20,3 @@ for /f "delims=" %%i in ('dir /b /s /a-d *.lua') do (
     if exist "!target!" del "!target!"
     mklink "!target!" "!file!"
 )
-
-echo Symbolic links created for all .lua files in .release directory
