@@ -183,12 +183,12 @@ SLUI.defaults = {
 
 function SLUI:OptionsTable()
     --- @type AceConfig.OptionsTable
-    self.options = {
+    SLUI.options = {
         name = format("|cff00ff98%s|r v%s", "SLUI", C_AddOns.GetAddOnMetadata("SLUI", "Version")),
         type = "group",
-        handler = self,
-        get = function(info) return self.db.global[info[#info]] end,
-        set = function(info, val) self.db.global[info[#info]] = val end,
+        handler = SLUI,
+        get = function(info) return SLUI.db.global[info[#info]] end,
+        set = function(info, val) SLUI.db.global[info[#info]] = val end,
         args = {
             nicknames = {
                 name = "Nicknames",
@@ -212,8 +212,8 @@ function SLUI:OptionsTable()
                                 desc = "Synchronize our nicknames with Cell's nickname database.",
                                 type = "toggle",
                                 width = "full",
-                                get = function() return self.db.global.nicknames.cell end,
-                                set = function(_, val) self.db.global.nicknames.cell = val end,
+                                get = function() return SLUI.db.global.nicknames.cell end,
+                                set = function(_, val) SLUI.db.global.nicknames.cell = val end,
                             },
                         },
                     },
@@ -234,8 +234,8 @@ function SLUI:OptionsTable()
                                 desc = "Synchronize our nicknames with CustomNames's nickname database.",
                                 type = "toggle",
                                 width = "full",
-                                get = function() return self.db.global.nicknames.customnames end,
-                                set = function(_, val) self.db.global.nicknames.customnames = val end,
+                                get = function() return SLUI.db.global.nicknames.customnames end,
+                                set = function(_, val) SLUI.db.global.nicknames.customnames = val end,
                             },
                         },
                     },
@@ -257,8 +257,8 @@ function SLUI:OptionsTable()
                                 desc = "Adds [name:alias] tags to ElvUI.",
                                 type = "toggle",
                                 width = "full",
-                                get = function() return self.db.global.nicknames.elvui end,
-                                set = function(_, val) self.db.global.nicknames.elvui = val end,
+                                get = function() return SLUI.db.global.nicknames.elvui end,
+                                set = function(_, val) SLUI.db.global.nicknames.elvui = val end,
                             },
                         },
                     },
@@ -281,8 +281,8 @@ function SLUI:OptionsTable()
                                 desc = "Add \"nickname\" status to Grid2.",
                                 type = "toggle",
                                 width = "full",
-                                get = function() return self.db.global.nicknames.grid2 end,
-                                set = function(_, val) self.db.global.nicknames.grid2 = val end,
+                                get = function() return SLUI.db.global.nicknames.grid2 end,
+                                set = function(_, val) SLUI.db.global.nicknames.grid2 = val end,
                             },
                         },
                     },
@@ -301,16 +301,16 @@ function SLUI:OptionsTable()
                                 name = "Raid Cooldowns",
                                 desc = "Replace names in MRT Raid Cooldowns tracker.",
                                 type = "toggle",
-                                get = function() return self.db.global.nicknames.mrt.cooldowns end,
-                                set = function(_, val) self.db.global.nicknames.mrt.cooldowns = val end,
+                                get = function() return SLUI.db.global.nicknames.mrt.cooldowns end,
+                                set = function(_, val) SLUI.db.global.nicknames.mrt.cooldowns = val end,
                             },
                             note = {
                                 name = "Note",
                                 desc = "Replace names in MRT notes. " ..
                                     "This should not change the actual note text as parsed by WeakAuras.",
                                 type = "toggle",
-                                get = function() return self.db.global.nicknames.mrt.note end,
-                                set = function(_, val) self.db.global.nicknames.mrt.note = val end,
+                                get = function() return SLUI.db.global.nicknames.mrt.note end,
+                                set = function(_, val) SLUI.db.global.nicknames.mrt.note = val end,
                             },
                         },
                     },
@@ -329,8 +329,8 @@ function SLUI:OptionsTable()
                                 desc = "Replace names in OmniCD bars and icons.",
                                 type = "toggle",
                                 width = "full",
-                                get = function() return self.db.global.nicknames.omnicd end,
-                                set = function(_, val) self.db.global.nicknames.omnicd = val end,
+                                get = function() return SLUI.db.global.nicknames.omnicd end,
+                                set = function(_, val) SLUI.db.global.nicknames.omnicd = val end,
                             },
                         },
                     },
@@ -349,8 +349,8 @@ function SLUI:OptionsTable()
                                 desc = "Replace names in VuhDo bars.",
                                 type = "toggle",
                                 width = "full",
-                                get = function() return self.db.global.nicknames.vuhdo end,
-                                set = function(_, val) self.db.global.nicknames.vuhdo = val end,
+                                get = function() return SLUI.db.global.nicknames.vuhdo end,
+                                set = function(_, val) SLUI.db.global.nicknames.vuhdo = val end,
                             },
                         },
                     },
@@ -369,8 +369,8 @@ function SLUI:OptionsTable()
                                 desc = "Replace the default name handlers in WeakAuras.",
                                 type = "toggle",
                                 width = "full",
-                                get = function() return self.db.global.nicknames.weakauras end,
-                                set = function(_, val) self.db.global.nicknames.weakauras = val end,
+                                get = function() return SLUI.db.global.nicknames.weakauras end,
+                                set = function(_, val) SLUI.db.global.nicknames.weakauras = val end,
                             },
                         },
                     },
@@ -388,7 +388,7 @@ function SLUI:OptionsTable()
                                     local name, nickname = val:trim():match("([^:]+):([^:]+)")
                                     if not name or not nickname then
                                         return "Enter a nickname in the format \"Name:Nickname\""
-                                    elseif self.defaults.global.nicknames.roster[name] then
+                                    elseif SLUI.defaults.global.nicknames.roster[name] then
                                         return "You cannot override the existing Sacred Lotus roster nicknames."
                                     else
                                         return true
@@ -396,7 +396,7 @@ function SLUI:OptionsTable()
                                 end,
                                 set = function(_, val)
                                     local name, nickname = val:trim():match("([^:]+):([^:]+)")
-                                    self:AddNickname(name, nickname)
+                                    SLUI:AddNickname(name, nickname)
                                 end,
                             }
                         }
@@ -418,16 +418,16 @@ function SLUI:OptionsTable()
                 confirm = true,
                 confirmText = "Reset your configuration and reload UI?",
                 func = function()
-                    self.db:ResetDB(DEFAULT)
+                    SLUI.db:ResetDB(DEFAULT)
                     return ReloadUI()
                 end
             }
         }
     }
 
-    for k, v in pairs(self.db.global.nicknames.roster) do
-        local isDefault = self.defaults.global.nicknames.roster[k] ~= nil
-        self.options.args.nicknames.args.roster.args[k] = {
+    for k, v in pairs(SLUI.db.global.nicknames.roster) do
+        local isDefault = SLUI.defaults.global.nicknames.roster[k] ~= nil
+        SLUI.options.args.nicknames.args.roster.args[k] = {
             order = isDefault and 1 or 100,
             name = format("%s:%s", k, v),
             type = "toggle",
@@ -436,7 +436,7 @@ function SLUI:OptionsTable()
             get = function() return true end,
             set = function(_, val)
                 if val == false then
-                    self.db.global.nicknames.roster[k] = nil
+                    SLUI.db.global.nicknames.roster[k] = nil
                 end
             end,
             confirm = true,
@@ -444,28 +444,28 @@ function SLUI:OptionsTable()
         }
     end
 
-    return self.options
+    return SLUI.options
 end
 
 function SLUI:OnInitialize()
-    self.db = LibStub("AceDB-3.0"):New("SLUIDB", self.defaults, DEFAULT)
+    SLUI.db = LibStub("AceDB-3.0"):New("SLUIDB", SLUI.defaults, DEFAULT)
     -- overwrite any old custom nicknames with defaults that may have been added.
-    for k, v in pairs(self.defaults.global.nicknames.roster) do
-        self.db.global.nicknames.roster[k] = v
+    for k, v in pairs(SLUI.defaults.global.nicknames.roster) do
+        SLUI.db.global.nicknames.roster[k] = v
     end
-    self.roster = self.db.global.nicknames.roster
+    SLUI.roster = SLUI.db.global.nicknames.roster
 
-    LibStub("AceConfig-3.0"):RegisterOptionsTable("SLUI", function() return self:OptionsTable() end)
+    LibStub("AceConfig-3.0"):RegisterOptionsTable("SLUI", function() return SLUI:OptionsTable() end)
     LibStub("AceConfigDialog-3.0"):AddToBlizOptions("SLUI")
     LibStub("AceConsole-3.0"):RegisterChatCommand("slui", function(input)
         if not input or input:trim() == "" then
             Settings.OpenToCategory("SLUI")
         else
-            LibStub("AceConfigCmd-3.0").HandleCommand(self, "slui", "SLUI", input)
+            LibStub("AceConfigCmd-3.0").HandleCommand(SLUI, "slui", "SLUI", input)
         end
     end)
 end
 
 function SLUI:OnEnable()
-    self:EnableNicknames()
+    SLUI:EnableNicknames()
 end
