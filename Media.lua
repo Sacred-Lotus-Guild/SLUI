@@ -6,6 +6,10 @@ SLUI.breakImages = {
     common = {
         [[Interface\AddOns\SLUI\Media\Textures\HorseBio.tga]],
     },
-    group1 = {},
+    group1 = {
+        [[Interface\AddOns\SLUI\Media\Textures\CalemKnee.tga]],
+        [[Interface\AddOns\SLUI\Media\Textures\Priory.tga]],
+        [[Interface\AddOns\SLUI\Media\Textures\StripperBio.tga]],
+    },
     group2 = {}
 }
