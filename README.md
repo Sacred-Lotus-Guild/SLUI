@@ -14,5 +14,5 @@ Shared &lt;Sacred Lotus&gt; UI Utilities for use with our guild WeakAura suite.
 Using [ImageMagick](https://imagemagick.org/)
 
 ```
-magick input. -resize 256x256^ -gravity Center -crop 256x256+0+0 output.tga
+magick input.xyz -resize 256x256^ -gravity Center -crop 256x256+0+0 output.tga
 ```
