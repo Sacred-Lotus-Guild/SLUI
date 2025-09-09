@@ -15,5 +15,4 @@ embeds.xml
 
 SLUI.lua
 Media.lua
-AnchorSettings.lua
 Nicknames.lua
