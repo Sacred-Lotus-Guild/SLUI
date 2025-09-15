@@ -11,6 +11,7 @@ SLUI.breakImages = {
         [[Interface\AddOns\SLUI\Media\Textures\Priory.tga]],
         [[Interface\AddOns\SLUI\Media\Textures\StripperBio.tga]],
         [[Interface\AddOns\SLUI\Media\Textures\WerthersOriginal.tga]],
+        [[Interface\AddOns\SLUI\Media\Textures\Wolf.tga]],
     },
     group2 = {}
 }
