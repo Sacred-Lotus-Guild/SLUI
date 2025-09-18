@@ -1,6 +1,15 @@
+local IsAddOnLoaded = C_AddOns.IsAddOnLoaded
+
 --- @class SLUI
 local SLUI = select(2, ...)
-local CustomNames = C_AddOns.IsAddOnLoaded("CustomNames") and LibStub("CustomNames")
+local CustomNames = IsAddOnLoaded("CustomNames") and LibStub("CustomNames")
+
+--- @class MRTNoteFrame : Frame
+--- @field text FontString
+
+--- Keep track of the last MRT note text we processed, so we don't do it again unnecessarily.
+--- @type string|nil, string|nil
+local oldMRTNoteText, newMRTNoteText
 
 --- Retrieve a unit's configured nickname, given UnitID or character name.
 --- @param unit string UnitID
@@ -25,7 +34,7 @@ end
 
 --- Remove duplicate nicknames from the Cell database.
 function SLUI:PruneCellNicknames()
-    if SLUI.db.global.nicknames.cell and C_AddOns.IsAddOnLoaded("Cell") and CellDB then
+    if SLUI.db.global.nicknames.cell and IsAddOnLoaded("Cell") and CellDB then
         for i, entry in pairs(CellDB.nicknames.list) do
             local name, nickname = entry:match("([^:]+):([^:]+)")
 
@@ -40,7 +49,7 @@ end
 --- @param name string
 --- @param nickname string
 function SLUI:AddCellNickname(name, nickname)
-    if SLUI.db.global.nicknames.cell and C_AddOns.IsAddOnLoaded("Cell") and Cell and CellDB then
+    if SLUI.db.global.nicknames.cell and IsAddOnLoaded("Cell") and Cell and CellDB then
         if tInsertUnique(CellDB.nicknames.list, format("%s:%s", name, nickname)) then
             Cell.Fire("UpdateNicknames", "list-update", name, nickname)
         end
@@ -58,7 +67,7 @@ end
 
 --- Add ElvUI tags
 function SLUI:EnableElvUI()
-    if SLUI.db.global.nicknames.elvui and C_AddOns.IsAddOnLoaded("ElvUI") and ElvUI then
+    if SLUI.db.global.nicknames.elvui and IsAddOnLoaded("ElvUI") and ElvUI then
         local E = unpack(ElvUI)
 
         E:AddTag('name:alias', 'UNIT_NAME_UPDATE INSTANCE_ENCOUNTER_ENGAGE_UNIT', function(unit)
@@ -79,9 +88,9 @@ function SLUI:EnableElvUI()
     end
 end
 
----
+--- Enable Grid2 nickname status
 function SLUI:EnableGrid2()
-    if SLUI.db.global.nicknames.grid2 and C_AddOns.IsAddOnLoaded("Grid2") and Grid2 then
+    if SLUI.db.global.nicknames.grid2 and IsAddOnLoaded("Grid2") and Grid2 then
         local Nickname = Grid2.statusPrototype:new("nickname")
         Nickname.IsActive = Grid2.statusLibrary.IsActive
 
@@ -118,23 +127,24 @@ function SLUI:EnableGrid2()
         SLUI:RegisterEvent("ADDON_LOADED", function(_, addOnName)
             if addOnName == "Grid2Options" and Grid2Options then
                 Grid2Options:RegisterStatusOptions("nickname", "misc", function() end, {
-                    titleIcon = "Interface\\AddOns\\SLUI\\Media\\Textures\\logo.blp",
+                    titleIcon = SLUI.logo,
                 })
             end
         end)
     end
 end
 
-local oldText, newText
+--- Update the text of an MRT note frame to replace names with nicknames.
+--- @param noteFrame MRTNoteFrame
 function SLUI:MRTNoteUpdateText(noteFrame)
     local text = noteFrame and noteFrame.text and noteFrame.text:GetText()
     if not text or not SLUI.db.global.nicknames.mrt.note then return end
-    if oldText and text == oldText and newText then
-        noteFrame.text:SetText(newText)
+    if oldMRTNoteText and text == oldMRTNoteText and newMRTNoteText then
+        noteFrame.text:SetText(newMRTNoteText)
         return
     end
 
-    oldText = text
+    oldMRTNoteText = text
     local replacements = {}
 
     -- match all color-coded name strings
@@ -149,15 +159,15 @@ function SLUI:MRTNoteUpdateText(noteFrame)
         text = text:gsub("|c(%x%x%x%x%x%x%x%x)" .. name .. "|r", "|c%1" .. nickname .. "|r")
     end
 
-    newText = text
-    if text ~= oldText then
+    newMRTNoteText = text
+    if text ~= oldMRTNoteText then
         noteFrame.text:SetText(text)
     end
 end
 
 --- Enable (the enabled) MRT overrides
 function SLUI:EnableMRT()
-    if C_AddOns.IsAddOnLoaded("MRT") and GMRT then
+    if IsAddOnLoaded("MRT") and GMRT then
         -- Replace names in MRT cooldown bars.
         if SLUI.db.global.nicknames.mrt.cooldowns then
             GMRT.F:RegisterCallback("RaidCooldowns_Bar_TextName", function(_, _, gsubData, barData)
@@ -183,7 +193,7 @@ end
 
 --- Replace OmniCD Names
 function SLUI:EnableOmniCD()
-    if SLUI.db.global.nicknames.omnicd and C_AddOns.IsAddOnLoaded("OmniCD") and OmniCD then
+    if SLUI.db.global.nicknames.omnicd and IsAddOnLoaded("OmniCD") and OmniCD then
         local P = OmniCD[1].Party
         SLUI:RawHook(P, "CreateUnitInfo", function(_self, unit, guid, _, level, class, raceID, _)
             local name = SLUI:GetNickname(unit)
@@ -213,7 +223,7 @@ end
 
 --- Hook VUHDO_getBarText function to apply our nicknames.
 function SLUI:EnableVuhDo()
-    if SLUI.db.global.nicknames.vuhdo and C_AddOns.IsAddOnLoaded("VuhDo") and VUHDO_PANEL_SETUP then
+    if SLUI.db.global.nicknames.vuhdo and IsAddOnLoaded("VuhDo") and VUHDO_PANEL_SETUP then
         SLUI.vuhDoPanelSettings = {}
 
         if VUHDO_PANEL_SETUP then
@@ -280,7 +290,7 @@ end
 
 function SLUI:EnableNicknames()
     --- Provide our Nickname functionality to LiquidWeakAuras
-    if AuraUpdater then
+    if IsAddOnLoaded("AuraUpdater") and AuraUpdater then
         function AuraUpdater:GetNickname(unit)
             return SLUI:GetNickname(unit)
         end
