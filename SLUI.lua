@@ -28,6 +28,7 @@ SLUI.defaults = {
                 ["Eldravus"] = "Dravus",
                 ["Kiñgdravus"] = "Dravus",
                 ["Dwavus"] = "Dravus",
+                ["Likelydravus"] = "Dravus",
                 --
                 ["Biopriest"] = "Bio",
                 ["Biomediocre"] = "Bio",
