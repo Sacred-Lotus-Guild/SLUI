@@ -10,6 +10,7 @@ SLUI.breakImages = {
     },
     group1 = {
         [[Interface\AddOns\SLUI\Media\Textures\CalemKnee.tga]],
+        [[Interface\AddOns\SLUI\Media\Textures\ForThomas.tga]],
         [[Interface\AddOns\SLUI\Media\Textures\Priory.tga]],
         [[Interface\AddOns\SLUI\Media\Textures\StripperBio.tga]],
         [[Interface\AddOns\SLUI\Media\Textures\WerthersOriginal.tga]],
