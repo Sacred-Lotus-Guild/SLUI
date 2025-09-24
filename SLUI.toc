@@ -1,4 +1,4 @@
-## Interface: 110200
+## Interface: 110200, 110205
 ## Title: |cff00ff98SLUI|r
 ## Version: @project-version@
 ## Notes: Sacred Lotus UI Utilities
