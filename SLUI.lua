@@ -21,17 +21,12 @@ SLUI.options = {
 
 function SLUI:OnInitialize()
     SLUI.db = LibStub("AceDB-3.0"):New("SLUIDB", SLUI.defaults, DEFAULT)
-    -- overwrite any old custom nicknames with defaults that may have been added.
-    --for k, v in pairs(SLUI.defaults.global.nicknames.roster) do
-        --SLUI.db.global.nicknames.roster[k] = v
-    --end
-    --SLUI.roster = SLUI.db.global.nicknames.roster
 
     LibStub("AceConfig-3.0"):RegisterOptionsTable("SLUI", function() return SLUI.options end)
-    LibStub("AceConfigDialog-3.0"):AddToBlizOptions("SLUI")
+    local _, id = LibStub("AceConfigDialog-3.0"):AddToBlizOptions("SLUI")
     LibStub("AceConsole-3.0"):RegisterChatCommand("slui", function(input)
         if not input or input:trim() == "" then
-            Settings.OpenToCategory("SLUI")
+            Settings.OpenToCategory(id)
         else
             LibStub("AceConfigCmd-3.0").HandleCommand(SLUI, "slui", "SLUI", input)
         end
