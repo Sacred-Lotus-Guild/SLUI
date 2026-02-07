@@ -7,10 +7,11 @@ local reminderDefinitions = {
         ids = {160914},
     },
     {
-        name = "Hover",
-        defaultMessage = "Hover Up",
-        ids = {358267},
-    }
+        name = "TEST",
+        defaultMessage = "Testing Test",
+        ids = {-1},
+        ignoreOptions = true
+    },
 }
 
 ----------------------------------------------------------------------------------------
@@ -30,11 +31,12 @@ end
 
 SLUI.defaults.global.reminders = {
     common = {
-        sound = "",
+        sound = "BigWigs: Info",
         soundChannel = "Master",
         font = "PT Sans Narrow",
         fontSize = 30,
         timeOnScreen = 5,
+        position = {0, 0},
     } 
 }
 
@@ -48,14 +50,15 @@ local reminderOptions = {
         type = "select",
         name = "Sound",
         get = function(info)
-            for i, v in next, SLUI.media:List("sound") do
+            for i, v in next, SLUI.media:List(SLUI.media.MediaType.SOUND) do
                 if v == SLUI.db.global.reminders.common.sound then
                     return i
                 end
             end
         end,
-        set = function(info, value) SLUI.db.global.reminders.common.sound = SLUI.media:List("sound")[value] end,
-        values = SLUI.media:List("sound"),
+        set = function(info, value) SLUI.db.global.reminders.common.sound = SLUI.media:List(SLUI.media.MediaType.SOUND)[value] 
+        end,
+        values = SLUI.media:List(SLUI.media.MediaType.SOUND),
         width = "double",
         order = 0,
     },
@@ -80,14 +83,14 @@ local reminderOptions = {
         type = "select",
         name = "Font",
         get = function(info)
-            for i, v in next, SLUI.media:List("font") do
+            for i, v in next, SLUI.media:List(SLUI.media.MediaType.FONT) do
                 if v == SLUI.db.global.reminders.common.font then
                     return i
                 end
             end
         end,
-        set = function(info, value) SLUI.db.global.reminders.common.font = SLUI.media:List("font")[value] end,
-        values = SLUI.media:List("font"),
+        set = function(info, value) SLUI.db.global.reminders.common.font = SLUI.media:List(SLUI.media.MediaType.FONT)[value] end,
+        values = SLUI.media:List(SLUI.media.MediaType.FONT),
         width = "double",
         order = 5,
     },
@@ -116,19 +119,11 @@ local reminderOptions = {
         order = 10
     },
 
-    resetDefaultsButton = {
-        name = "Reset to Defaults",
-        type = "execute",
-        width = "normal",
-        func = function() SLUI.db:ResetProfile() end,
-        order = 90
-    },
-
     previewButton = {
         name = "Test",
         type = "execute",
         width = "normal",
-        func = function() TimeSpiralTracker:ShowPreview() end,
+        func = function() SLUI.reminders:TestReminder() end,
         order = 91
     },
 }
@@ -138,20 +133,22 @@ for i, reminder in ipairs(reminderDefinitions) do
         message = reminder.defaultMessage or "<empty>",
     }
 
-    reminderOptions[reminder.name] = {
-        type = "group",
-        name = reminder.name,
-        args = {
-            message = {
-                name = "Message",
-                type = "input",
-                set = function(info,value) SLUI.db.global.reminders[reminder.name].message = value  end,
-                get = function(info) return SLUI.db.global.reminders[reminder.name].message end,
-                width = "normal",
-                order = 0
+    if not reminder.ignoreOptions then
+        reminderOptions[reminder.name] = {
+            type = "group",
+            name = reminder.name,
+            args = {
+                message = {
+                    name = "Message",
+                    type = "input",
+                    set = function(info,value) SLUI.db.global.reminders[reminder.name].message = value  end,
+                    get = function(info) return SLUI.db.global.reminders[reminder.name].message end,
+                    width = "normal",
+                    order = 0
+                },
             },
-        },
-        order = 10 + i * 5
-    }
+            order = 10 + i * 5
+        }
+    end
 end
 SLUI.options.args.reminders.args = reminderOptions
