@@ -1,42 +1,32 @@
 -- SLinvite: Autoinv and autopromote
--- Features:
+-- Features: ???
 -- 1. Auto-invite from whispers using keywords
 -- 2. Auto-convert to raid when group reaches 5 members
 -- 3. Auto-promote whitelisted members
 
-local ADDON_NAME = "SLinvite"
+local ADDON_NAME = "SLUI"
+local SLUI = select(2,...)
 
 -- Saved variables (will persist between sessions)
-SLinviteDB = SLinviteDB or {}
-
--- Initialize saved variables with defaults if they don't exist
-local function InitializeDefaults()
-    if not SLinviteDB.debugMode then
-        SLinviteDB.debugMode = true
-    end
-    
-    if not SLinviteDB.inviteKeywords then
-        SLinviteDB.inviteKeywords = {
-            ["raidinv"] = true,
-            ["inv"] = true,
-            ["invite"] = true,
-        }
-    end
-    
-    if not SLinviteDB.promoteWhitelist then
-        SLinviteDB.promoteWhitelist = {
-            ["Biopriest-Area52"] = true,
-            ["Lavernius-Area52"] = true,
-            ["Shukadin-Area52"]  = true,
-            ["Notdravus-Area52"] = true,
-            ["Dwavus-Area52"]    = true,
-        }
-    end
-end
+SLUI.defaults.global.invites = {
+    debug = false,
+    keywords = {
+        ["raidinv"] = true,
+        ["inv"] = true,
+        ["invite"] = true,
+    },
+    promote = {
+        ["Biopriest-Area52"] = true,
+        ["Lavernius-Area52"] = true,
+        ["Shukadin-Area52"]  = true,
+        ["Notdravus-Area52"] = true,
+        ["Dwavus-Area52"]    = true,
+    },
+}
 
 -- Helper function for debug printing
 local function DebugPrint(...)
-    if SLinviteDB.debugMode then
+    if SLUI.db.global.invites.debug then
         print("|cff00ff00[SLinvite Debug]|r", ...)
     end
 end
@@ -55,12 +45,9 @@ local function NormalizeName(name)
 end
 
 local function IsRaidCombatRestricted()
-    if C_RestrictedActions and C_RestrictedActions.IsAddOnRestrictionActive then
-        return C_RestrictedActions.IsAddOnRestrictionActive(
+ return C_RestrictedActions.IsAddOnRestrictionActive(
             Enum.AddOnRestrictionType.Encounter
         )
-    end
-    return false
 end
 
 -- State tracking
@@ -101,7 +88,7 @@ local function ShouldPromoteMember(name)
     end
 
     -- Explicit whitelist check
-    if SLinviteDB.promoteWhitelist[normalizedName] then
+    if SLUI.db.global.invites.promote[normalizedName] then
         -- Respect manual demotions
         if not demotedPlayers[normalizedName] then
             return true
@@ -146,8 +133,8 @@ local function ShowHelp()
 end
 
 local function ToggleDebug()
-    SLinviteDB.debugMode = not SLinviteDB.debugMode
-    if SLinviteDB.debugMode then
+    SLUI.db.global.invites.debug = not SLUI.db.global.invites.debug
+    if SLUI.db.global.invites.debug then
         AddonPrint("|cff00ff00Debug mode ENABLED|r")
     else
         AddonPrint("|cffff0000Debug mode DISABLED|r")
@@ -162,10 +149,10 @@ local function AddKeyword(keyword)
     
     keyword = string.lower(keyword)
     
-    if SLinviteDB.inviteKeywords[keyword] then
+    if SLUI.db.global.invites.keywords[keyword] then
         AddonPrint("|cffffcc00Warning:|r Keyword '|cff00ff00" .. keyword .. "|r' already exists")
     else
-        SLinviteDB.inviteKeywords[keyword] = true
+        SLUI.db.global.invites.keywords[keyword] = true
         AddonPrint("Added keyword: |cff00ff00" .. keyword .. "|r")
     end
 end
@@ -178,8 +165,8 @@ local function RemoveKeyword(keyword)
     
     keyword = string.lower(keyword)
     
-    if SLinviteDB.inviteKeywords[keyword] then
-        SLinviteDB.inviteKeywords[keyword] = nil
+    if SLUI.db.global.invites.keywords[keyword] then
+        SLUI.db.global.invites.keywords[keyword] = nil
         AddonPrint("Removed keyword: |cffff0000" .. keyword .. "|r")
     else
         AddonPrint("|cffffcc00Warning:|r Keyword '|cffff0000" .. keyword .. "|r' not found")
@@ -189,7 +176,7 @@ end
 local function ListKeywords()
     AddonPrint("Current invite keywords:")
     local count = 0
-    for keyword, _ in pairs(SLinviteDB.inviteKeywords) do
+    for keyword, _ in pairs(SLUI.db.global.invites.keywords) do
         print("  |cff00ff00" .. keyword .. "|r")
         count = count + 1
     end
@@ -210,10 +197,10 @@ local function AddPromote(name)
         return
     end
     
-    if SLinviteDB.promoteWhitelist[normalizedName] then
+    if SLUI.db.global.invites.promote[normalizedName] then
         AddonPrint("|cffffcc00Warning:|r '|cff00ff00" .. normalizedName .. "|r' is already in the promote whitelist")
     else
-        SLinviteDB.promoteWhitelist[normalizedName] = true
+        SLUI.db.global.invites.promote[normalizedName] = true
         AddonPrint("Added to promote whitelist: |cff00ff00" .. normalizedName .. "|r")
     end
 end
@@ -230,8 +217,8 @@ local function RemovePromote(name)
         return
     end
     
-    if SLinviteDB.promoteWhitelist[normalizedName] then
-        SLinviteDB.promoteWhitelist[normalizedName] = nil
+    if SLUI.db.global.invites.promote[normalizedName] then
+        SLUI.db.global.invites.promote[normalizedName] = nil
         AddonPrint("Removed from promote whitelist: |cffff0000" .. normalizedName .. "|r")
     else
         AddonPrint("|cffffcc00Warning:|r '|cffff0000" .. normalizedName .. "|r' not found in promote whitelist")
@@ -241,7 +228,7 @@ end
 local function ListPromote()
     AddonPrint("Current promote whitelist:")
     local count = 0
-    for name, _ in pairs(SLinviteDB.promoteWhitelist) do
+    for name, _ in pairs(SLUI.db.global.invites.promote) do
         print("  |cff00ff00" .. name .. "|r")
         count = count + 1
     end
@@ -288,7 +275,6 @@ eventFrame:RegisterEvent("CHAT_MSG_WHISPER")
 eventFrame:RegisterEvent("CHAT_MSG_BN_WHISPER")
 eventFrame:RegisterEvent("GROUP_ROSTER_UPDATE")
 eventFrame:RegisterEvent("PLAYER_LOGIN")
-eventFrame:RegisterEvent("ADDON_LOADED")
 
 -- Track demoted players to avoid auto-promoting them again
 hooksecurefunc("DemoteAssistant", function(unit)
@@ -303,15 +289,7 @@ end)
 
 -- Event handler
 eventFrame:SetScript("OnEvent", function(self, event, ...)
-    if event == "ADDON_LOADED" then
-        local addonName = ...
-        if addonName == ADDON_NAME then
-            -- Initialize saved variables
-            InitializeDefaults()
-            eventFrame:UnregisterEvent("ADDON_LOADED")
-        end
-        
-    elseif event == "CHAT_MSG_WHISPER" then
+    if event == "CHAT_MSG_WHISPER" then
         if IsRaidCombatRestricted() then
             return
         end
@@ -319,7 +297,7 @@ eventFrame:SetScript("OnEvent", function(self, event, ...)
 
         -- Check if message is an invite keyword
         msg = string.lower(msg:trim())
-        if SLinviteDB.inviteKeywords[msg] then
+        if SLUI.db.global.invites.keywords[msg] then
             -- Check if we need to convert to raid first
             CheckAndConvertToRaid()
             
@@ -356,9 +334,9 @@ eventFrame:SetScript("OnEvent", function(self, event, ...)
         -- Check if message is an invite keyword
         local lowerMsg = string.lower(msg:trim())
         DebugPrint("Lowercase message:", lowerMsg)
-        DebugPrint("Is invite keyword:", SLinviteDB.inviteKeywords[lowerMsg] and "YES" or "NO")
+        DebugPrint("Is invite keyword:", SLUI.db.global.invites.keywords[lowerMsg] and "YES" or "NO")
         
-        if SLinviteDB.inviteKeywords[lowerMsg] then
+        if SLUI.db.global.invites.keywords[lowerMsg] then
             DebugPrint("Keyword matched! Processing invite...")
             
             -- Check if we need to convert to raid first
@@ -454,14 +432,14 @@ eventFrame:SetScript("OnEvent", function(self, event, ...)
         
         -- Build keyword list for display
         local keywords = {}
-        for keyword, _ in pairs(SLinviteDB.inviteKeywords) do
+        for keyword, _ in pairs(SLUI.db.global.invites.keywords) do
             table.insert(keywords, keyword)
         end
         table.sort(keywords)
         
         AddonPrint("loaded. Type |cffffcc00/slinv help|r for commands")
         print("  Invite keywords: |cff00ff00" .. table.concat(keywords, ", ") .. "|r")
-        if SLinviteDB.debugMode then
+        if SLUI.db.global.invites.debug then
             print("  |cffff9900Debug mode is ENABLED|r")
         end
     end
