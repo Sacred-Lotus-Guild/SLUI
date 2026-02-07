@@ -12,8 +12,5 @@
   <Include file="Libs\AceDB-3.0\AceDB-3.0.xml"/>
   <Include file="Libs\AceEvent-3.0\AceEvent-3.0.xml"/>
   <Include file="Libs\AceHook-3.0\AceHook-3.0.xml"/>
-  <Include file="Libs\LibDeflate\lib.xml"/>
-  <Include file="Libs\LibSerialize\lib.xml"/>
   <Include file="Libs\LibSharedMedia-3.0\lib.xml"/>
-  <Include file="Libs\UTF8\lib.xml"/>
 </Ui>

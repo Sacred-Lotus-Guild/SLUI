@@ -14,3 +14,5 @@ embeds.xml
 SLUI.lua
 Media.lua
 
+Modules/RemindersSettings.lua
+Modules/Reminders.lua
