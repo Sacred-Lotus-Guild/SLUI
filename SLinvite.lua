@@ -1,5 +1,5 @@
 -- SLinvite: Autoinv and autopromote
--- Features: ???
+-- Features:
 -- 1. Auto-invite from whispers using keywords
 -- 2. Auto-convert to raid when group reaches 5 members
 -- 3. Auto-promote whitelisted members
