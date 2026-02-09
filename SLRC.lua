@@ -1,7 +1,7 @@
 local SLUI = select(2, ...)
 
---- @class SLUReady: AceModule, AceEvent-3.0
-local SLUReady = SLUI:NewModule("SLUReady", "AceEvent-3.0")
+--- @class SLRC: AceModule, AceEvent-3.0
+local SLRC = SLUI:NewModule("SLRC", "AceEvent-3.0")
 
 -- Libraries
 local AceDB = LibStub("AceDB-3.0")
@@ -50,21 +50,21 @@ SLUI.defaults.global.ready = {
 -- Helper function for debug printing
 local function DebugPrint(...)
     if SLUI.db.global.ready.debug then
-        print("|cff00ff00[SLUReady Debug]|r", ...)
+        print("|cff00ff00[SLRC Debug]|r", ...)
     end
 end
 
 -- Helper function for addon messages
 local function AddonPrint(...)
-    print("|cff1e90ff[SLUReady]|r", ...)
+    print("|cff1e90ff[SLRC]|r", ...)
 end
 
 -- Slash command help
 local function ShowHelp()
     AddonPrint("Available commands:")
-    print("  |cffffcc00/slur debug|r - Toggle debug mode on/off")
-    print("  |cffffcc00/slur show|r - Toggle ready check window")
-    print("  |cffffcc00/slur help|r - Show this help message")
+    print("  |cffffcc00/slrc debug|r - Toggle debug mode on/off")
+    print("  |cffffcc00/slrc show|r - Toggle ready check window")
+    print("  |cffffcc00/slrc help|r - Show this help message")
 end
 
 local function ToggleDebug()
@@ -103,9 +103,9 @@ local function SlashCommandHandler(msg)
 end
 
 -- Register slash commands
-SLASH_SLUReady1 = "/slur"
-SLASH_SLUReady2 = "/sluready"
-SlashCmdList["SLUReady"] = SlashCommandHandler
+SLASH_SLRC1 = "/SLReadyCheck"
+SLASH_SLRC2 = "/SLRC"
+SlashCmdList["SLRC"] = SlashCommandHandler
 
 -- Frame and data storage
 local mainFrame
@@ -259,6 +259,7 @@ end
 
 -- Function to update player data
 local function UpdatePlayerData()
+    --if readyCheckActive == false then return end
     if not IsInGroup() then 
         DebugPrint("Not in group, skipping player data update")
         return 
@@ -278,10 +279,10 @@ local function UpdatePlayerData()
         playerData[1] = {
             name = playerName,
             unit = "player",
-            ready = readyStatus == READY_CHECK_READY,
+            ready = true,
             buffs = GetPlayerBuffs("player"),
         }
-        DebugPrint("Added player:", playerName, "Ready:", readyStatus == READY_CHECK_READY)
+        DebugPrint(playerName, "ReadyStatus:", readyStatus)
     end
     
     -- Add group members
@@ -301,7 +302,7 @@ local function UpdatePlayerData()
                     ready = readyStatus == READY_CHECK_READY,
                     buffs = GetPlayerBuffs(unit),
                 }
-                DebugPrint("Added raid member:", name, "Ready:", readyStatus == READY_CHECK_READY)
+                DebugPrint(name, "ReadyStatus:", readyStatus)
                 startIndex = startIndex + 1
             end
         end
@@ -320,7 +321,7 @@ local function UpdatePlayerData()
                     ready = readyStatus == READY_CHECK_READY,
                     buffs = GetPlayerBuffs(unit),
                 }
-                DebugPrint("Added party member:", name, "Ready:", readyStatus == READY_CHECK_READY)
+                DebugPrint(name, "ReadyStatus:", readyStatus)
                 startIndex = startIndex + 1
             end
         end
@@ -344,7 +345,7 @@ end
 local function CreateMainFrame()
     DebugPrint("Creating main ready check frame")
     
-    local frame = CreateFrame("Frame", "SLUReadyCheckFrame", UIParent, "BackdropTemplate")
+    local frame = CreateFrame("Frame", "SLRCFrame", UIParent, "BackdropTemplate")
     frame:SetSize(SLUI.db.global.ready.width, SLUI.db.global.ready.height)
     frame:SetBackdrop({
         bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
@@ -390,7 +391,7 @@ local function CreateMainFrame()
     -- Title text
     local titleText = titleBar:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     titleText:SetPoint("CENTER", titleBar, "CENTER", 0, 0)
-    titleText:SetText("<SL> U Ready: 0s")
+    titleText:SetText("<SL> Ready Check: 0s")
     titleText:SetTextColor(0, 1, 0.6, 1)
     frame.titleText = titleText
     
@@ -410,12 +411,40 @@ local function CreateMainFrame()
     end)
     frame.closeButton = closeButton
     
-    -- Content frame (no scrollbar needed since frame resizes based on players)
+    -- Content frame
     local content = CreateFrame("Frame", nil, frame)
     content:SetPoint("TOPLEFT", titleBar, "BOTTOMLEFT", 5, -5)
     content:SetPoint("TOPRIGHT", titleBar, "BOTTOMRIGHT", -5, -5)
     content:SetHeight(200) -- Initial height, will be adjusted
     frame.content = content
+    
+    -- Ready texture (shown when everyone is ready at check finish)
+    local readyTexture = frame:CreateTexture(nil, "ARTWORK")
+    readyTexture:SetTexture("Interface\\Addons\\SLUI\\Media\\Ready\\Pass")
+    readyTexture:SetAlpha(0.25)
+    readyTexture:SetPoint("CENTER", frame, "CENTER", 0, 0)
+    readyTexture:SetSize(200, 200)
+    readyTexture:Hide() -- Hidden by default
+    frame.readyTexture = readyTexture
+    
+    -- Fail texture (shown when not everyone is ready at check finish)
+    local failTexture = frame:CreateTexture(nil, "ARTWORK")
+    failTexture:SetTexture("Interface\\Addons\\SLUI\\Media\\Ready\\Fail")
+    failTexture:SetAlpha(0.25)
+    failTexture:SetPoint("CENTER", frame, "CENTER", 0, 0)
+    failTexture:SetSize(200, 200)
+    failTexture:Hide() -- Hidden by default
+    frame.failTexture = failTexture
+    
+    -- Not ready players text (shown over fail texture)
+    local notReadyText = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    notReadyText:SetPoint("CENTER", frame, "CENTER", 0, 0)
+    notReadyText:SetTextColor(1, 1, 1, 1) -- White text
+    notReadyText:SetJustifyH("CENTER")
+    notReadyText:SetJustifyV("MIDDLE")
+    notReadyText:SetWidth(frame:GetWidth() - 40)
+    notReadyText:Hide() -- Hidden by default
+    frame.notReadyText = notReadyText
     
     -- Column headers
     local columnHeaders = {
@@ -443,7 +472,7 @@ local function CreateMainFrame()
     nameText:SetPoint("TOPLEFT", content, "TOPLEFT", 5, 0)
     nameText:SetText("Name")
     nameText:SetTextColor(1, 1, 0, 1)
-
+    --rest of the headers
     local xOffset = 100
     for i, header in ipairs(columnHeaders) do
         local headerText = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -575,6 +604,7 @@ end
 
 -- Function to update the frame
 local function UpdateFrame()
+    if readyCheckActive == false then return end
     if not mainFrame or not mainFrame:IsShown() then 
         DebugPrint("Frame not shown, skipping update")
         return 
@@ -586,7 +616,8 @@ local function UpdateFrame()
     
     -- Update title with remaining time
     local timeLeft = math.max(0, readyCheckEndTime - GetTime())
-    mainFrame.titleText:SetFormattedText("<SL> U Ready: %.0fs", timeLeft)
+    mainFrame.titleText:SetFormattedText("<SL> Ready Check: %.0fs", timeLeft)
+    -- Title change to complete here
     
     -- Update ready count
     local readyCount = CountReadyPlayers()
@@ -618,12 +649,12 @@ local function UpdateFrame()
     mainFrame.content:SetHeight(contentHeight)
     
     -- Adjust main frame height to fit content
-    local frameHeight = 40 + contentHeight + 10 -- Title bar (40) + content + padding (10)
+    local frameHeight = math.max(200,40 + contentHeight + 10) -- Title bar (40) + content + padding (10)
     mainFrame:SetHeight(frameHeight)
 end
 
 -- Event handlers
-function SLUReady:READY_CHECK(event, initiator, duration)
+function SLRC:READY_CHECK(event, initiator, duration)
     DebugPrint("READY_CHECK event triggered by", initiator, "for", duration, "seconds")
     
     if not IsInGroup() then 
@@ -665,10 +696,52 @@ function SLUReady:READY_CHECK(event, initiator, duration)
     end
 end
 
-function SLUReady:READY_CHECK_FINISHED()
+function SLRC:READY_CHECK_FINISHED()
     DebugPrint("READY_CHECK_FINISHED event triggered")
     
     readyCheckActive = false
+    
+    if not mainFrame or not mainFrame:IsShown() then
+        DebugPrint("Frame not shown, skipping READY_CHECK_FINISHED display")
+        return
+    end
+
+    -- Update main frame
+    mainFrame.titleText:SetFormattedText("Ready Check Complete")
+    mainFrame.content:Hide()
+
+    -- Check if everyone is ready
+    local readyCount = CountReadyPlayers()
+    local totalCount = GetNumGroupMembers()
+    local allReady = (readyCount == totalCount)
+    
+    DebugPrint("Ready check finished - Ready:", readyCount, "Total:", totalCount, "All Ready:", allReady)
+    
+    if allReady then
+        -- Everyone is ready - show pass texture
+        DebugPrint("Everyone is ready - showing pass texture")
+        mainFrame.readyTexture:Show()
+
+    else
+        -- Not everyone is ready - show fail texture and list of not ready players
+        DebugPrint("Not everyone ready - showing fail texture and player list")
+        mainFrame.failTexture:Show()
+        
+        -- Build list of players who are not ready
+        local notReadyPlayers = {}
+        for _, data in pairs(playerData) do
+            if not data.ready then
+                table.insert(notReadyPlayers, data.name)
+            end
+        end
+        
+        -- Display the list
+        local notReadyList = table.concat(notReadyPlayers, "\n")
+        mainFrame.notReadyText:SetText(notReadyList)
+        mainFrame.notReadyText:Show()
+        
+        DebugPrint("Not ready players:", notReadyList)
+            end
     
     -- Close window 5 seconds after ready check completes
     if closeTimer then
@@ -681,15 +754,19 @@ function SLUReady:READY_CHECK_FINISHED()
         DebugPrint("5 second timer expired, hiding frame")
         if mainFrame then
             mainFrame:Hide()
+            mainFrame.failTexture:Hide()
+            mainFrame.readyTexture:Hide()
+            mainFrame.notReadyText:Hide()
+            mainFrame.content:Show()
         end
-        SLUReady:UnregisterEvent("UNIT_AURA")
-        SLUReady:UnregisterEvent("READY_CHECK_CONFIRM")
+        SLRC:UnregisterEvent("UNIT_AURA")
+        SLRC:UnregisterEvent("READY_CHECK_CONFIRM")
     end)
 end
 
 -- Module initialization
-function SLUReady:OnInitialize()
-    DebugPrint("SLUReady module initializing")
+function SLRC:OnInitialize()
+    DebugPrint("SLRC module initializing")
 
     -- Register events
     self:RegisterEvent("READY_CHECK")
@@ -698,19 +775,19 @@ function SLUReady:OnInitialize()
     DebugPrint("Events registered")
     
     -- Module loaded message
-    AddonPrint("loaded. Type |cffffcc00/slur help|r for commands")
+    AddonPrint("loaded. Type |cffffcc00/slrc help|r for commands")
     
     if SLUI.db.global.ready.debug then
         print("  |cffff9900Debug mode is ENABLED|r")
     end
 end
 
-function SLUReady:OnEnable()
-    DebugPrint("SLUReady module enabled")
+function SLRC:OnEnable()
+    DebugPrint("SLRC module enabled")
 end
 
-function SLUReady:OnDisable()
-    DebugPrint("SLUReady module disabled")
+function SLRC:OnDisable()
+    DebugPrint("SLRC module disabled")
     if mainFrame then
         mainFrame:Hide()
     end
@@ -721,5 +798,6 @@ local updateFrame = CreateFrame("Frame")
 updateFrame:SetScript("OnUpdate", function(self, elapsed)
     if readyCheckActive and mainFrame and mainFrame:IsShown() then
         UpdateFrame()
+        DebugPrint("Frame Update")
     end
 end)
