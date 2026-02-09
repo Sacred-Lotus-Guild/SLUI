@@ -6,16 +6,6 @@ local SLUReady = SLUI:NewModule("SLUReady", "AceEvent-3.0")
 -- Libraries
 local AceDB = LibStub("AceDB-3.0")
 
--- Debug mode
-local debugMode = false
-
--- Debug print function
-local function DebugPrint(...)
-    if debugMode then
-        print("|cff00ff98[SLUReady Debug]|r", ...)
-    end
-end
-
 -- Local functions and upvalues
 local GetTime = GetTime
 local GetInventoryItemDurability = GetInventoryItemDurability
@@ -25,6 +15,8 @@ local GetNumGroupMembers = GetNumGroupMembers
 local UnitName = UnitName
 local GetReadyCheckStatus = GetReadyCheckStatus
 local UnitIsUnit = UnitIsUnit
+local UnitIsGroupLeader = UnitIsGroupLeader
+local UnitIsGroupAssistant = UnitIsGroupAssistant
 local READY_CHECK_READY = "ready"
 
 
@@ -41,8 +33,7 @@ local SPELL_IDS = {
 }
 
 -- Default settings
-SLUReady.defaults = {
-    profile = {
+SLUI.defaults.global.ready = {
         position = {
             point = "CENTER",
             relativeTo = "UIParent",
@@ -52,8 +43,69 @@ SLUReady.defaults = {
         },
         width = 480,
         height = 400,
-    }
+        debug = false,
+        show = false,
 }
+
+-- Helper function for debug printing
+local function DebugPrint(...)
+    if SLUI.db.global.ready.debug then
+        print("|cff00ff00[SLUReady Debug]|r", ...)
+    end
+end
+
+-- Helper function for addon messages
+local function AddonPrint(...)
+    print("|cff1e90ff[SLUReady]|r", ...)
+end
+
+-- Slash command help
+local function ShowHelp()
+    AddonPrint("Available commands:")
+    print("  |cffffcc00/slur debug|r - Toggle debug mode on/off")
+    print("  |cffffcc00/slur show|r - Toggle ready check window")
+    print("  |cffffcc00/slur help|r - Show this help message")
+end
+
+local function ToggleDebug()
+    SLUI.db.global.ready.debug = not SLUI.db.global.ready.debug
+    if SLUI.db.global.ready.debug then
+        AddonPrint("|cff00ff00Debug mode ENABLED|r")
+    else
+        AddonPrint("|cffff0000Debug mode DISABLED|r")
+    end
+end
+
+local function ToggleShow()
+    SLUI.db.global.ready.show = not SLUI.db.global.ready.show
+    if SLUI.db.global.ready.show then
+        AddonPrint("|cff00ff00Ready Check Window ENABLED|r")
+    else
+        AddonPrint("|cffff0000Ready Check Window DISABLED|r")
+    end
+end
+
+-- Slash command handler
+local function SlashCommandHandler(msg)
+    local command, arg = msg:match("^(%S*)%s*(.-)$")
+    command = command:lower()
+    
+    if command == "debug" then
+        ToggleDebug()
+    elseif command == "show" then
+        ToggleShow()
+    elseif command == "help" or command == "" then
+        ShowHelp()
+    else
+        AddonPrint("|cffff0000Unknown command:|r " .. command)
+        ShowHelp()
+    end
+end
+
+-- Register slash commands
+SLASH_SLUReady1 = "/slur"
+SLASH_SLUReady2 = "/sluready"
+SlashCmdList["SLUReady"] = SlashCommandHandler
 
 -- Frame and data storage
 local mainFrame
@@ -80,6 +132,17 @@ local stamLookup = CreateSpellLookup(SPELL_IDS.Stam)
 local masteryLookup = CreateSpellLookup(SPELL_IDS.Mastery)
 local moveLookup = CreateSpellLookup(SPELL_IDS.Move)
 local ssLookup = CreateSpellLookup(SPELL_IDS.SS)
+
+-- Determine if window should be shown
+local function ShowWindow()
+    local isLeader = UnitIsGroupLeader("player")
+    local isAssistant = UnitIsGroupAssistant("player")
+    local isShow = SLUI.db.global.ready.show
+    
+    DebugPrint("Permission check - Leader:", isLeader, "Assistant:", isAssistant)
+
+    return isLeader or isAssistant or isShow
+end
 
 -- Function to get player buffs
 local function GetPlayerBuffs(unit)
@@ -282,14 +345,9 @@ local function CreateMainFrame()
     DebugPrint("Creating main ready check frame")
     
     local frame = CreateFrame("Frame", "SLUReadyCheckFrame", UIParent, "BackdropTemplate")
-    frame:SetSize(SLUReady.db.profile.width, SLUReady.db.profile.height)
+    frame:SetSize(SLUI.db.global.ready.width, SLUI.db.global.ready.height)
     frame:SetBackdrop({
         bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
-        --edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
-        --tile = true,
-        --tileSize = 32,
-        --edgeSize = 32,
-        --insets = {left = 11, right = 12, top = 12, bottom = 11},
     })
     frame:SetBackdropColor(0, 0, 0, 0.9)
     frame:SetMovable(true)
@@ -298,7 +356,7 @@ local function CreateMainFrame()
     frame:Hide()
     
     -- Restore position
-    local pos = SLUReady.db.profile.position
+    local pos = SLUI.db.global.ready.position
     frame:SetPoint(pos.point, pos.relativeTo, pos.relativePoint, pos.xOfs, pos.yOfs)
     
     -- Title bar
@@ -307,10 +365,6 @@ local function CreateMainFrame()
     titleBar:SetPoint("TOP", frame, "TOP", 0, -2)
     titleBar:SetBackdrop({
         bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
-        --edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-        --tile = true,
-        --tileSize = 16,
-        --edgeSize = 16,
         insets = {left = 4, right = 4, top = 4, bottom = 4},
     })
     titleBar:SetBackdropColor(0.1, 0.1, 0.1, 1)
@@ -323,7 +377,7 @@ local function CreateMainFrame()
         frame:StopMovingOrSizing()
         -- Save position
         local point, relativeTo, relativePoint, xOfs, yOfs = frame:GetPoint()
-        SLUReady.db.profile.position = {
+        SLUI.db.global.ready.position = {
             point = point,
             relativeTo = "UIParent",
             relativePoint = relativePoint,
@@ -577,6 +631,12 @@ function SLUReady:READY_CHECK(event, initiator, duration)
         return 
     end
     
+    -- Check if player is showing window
+    if not ShowWindow() then
+        DebugPrint("Show Window is off")
+        return
+    end
+    
     readyCheckActive = true
     readyCheckEndTime = GetTime() + (duration or 40)
     
@@ -630,39 +690,19 @@ end
 -- Module initialization
 function SLUReady:OnInitialize()
     DebugPrint("SLUReady module initializing")
-    
-    -- Initialize database
-    self.db = AceDB:New("SLUReadyDB", self.defaults, true)
-    
-    DebugPrint("Database initialized")
-    
+
     -- Register events
     self:RegisterEvent("READY_CHECK")
     self:RegisterEvent("READY_CHECK_FINISHED")
     
     DebugPrint("Events registered")
     
-    -- Register slash command for debug
-    SLASH_SLUR1 = "/slur"
-    SlashCmdList["SLUR"] = function(msg)
-        msg = msg:trim():lower()
-        if msg == "debug" then
-            debugMode = not debugMode
-            if debugMode then
-                print("|cff00ff98[SLUReady]|r Debug mode |cff00ff00ENABLED|r")
-            else
-                print("|cff00ff98[SLUReady]|r Debug mode |cffff0000DISABLED|r")
-            end
-        else
-            print("|cff00ff98[SLUReady]|r Commands:")
-            print("  /slur debug - Toggle debug mode")
-        end
-    end
-    
-    DebugPrint("Slash command registered")
-    
     -- Module loaded message
-    print("|cff00ff98[SLUReady]|r Module loaded successfully")
+    AddonPrint("loaded. Type |cffffcc00/slur help|r for commands")
+    
+    if SLUI.db.global.ready.debug then
+        print("  |cffff9900Debug mode is ENABLED|r")
+    end
 end
 
 function SLUReady:OnEnable()
