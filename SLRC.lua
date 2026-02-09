@@ -41,7 +41,7 @@ SLUI.defaults.global.ready = {
             xOfs = 0,
             yOfs = 0,
         },
-        width = 480,
+        width = 460,
         height = 400,
         debug = false,
         show = false,
