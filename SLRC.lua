@@ -452,13 +452,13 @@ local function CreateMainFrame()
         {name = "Food", width = 30},
         {name = "Flask", width = 30},
         {name = "Rune", width = 30},
-        {name = "Vantus", width = 30},
         {name = "Int", width = 30},
         {name = "Atk", width = 30},
         {name = "Vers", width = 30},
         {name = "Stam", width = 30},
         {name = "Mast", width = 30},
-        {name = "Move", width = 30},
+        {name = "Move", width = 32},
+        {name = "Vantus", width = 30},
         {name = "SS", width = 30},
         {name = "Dur%", width = 40},
     }
@@ -513,7 +513,7 @@ local function CreateRow(parent, index)
     -- Icons
     local xOffset = 100
     row.icons = {}
-    local iconOrder = {"Food", "Flask", "Rune", "Vantus", "Int", "Atk", "Vers", "Stam", "Mastery", "Move", "SS"}
+    local iconOrder = {"Food", "Flask", "Rune", "Int", "Atk", "Vers", "Stam", "Mastery", "Move", "Vantus", "SS"}
     
     for _, buffName in ipairs(iconOrder) do
         local icon = row:CreateTexture(nil, "ARTWORK")
