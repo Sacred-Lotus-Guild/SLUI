@@ -6,32 +6,6 @@ local SLRC = SLUI:NewModule("SLRC", "AceEvent-3.0")
 -- Libraries
 local AceDB = LibStub("AceDB-3.0")
 
--- Local functions and upvalues
-local GetTime = GetTime
-local GetInventoryItemDurability = GetInventoryItemDurability
-local IsInRaid = IsInRaid
-local IsInGroup = IsInGroup
-local GetNumGroupMembers = GetNumGroupMembers
-local UnitName = UnitName
-local GetReadyCheckStatus = GetReadyCheckStatus
-local UnitIsUnit = UnitIsUnit
-local UnitIsGroupLeader = UnitIsGroupLeader
-local UnitIsGroupAssistant = UnitIsGroupAssistant
-local READY_CHECK_READY = "ready"
-
-
--- Spell IDs for tracking
-local SPELL_IDS = {
-    Rune = {1234969, 1242347},
-    Int = {1459},
-    Atk = {6673},
-    Vers = {1126},
-    Stam = {21562},
-    Mastery = {462854},
-    Move = {381758, 381732, 381746, 381748, 381750, 381749, 381751, 381752, 381753, 381754, 381756, 381757},
-    SS = {20707},
-}
-
 -- Default settings
 SLUI.defaults.global.ready = {
         position = {
@@ -47,19 +21,19 @@ SLUI.defaults.global.ready = {
         show = false,
 }
 
--- Helper function for debug printing
+-- Debug
 local function DebugPrint(...)
     if SLUI.db.global.ready.debug then
         print("|cff00ff00[SLRC Debug]|r", ...)
     end
 end
 
--- Helper function for addon messages
+-- Addon Messages
 local function AddonPrint(...)
     print("|cff1e90ff[SLRC]|r", ...)
 end
 
--- Slash command help
+-- Slash commands
 local function ShowHelp()
     AddonPrint("Available commands:")
     print("  |cffffcc00/slrc debug|r - Toggle debug mode on/off")
@@ -89,7 +63,6 @@ end
 local function SlashCommandHandler(msg)
     local command, arg = msg:match("^(%S*)%s*(.-)$")
     command = command:lower()
-    
     if command == "debug" then
         ToggleDebug()
     elseif command == "show" then
@@ -107,14 +80,27 @@ SLASH_SLRC1 = "/SLReadyCheck"
 SLASH_SLRC2 = "/SLRC"
 SlashCmdList["SLRC"] = SlashCommandHandler
 
--- Frame and data storage
+-- Locals
 local mainFrame
 local playerData = {}
 local readyCheckEndTime = 0
 local readyCheckActive = false
 local closeTimer
+local READY_CHECK_READY = "ready"
 
--- Helper function to create spell ID lookup table
+-- Spell IDs to monitor
+local SPELL_IDS = {
+    Rune = {1234969, 1242347},
+    Int = {1459},
+    Atk = {6673},
+    Vers = {1126},
+    Stam = {21562},
+    Mastery = {462854},
+    Move = {381758, 381732, 381746, 381748, 381750, 381749, 381751, 381752, 381753, 381754, 381756, 381757},
+    SS = {20707},
+}
+
+-- Spell lookup functions
 local function CreateSpellLookup(spellList)
     local lookup = {}
     for _, spellID in ipairs(spellList) do
@@ -139,7 +125,7 @@ local function ShowWindow()
     local isAssistant = UnitIsGroupAssistant("player")
     local isShow = SLUI.db.global.ready.show
     
-    DebugPrint("Permission check - Leader:", isLeader, "Assistant:", isAssistant)
+    DebugPrint("Leader:", isLeader, "Assistant:", isAssistant, "Showing Window", isShow)
 
     return isLeader or isAssistant or isShow
 end
@@ -180,53 +166,41 @@ local function GetPlayerBuffs(unit)
         -- Check for Well Fed
         if name and name == "Well Fed" and not buffs.Food then
             buffs.Food = {icon = icon, expirationTime = expirationTime}
-            DebugPrint("  Found Well Fed buff for", unit)
         end
         
         -- Check for Food (eating)
         if name and name == "Food" and not buffs.Food then
             buffs.Food = {icon = icon, expirationTime = expirationTime}
-            DebugPrint("  Found Food buff for", unit)
         end
         
         -- Check for Flask
         if name and name:match("^Flask of") and not buffs.Flask then
             buffs.Flask = {icon = icon, expirationTime = expirationTime}
-            DebugPrint("  Found Flask buff for", unit, ":", name)
         end
         
         -- Check for Vantus Rune
         if name and name:match("^Vantus Rune:") and not buffs.Vantus then
             buffs.Vantus = {icon = icon, expirationTime = expirationTime}
-            DebugPrint("  Found Vantus Rune buff for", unit, ":", name)
         end
         
         -- Check spell IDs
         if spellId then
             if runeLookup[spellId] and not buffs.Rune then
                 buffs.Rune = {icon = icon, expirationTime = expirationTime}
-                DebugPrint("  Found Rune buff for", unit, "SpellID:", spellId)
             elseif intLookup[spellId] and not buffs.Int then
                 buffs.Int = {icon = icon, expirationTime = expirationTime}
-                DebugPrint("  Found Int buff for", unit)
             elseif atkLookup[spellId] and not buffs.Atk then
                 buffs.Atk = {icon = icon, expirationTime = expirationTime}
-                DebugPrint("  Found Atk buff for", unit)
             elseif versLookup[spellId] and not buffs.Vers then
                 buffs.Vers = {icon = icon, expirationTime = expirationTime}
-                DebugPrint("  Found Vers buff for", unit)
             elseif stamLookup[spellId] and not buffs.Stam then
                 buffs.Stam = {icon = icon, expirationTime = expirationTime}
-                DebugPrint("  Found Stam buff for", unit)
             elseif masteryLookup[spellId] and not buffs.Mastery then
                 buffs.Mastery = {icon = icon, expirationTime = expirationTime}
-                DebugPrint("  Found Mastery buff for", unit)
             elseif moveLookup[spellId] and not buffs.Move then
                 buffs.Move = {icon = icon, expirationTime = expirationTime}
-                DebugPrint("  Found Move buff for", unit)
             elseif ssLookup[spellId] and not buffs.SS then
                 buffs.SS = {icon = icon, expirationTime = expirationTime}
-                DebugPrint("  Found SS buff for", unit)
             end
         end
         
@@ -257,9 +231,8 @@ local function GetPlayerBuffs(unit)
     return buffs
 end
 
--- Function to update player data
+-- Update player data
 local function UpdatePlayerData()
-    --if readyCheckActive == false then return end
     if not IsInGroup() then 
         DebugPrint("Not in group, skipping player data update")
         return 
@@ -330,7 +303,7 @@ local function UpdatePlayerData()
     DebugPrint("Total players added to data:", #playerData)
 end
 
--- Function to count ready players
+-- Count readied players
 local function CountReadyPlayers()
     local count = 0
     for _, data in pairs(playerData) do
@@ -356,7 +329,7 @@ local function CreateMainFrame()
     frame:SetClampedToScreen(true)
     frame:Hide()
     
-    -- Restore position
+    -- Set to last known position
     local pos = SLUI.db.global.ready.position
     frame:SetPoint(pos.point, pos.relativeTo, pos.relativePoint, pos.xOfs, pos.yOfs)
     
@@ -448,7 +421,6 @@ local function CreateMainFrame()
     
     -- Column headers
     local columnHeaders = {
-        --{name = "Name", width = 80},
         {name = "Food", width = 30},
         {name = "Flask", width = 30},
         {name = "Rune", width = 30},
@@ -487,7 +459,7 @@ local function CreateMainFrame()
     return frame
 end
 
--- Function to create a row
+-- Create Row
 local function CreateRow(parent, index)
     local row = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     row:SetSize(parent:GetWidth(), 28)
@@ -544,7 +516,7 @@ local function CreateRow(parent, index)
     return row
 end
 
--- Function to update row data
+-- Update row for each player
 local function UpdateRow(row, data)
     if not data then
         row:Hide()
@@ -617,7 +589,6 @@ local function UpdateFrame()
     -- Update title with remaining time
     local timeLeft = math.max(0, readyCheckEndTime - GetTime())
     mainFrame.titleText:SetFormattedText("<SL> Ready Check: %.0fs", timeLeft)
-    -- Title change to complete here
     
     -- Update ready count
     local readyCount = CountReadyPlayers()
@@ -673,6 +644,7 @@ function SLRC:READY_CHECK(event, initiator, duration)
     
     DebugPrint("Ready check will end at:", readyCheckEndTime)
     
+    -- Create frame, show it, then update it
     if not mainFrame then
         mainFrame = CreateMainFrame()
     end
@@ -697,18 +669,7 @@ function SLRC:READY_CHECK(event, initiator, duration)
 end
 
 function SLRC:READY_CHECK_FINISHED()
-    DebugPrint("READY_CHECK_FINISHED event triggered")
-    
-    readyCheckActive = false
-    
-    if not mainFrame or not mainFrame:IsShown() then
-        DebugPrint("Frame not shown, skipping READY_CHECK_FINISHED display")
-        return
-    end
-
-    -- Update main frame
-    mainFrame.titleText:SetFormattedText("Ready Check Complete")
-    mainFrame.content:Hide()
+    DebugPrint("READY_CHECK_FINISHED")
 
     -- Check if everyone is ready
     local readyCount = CountReadyPlayers()
@@ -716,7 +677,17 @@ function SLRC:READY_CHECK_FINISHED()
     local allReady = (readyCount == totalCount)
     
     DebugPrint("Ready check finished - Ready:", readyCount, "Total:", totalCount, "All Ready:", allReady)
+    readyCheckActive = false
     
+    if not mainFrame or not mainFrame:IsShown() then
+        DebugPrint("Frame closed early, skipping display complete")
+        return
+    end
+
+    -- Update main frame
+    mainFrame.titleText:SetFormattedText("Ready Check Complete")
+    mainFrame.content:Hide()
+
     if allReady then
         -- Everyone is ready - show pass texture
         DebugPrint("Everyone is ready - showing pass texture")
@@ -727,7 +698,7 @@ function SLRC:READY_CHECK_FINISHED()
         DebugPrint("Not everyone ready - showing fail texture and player list")
         mainFrame.failTexture:Show()
         
-        -- Build list of players who are not ready
+        -- Who isnt ready
         local notReadyPlayers = {}
         for _, data in pairs(playerData) do
             if not data.ready then
@@ -743,13 +714,13 @@ function SLRC:READY_CHECK_FINISHED()
         DebugPrint("Not ready players:", notReadyList)
             end
     
-    -- Close window 5 seconds after ready check completes
+    -- Cancel previous timer if it exists
     if closeTimer then
         closeTimer:Cancel()
     end
     
     DebugPrint("Starting 5 second timer to close window")
-    
+    -- Close window 5 seconds after ready check completes
     closeTimer = C_Timer.NewTimer(5, function()
         DebugPrint("5 second timer expired, hiding frame")
         if mainFrame then
@@ -764,6 +735,28 @@ function SLRC:READY_CHECK_FINISHED()
     end)
 end
 
+function SLRC:ENCOUNTER_START()
+    DebugPrint("ENCOUNTER_START")
+
+    -- Stop everything, someone pulled early
+    readyCheckActive = false
+
+    if mainFrame then
+        mainFrame:Hide()
+        mainFrame.failTexture:Hide()
+        mainFrame.readyTexture:Hide()
+        mainFrame.notReadyText:Hide()
+        mainFrame.content:Show()
+    end
+
+    SLRC:UnregisterEvent("UNIT_AURA")
+    SLRC:UnregisterEvent("READY_CHECK_CONFIRM")
+
+    if closeTimer then
+        closeTimer:Cancel()
+    end
+end
+
 -- Module initialization
 function SLRC:OnInitialize()
     DebugPrint("SLRC module initializing")
@@ -771,6 +764,7 @@ function SLRC:OnInitialize()
     -- Register events
     self:RegisterEvent("READY_CHECK")
     self:RegisterEvent("READY_CHECK_FINISHED")
+    self:RegisterEvent("ENCOUNTER_START")
     
     DebugPrint("Events registered")
     
