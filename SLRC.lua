@@ -1,3 +1,4 @@
+-- Dravus #1 Beta Tester
 local SLUI = select(2, ...)
 
 --- @class SLRC: AceModule, AceEvent-3.0
