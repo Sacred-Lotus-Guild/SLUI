@@ -34,53 +34,6 @@ local function AddonPrint(...)
     print("|cff1e90ff[SLRC]|r", ...)
 end
 
--- Slash commands
-local function ShowHelp()
-    AddonPrint("Available commands:")
-    print("  |cffffcc00/slrc debug|r - Toggle debug mode on/off")
-    print("  |cffffcc00/slrc show|r - Toggle ready check window")
-    print("  |cffffcc00/slrc help|r - Show this help message")
-end
-
-local function ToggleDebug()
-    SLUI.db.global.ready.debug = not SLUI.db.global.ready.debug
-    if SLUI.db.global.ready.debug then
-        AddonPrint("|cff00ff00Debug mode ENABLED|r")
-    else
-        AddonPrint("|cffff0000Debug mode DISABLED|r")
-    end
-end
-
-local function ToggleShow()
-    SLUI.db.global.ready.show = not SLUI.db.global.ready.show
-    if SLUI.db.global.ready.show then
-        AddonPrint("|cff00ff00Ready Check Window ENABLED|r")
-    else
-        AddonPrint("|cffff0000Ready Check Window DISABLED|r")
-    end
-end
-
--- Slash command handler
-local function SlashCommandHandler(msg)
-    local command, arg = msg:match("^(%S*)%s*(.-)$")
-    command = command:lower()
-    if command == "debug" then
-        ToggleDebug()
-    elseif command == "show" then
-        ToggleShow()
-    elseif command == "help" or command == "" then
-        ShowHelp()
-    else
-        AddonPrint("|cffff0000Unknown command:|r " .. command)
-        ShowHelp()
-    end
-end
-
--- Register slash commands
-SLASH_SLRC1 = "/SLReadyCheck"
-SLASH_SLRC2 = "/SLRC"
-SlashCmdList["SLRC"] = SlashCommandHandler
-
 -- Locals
 local mainFrame
 local playerData = {}
@@ -366,7 +319,7 @@ local function CreateMainFrame()
     local titleText = titleBar:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     titleText:SetPoint("CENTER", titleBar, "CENTER", 0, 0)
     titleText:SetText("<SL> Ready Check: 0s")
-    titleText:SetTextColor(0, 1, 0.6, 1)
+    titleText:SetTextColor(0, 0.9, 0.9, 1) --.6 .9 .9
     frame.titleText = titleText
     
     -- Ready count text
@@ -377,9 +330,30 @@ local function CreateMainFrame()
     frame.readyCount = readyCount
     
     -- Close button
-    local closeButton = CreateFrame("Button", nil, titleBar, "UIPanelCloseButton")
+    local closeButton = CreateFrame("Button", nil, titleBar, "BackdropTemplate")
     closeButton:SetSize(18, 18)
     closeButton:SetPoint("RIGHT", titleBar, "RIGHT", -6, 0)
+    closeButton:SetBackdrop({
+        bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
+        edgeFile = "Interface\\Buttons\\WHITE8x8",
+        edgeSize = 1,
+    })
+    closeButton:SetBackdropColor(0.1, 0.1, 0.1, 1)
+    closeButton:SetBackdropBorderColor(1, 1, 1, 0.1)
+    local closeX = closeButton:CreateTexture(nil, "OVERLAY")
+    closeX:SetPoint("CENTER")
+    closeX:SetSize(12, 12)
+    closeX:SetTexture("Interface\\AddOns\\SLUI\\Media\\Ready\\Close")
+    --closeX:SetVertexColor(1,1,1)
+    
+    closeButton:SetScript("OnEnter", function(self)
+        self:SetBackdropBorderColor(0, 0.9, 0.9, 1)
+        --closeX:SetVertexColor(1, 0.3, 0.3)
+    end)
+    closeButton:SetScript("OnLeave", function(self)
+        self:SetBackdropBorderColor(1, 1, 1, 0.1)
+        --closeX:SetVertexColor(C_TEXT_DIM.r, C_TEXT_DIM.g, C_TEXT_DIM.b)
+    end)
     closeButton:SetScript("OnClick", function()
         frame:Hide()
     end)
@@ -444,14 +418,14 @@ local function CreateMainFrame()
     local nameText = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     nameText:SetPoint("TOPLEFT", content, "TOPLEFT", 5, 0)
     nameText:SetText("Name")
-    nameText:SetTextColor(1, 1, 0, 1)
+    nameText:SetTextColor(1, 1, 1, 1)
     --rest of the headers
     local xOffset = 100
     for i, header in ipairs(columnHeaders) do
         local headerText = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         headerText:SetPoint("CENTER", content, "TOPLEFT", xOffset, -5)
         headerText:SetText(header.name)
-        headerText:SetTextColor(1, 1, 0, 1)
+        headerText:SetTextColor(1, 1, 1, 1)
         xOffset = xOffset + header.width
     end
     
@@ -796,3 +770,94 @@ updateFrame:SetScript("OnUpdate", function(self, elapsed)
         DebugPrint("Frame Update")
     end
 end)
+
+-- Slash commands
+local function ShowHelp()
+    AddonPrint("Available commands:")
+    print("  |cffffcc00/slrc debug|r - Toggle debug mode on/off")
+    print("  |cffffcc00/slrc show|r - Toggle ready check window")
+    print("  |cffffcc00/slrc test|r - Test Window")
+    print("  |cffffcc00/slrc help|r - Show this help message")
+end
+
+local function ToggleDebug()
+    SLUI.db.global.ready.debug = not SLUI.db.global.ready.debug
+    if SLUI.db.global.ready.debug then
+        AddonPrint("|cff00ff00Debug mode ENABLED|r")
+    else
+        AddonPrint("|cffff0000Debug mode DISABLED|r")
+    end
+end
+
+local function ToggleShow()
+    SLUI.db.global.ready.show = not SLUI.db.global.ready.show
+    if SLUI.db.global.ready.show then
+        AddonPrint("|cff00ff00Ready Check Window ENABLED|r")
+    else
+        AddonPrint("|cffff0000Ready Check Window DISABLED|r")
+    end
+end
+
+local function ToggleTest()
+        AddonPrint("|cff00ff00Test Window ENABLED|r")
+
+    readyCheckActive = true
+    readyCheckEndTime = GetTime() + 35
+    
+    -- Create frame, show it, then update it
+    if not mainFrame then
+        mainFrame = CreateMainFrame()
+    end
+    
+    mainFrame:Show()
+    DebugPrint("Frame shown")
+    UpdateFrame()
+    
+    -- Register events for updates
+    SLRC:RegisterEvent("UNIT_AURA", function(_, unit)
+        if unit == "player" then
+            UpdateFrame()
+        end
+    end)
+    
+    -- Cancel previous timer if it exists
+    if closeTimer then
+        closeTimer:Cancel()
+    end
+
+    closeTimer = C_Timer.NewTimer(35, function()
+        DebugPrint("5 second timer expired, hiding frame")
+        if mainFrame then
+            mainFrame:Hide()
+            mainFrame.failTexture:Hide()
+            mainFrame.readyTexture:Hide()
+            mainFrame.notReadyText:Hide()
+            mainFrame.content:Show()
+        end
+        SLRC:UnregisterEvent("UNIT_AURA")
+        SLRC:UnregisterEvent("READY_CHECK_CONFIRM")
+    end)
+end
+
+-- Slash command handler
+local function SlashCommandHandler(msg)
+    local command, arg = msg:match("^(%S*)%s*(.-)$")
+    command = command:lower()
+    if command == "debug" then
+        ToggleDebug()
+    elseif command == "show" then
+        ToggleShow()
+    elseif command == "test" then
+        ToggleTest()
+    elseif command == "help" or command == "" then
+        ShowHelp()
+    else
+        AddonPrint("|cffff0000Unknown command:|r " .. command)
+        ShowHelp()
+    end
+end
+
+-- Register slash commands
+SLASH_SLRC1 = "/SLReadyCheck"
+SLASH_SLRC2 = "/SLRC"
+SlashCmdList["SLRC"] = SlashCommandHandler
