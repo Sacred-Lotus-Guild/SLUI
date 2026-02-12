@@ -41,6 +41,7 @@ local readyCheckEndTime = 0
 local readyCheckActive = false
 local closeTimer
 local READY_CHECK_READY = "ready"
+local testWindow = false
 
 -- Spell IDs to monitor
 local SPELL_IDS = {
@@ -50,7 +51,7 @@ local SPELL_IDS = {
     Vers = {1126},
     Stam = {21562},
     Mastery = {462854},
-    Move = {381758, 381732, 381746, 381748, 381750, 381749, 381751, 381752, 381753, 381754, 381756, 381757},
+    Move = {381758, 381732, 381746, 381748, 381750, 381749, 381751, 381752, 381753, 381754, 381756, 381757, 381741},
     SS = {20707},
 }
 
@@ -187,15 +188,6 @@ end
 
 -- Update player data
 local function UpdatePlayerData()
-    if not IsInGroup() then 
-        DebugPrint("Not in group, skipping player data update")
-        return 
-    end
-    
-    local isRaid = IsInRaid()
-    local numMembers = GetNumGroupMembers()
-    DebugPrint("Updating player data for", numMembers, isRaid and "raid" or "party", "members")
-    
     -- Clear old data
     wipe(playerData)
     
@@ -212,49 +204,59 @@ local function UpdatePlayerData()
         DebugPrint(playerName, "ReadyStatus:", readyStatus)
     end
     
-    -- Add group members
-    local startIndex = 2
-    if isRaid then
-        -- In raid, iterate through raid units
-        for i = 1, numMembers do
-            local unit = "raid" .. i
-            local name = UnitName(unit)
-            
-            if name and name ~= playerName then
-                local readyStatus = GetReadyCheckStatus(unit)
-                
-                playerData[startIndex] = {
-                    name = name,
-                    unit = unit,
-                    ready = readyStatus == READY_CHECK_READY,
-                    buffs = GetPlayerBuffs(unit),
-                }
-                DebugPrint(name, "ReadyStatus:", readyStatus)
-                startIndex = startIndex + 1
-            end
-        end
+    if not IsInGroup() then
+        DebugPrint("Not in group, skipping player data update")
+        return
     else
-        -- In party, iterate through party units
-        for i = 1, numMembers - 1 do
-            local unit = "party" .. i
-            local name = UnitName(unit)
-            
-            if name then
-                local readyStatus = GetReadyCheckStatus(unit)
+
+        local isRaid = IsInRaid()
+        local numMembers = GetNumGroupMembers()
+        DebugPrint("Updating player data for", numMembers, isRaid and "raid" or "party", "members")
+        
+        -- Add group members
+        local startIndex = 2
+        if isRaid then
+            -- In raid, iterate through raid units
+            for i = 1, numMembers do
+                local unit = "raid" .. i
+                local name = UnitName(unit)
                 
-                playerData[startIndex] = {
-                    name = name,
-                    unit = unit,
-                    ready = readyStatus == READY_CHECK_READY,
-                    buffs = GetPlayerBuffs(unit),
-                }
-                DebugPrint(name, "ReadyStatus:", readyStatus)
-                startIndex = startIndex + 1
+                if name and name ~= playerName then
+                    local readyStatus = GetReadyCheckStatus(unit)
+                    
+                    playerData[startIndex] = {
+                        name = name,
+                        unit = unit,
+                        ready = readyStatus == READY_CHECK_READY,
+                        buffs = GetPlayerBuffs(unit),
+                    }
+                    DebugPrint(name, "ReadyStatus:", readyStatus)
+                    startIndex = startIndex + 1
+                end
+            end
+        else
+            -- In party, iterate through party units
+            for i = 1, numMembers - 1 do
+                local unit = "party" .. i
+                local name = UnitName(unit)
+                
+                if name then
+                    local readyStatus = GetReadyCheckStatus(unit)
+                    
+                    playerData[startIndex] = {
+                        name = name,
+                        unit = unit,
+                        ready = readyStatus == READY_CHECK_READY,
+                        buffs = GetPlayerBuffs(unit),
+                    }
+                    DebugPrint(name, "ReadyStatus:", readyStatus)
+                    startIndex = startIndex + 1
+                end
             end
         end
+        
+        DebugPrint("Total players added to data:", #playerData)
     end
-    
-    DebugPrint("Total players added to data:", #playerData)
 end
 
 -- Count readied players
@@ -319,7 +321,7 @@ local function CreateMainFrame()
     local titleText = titleBar:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     titleText:SetPoint("CENTER", titleBar, "CENTER", 0, 0)
     titleText:SetText("<SL> Ready Check: 0s")
-    titleText:SetTextColor(0, 0.9, 0.9, 1) --.6 .9 .9
+    titleText:SetTextColor(0, 0.9, 0.9, 1)
     frame.titleText = titleText
     
     -- Ready count text
@@ -329,7 +331,7 @@ local function CreateMainFrame()
     readyCount:SetTextColor(1, 1, 1, 1)
     frame.readyCount = readyCount
     
-    -- Close button
+    -- Close button with fancy skinning because why not
     local closeButton = CreateFrame("Button", nil, titleBar, "BackdropTemplate")
     closeButton:SetSize(18, 18)
     closeButton:SetPoint("RIGHT", titleBar, "RIGHT", -6, 0)
@@ -344,15 +346,13 @@ local function CreateMainFrame()
     closeX:SetPoint("CENTER")
     closeX:SetSize(12, 12)
     closeX:SetTexture("Interface\\AddOns\\SLUI\\Media\\Ready\\Close")
-    --closeX:SetVertexColor(1,1,1)
     
     closeButton:SetScript("OnEnter", function(self)
         self:SetBackdropBorderColor(0, 0.9, 0.9, 1)
-        --closeX:SetVertexColor(1, 0.3, 0.3)
     end)
     closeButton:SetScript("OnLeave", function(self)
         self:SetBackdropBorderColor(1, 1, 1, 0.1)
-        --closeX:SetVertexColor(C_TEXT_DIM.r, C_TEXT_DIM.g, C_TEXT_DIM.b)
+
     end)
     closeButton:SetScript("OnClick", function()
         frame:Hide()
@@ -536,12 +536,12 @@ local function UpdateRow(row, data)
     -- Update durability
     if data.buffs.Durability then
         row.durText:SetFormattedText("%.0f%%", data.buffs.Durability)
-        if data.buffs.Durability < 50 then
+        if data.buffs.Durability < 25 then
             row.durText:SetTextColor(1, 0, 0, 1)
-        elseif data.buffs.Durability < 75 then
+        elseif data.buffs.Durability < 50 then
             row.durText:SetTextColor(1, 1, 0, 1)
         else
-            row.durText:SetTextColor(0, 1, 0, 1)
+            row.durText:SetTextColor(1, 1, 1, 1)
         end
     else
         row.durText:SetText("-")
@@ -799,8 +799,8 @@ local function ToggleShow()
 end
 
 local function ToggleTest()
-        AddonPrint("|cff00ff00Test Window ENABLED|r")
-
+    AddonPrint("|cff00ff00Test Window ENABLED|r")
+    testWindow = true
     readyCheckActive = true
     readyCheckEndTime = GetTime() + 35
     
@@ -811,12 +811,12 @@ local function ToggleTest()
     
     mainFrame:Show()
     DebugPrint("Frame shown")
-    UpdateFrame()
+    UpdateFrame() -- update frame works, but updateplayerdata doesnt fire because im not in a group
     
-    -- Register events for updates
+    -- Register events for updates 
     SLRC:RegisterEvent("UNIT_AURA", function(_, unit)
         if unit == "player" then
-            UpdateFrame()
+            UpdateFrame() -- update frame works, but updateplayerdata doesnt fire because im not in a group
         end
     end)
     
@@ -826,7 +826,6 @@ local function ToggleTest()
     end
 
     closeTimer = C_Timer.NewTimer(35, function()
-        DebugPrint("5 second timer expired, hiding frame")
         if mainFrame then
             mainFrame:Hide()
             mainFrame.failTexture:Hide()
@@ -834,6 +833,7 @@ local function ToggleTest()
             mainFrame.notReadyText:Hide()
             mainFrame.content:Show()
         end
+        testWindow = false
         SLRC:UnregisterEvent("UNIT_AURA")
         SLRC:UnregisterEvent("READY_CHECK_CONFIRM")
     end)

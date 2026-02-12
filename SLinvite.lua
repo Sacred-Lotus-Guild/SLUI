@@ -1,3 +1,4 @@
+
 -- SLinvite: Autoinv and autopromote
 -- Features:
 -- 1. Auto-invite from whispers using keywords
@@ -21,6 +22,7 @@ SLUI.defaults.global.invites = {
         ["Shukadin-Area52"]  = true,
         ["Notdravus-Area52"] = true,
         ["Dwavus-Area52"]    = true,
+        ["Faulks-Area52"]    = true,
     },
 }
 
