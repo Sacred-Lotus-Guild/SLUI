@@ -4,9 +4,6 @@ local SLUI = select(2, ...)
 --- @class SLRC: AceModule, AceEvent-3.0
 local SLRC = SLUI:NewModule("SLRC", "AceEvent-3.0")
 
--- Libraries
-local AceDB = LibStub("AceDB-3.0")
-
 -- Default settings
 SLUI.defaults.global.ready = {
         position = {
@@ -41,7 +38,6 @@ local readyCheckEndTime = 0
 local readyCheckActive = false
 local closeTimer
 local READY_CHECK_READY = "ready"
-local testWindow = false
 
 -- Spell IDs to monitor
 local SPELL_IDS = {
@@ -262,7 +258,7 @@ end
 -- Count readied players
 local function CountReadyPlayers()
     local count = 0
-    for _, data in pairs(playerData) do
+    for _, data in ipairs(playerData) do
         if data.ready then
             count = count + 1
         end
@@ -763,11 +759,19 @@ function SLRC:OnDisable()
 end
 
 -- Update timer
+local timerUpdateThrottle = 0
 local updateFrame = CreateFrame("Frame")
 updateFrame:SetScript("OnUpdate", function(self, elapsed)
-    if readyCheckActive and mainFrame and mainFrame:IsShown() then
-        UpdateFrame()
-        DebugPrint("Frame Update")
+    if not readyCheckActive or not mainFrame or not mainFrame:IsShown() then
+        return
+    end
+
+    timerUpdateThrottle = timerUpdateThrottle + elapsed
+    if timerUpdateThrottle >= 0.5 then
+        timerUpdateThrottle = 0
+
+        local timeLeft = math.max(0, readyCheckEndTime - GetTime())
+        mainFrame.titleText:SetFormattedText("<SL> Ready Check: %.0fs", timeLeft)
     end
 end)
 
@@ -800,7 +804,6 @@ end
 
 local function ToggleTest()
     AddonPrint("|cff00ff00Test Window ENABLED|r")
-    testWindow = true
     readyCheckActive = true
     readyCheckEndTime = GetTime() + 35
     
@@ -833,7 +836,6 @@ local function ToggleTest()
             mainFrame.notReadyText:Hide()
             mainFrame.content:Show()
         end
-        testWindow = false
         SLRC:UnregisterEvent("UNIT_AURA")
         SLRC:UnregisterEvent("READY_CHECK_CONFIRM")
     end)
