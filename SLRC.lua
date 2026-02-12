@@ -34,6 +34,8 @@ end
 -- Locals
 local mainFrame
 local playerData = {}
+local unitIndexMap = {}
+local strsub = string.sub
 local readyCheckEndTime = 0
 local readyCheckActive = false
 local closeTimer
@@ -180,90 +182,6 @@ local function GetPlayerBuffs(unit)
     end
     
     return buffs
-end
-
--- Update player data
-local function UpdatePlayerData()
-    -- Clear old data
-    wipe(playerData)
-    
-    -- Add player first
-    local playerName = UnitName("player")
-    if playerName then
-        local readyStatus = GetReadyCheckStatus("player")
-        playerData[1] = {
-            name = playerName,
-            unit = "player",
-            ready = true,
-            buffs = GetPlayerBuffs("player"),
-        }
-        DebugPrint(playerName, "ReadyStatus:", readyStatus)
-    end
-    
-    if not IsInGroup() then
-        DebugPrint("Not in group, skipping player data update")
-        return
-    else
-
-        local isRaid = IsInRaid()
-        local numMembers = GetNumGroupMembers()
-        DebugPrint("Updating player data for", numMembers, isRaid and "raid" or "party", "members")
-        
-        -- Add group members
-        local startIndex = 2
-        if isRaid then
-            -- In raid, iterate through raid units
-            for i = 1, numMembers do
-                local unit = "raid" .. i
-                local name = UnitName(unit)
-                
-                if name and name ~= playerName then
-                    local readyStatus = GetReadyCheckStatus(unit)
-                    
-                    playerData[startIndex] = {
-                        name = name,
-                        unit = unit,
-                        ready = readyStatus == READY_CHECK_READY,
-                        buffs = GetPlayerBuffs(unit),
-                    }
-                    DebugPrint(name, "ReadyStatus:", readyStatus)
-                    startIndex = startIndex + 1
-                end
-            end
-        else
-            -- In party, iterate through party units
-            for i = 1, numMembers - 1 do
-                local unit = "party" .. i
-                local name = UnitName(unit)
-                
-                if name then
-                    local readyStatus = GetReadyCheckStatus(unit)
-                    
-                    playerData[startIndex] = {
-                        name = name,
-                        unit = unit,
-                        ready = readyStatus == READY_CHECK_READY,
-                        buffs = GetPlayerBuffs(unit),
-                    }
-                    DebugPrint(name, "ReadyStatus:", readyStatus)
-                    startIndex = startIndex + 1
-                end
-            end
-        end
-        
-        DebugPrint("Total players added to data:", #playerData)
-    end
-end
-
--- Count readied players
-local function CountReadyPlayers()
-    local count = 0
-    for _, data in ipairs(playerData) do
-        if data.ready then
-            count = count + 1
-        end
-    end
-    return count
 end
 
 -- Create the main frame
@@ -487,6 +405,17 @@ local function CreateRow(parent, index)
     return row
 end
 
+-- Count readied players
+local function CountReadyPlayers()
+    local count = 0
+    for _, data in ipairs(playerData) do
+        if data.ready then
+            count = count + 1
+        end
+    end
+    return count
+end
+
 -- Update row for each player
 local function UpdateRow(row, data)
     if not data then
@@ -545,7 +474,100 @@ local function UpdateRow(row, data)
     end
 end
 
--- update the frame
+-- Update data for all players
+local function UpdateAllPlayers()
+    -- Clear old data
+    wipe(playerData)
+    wipe(unitIndexMap)
+
+    -- Add player first
+    local playerName = UnitName("player")
+    if playerName then
+        local readyStatus = GetReadyCheckStatus("player")
+        playerData[1] = {
+            name = playerName,
+            unit = "player",
+            ready = true,
+            buffs = GetPlayerBuffs("player"),
+        }
+        unitIndexMap["player"] = 1
+        DebugPrint(playerName, "ReadyStatus:", readyStatus)
+    end
+    
+    if not IsInGroup() then
+        DebugPrint("Not in group, skipping player data update")
+        return
+    else
+
+        local isRaid = IsInRaid()
+        local numMembers = GetNumGroupMembers()
+        DebugPrint("Updating player data for", numMembers, isRaid and "raid" or "party", "members")
+        
+        -- Add group members
+        local startIndex = 2
+        if isRaid then
+            -- In raid, iterate through raid units
+            for i = 1, numMembers do
+                local unit = "raid" .. i
+                local name = UnitName(unit)
+                
+                if name and name ~= playerName then
+                    local readyStatus = GetReadyCheckStatus(unit)
+                    
+                    playerData[startIndex] = {
+                        name = name,
+                        unit = unit,
+                        ready = readyStatus == READY_CHECK_READY,
+                        buffs = GetPlayerBuffs(unit),
+                    }
+                    unitIndexMap[unit] = startIndex
+                    DebugPrint(name, "ReadyStatus:", readyStatus)
+                    startIndex = startIndex + 1
+                end
+            end
+        else
+            -- In party, iterate through party units
+            for i = 1, numMembers - 1 do
+                local unit = "party" .. i
+                local name = UnitName(unit)
+                
+                if name then
+                    local readyStatus = GetReadyCheckStatus(unit)
+                    
+                    playerData[startIndex] = {
+                        name = name,
+                        unit = unit,
+                        ready = readyStatus == READY_CHECK_READY,
+                        buffs = GetPlayerBuffs(unit),
+                    }
+                    unitIndexMap[unit] = startIndex
+                    DebugPrint(name, "ReadyStatus:", readyStatus)
+                    startIndex = startIndex + 1
+                end
+            end
+        end
+        
+        DebugPrint("Total players added to data:", #playerData)
+    end
+end
+
+-- Update data for a single player
+local function UpdatePlayer(unit)
+    local index = unitIndexMap[unit]
+    if not index then return end
+
+    local data = playerData[index]
+    if not data then return end
+
+    data.buffs = GetPlayerBuffs(unit)
+
+    local row = mainFrame and mainFrame.rows[index]
+    if row then
+        UpdateRow(row, data)
+    end
+end
+
+-- Update the frame
 local function UpdateFrame()
     if readyCheckActive == false then return end
     if not mainFrame or not mainFrame:IsShown() then 
@@ -555,7 +577,7 @@ local function UpdateFrame()
     
     DebugPrint("Updating frame display")
     
-    UpdatePlayerData()
+    UpdateAllPlayers()
     
     -- Update title with remaining time
     local timeLeft = math.max(0, readyCheckEndTime - GetTime())
@@ -637,11 +659,33 @@ function SLRC:READY_CHECK(event, initiator, duration)
     
     -- Register events for updates
     self:RegisterEvent("UNIT_AURA")
-    self:RegisterEvent("READY_CHECK_CONFIRM", UpdateFrame)
+    self:RegisterEvent("READY_CHECK_CONFIRM")
     
     -- Cancel previous timer if it exists
     if closeTimer then
         closeTimer:Cancel()
+    end
+end
+
+function SLRC:READY_CHECK_CONFIRM(_, unit)
+    local index = unitIndexMap[unit]
+    if not index then return end
+
+    local data = playerData[index]
+    if not data then return end
+
+    local readyStatus = GetReadyCheckStatus(unit)
+    data.ready = readyStatus == READY_CHECK_READY
+
+    local row = mainFrame and mainFrame.rows[index]
+    if row then
+        UpdateRow(row, data)
+    end
+
+    -- update count display
+    local readyCount = CountReadyPlayers()
+    if mainFrame and mainFrame.readyCount then
+        mainFrame.readyCount:SetFormattedText("%d/%d", readyCount, #playerData)
     end
 end
 
@@ -677,7 +721,7 @@ function SLRC:READY_CHECK_FINISHED()
         
         -- Who isnt ready
         local notReadyPlayers = {}
-        for _, data in pairs(playerData) do
+        for _, data in ipairs(playerData) do
             if not data.ready then
                 table.insert(notReadyPlayers, data.name)
             end
@@ -689,7 +733,7 @@ function SLRC:READY_CHECK_FINISHED()
         mainFrame.notReadyText:Show()
         
         DebugPrint("Not ready players:", notReadyList)
-            end
+    end
     
     -- Cancel previous timer if it exists
     if closeTimer then
@@ -736,7 +780,7 @@ function SLRC:UNIT_AURA(event, unit)
         or strsub(unit, 1, 4) == "raid"
         or strsub(unit, 1, 5) == "party" then
 
-        UpdateFrame()
+        UpdatePlayer(unit)
     end
 end
 
