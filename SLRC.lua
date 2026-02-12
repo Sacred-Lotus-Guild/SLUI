@@ -403,7 +403,7 @@ local function CreateMainFrame()
         {name = "Move", width = 32},
         {name = "Vantus", width = 30},
         {name = "SS", width = 30},
-        {name = "Dur%", width = 40},
+        {name = "Repair", width = 40},
     }
     
     frame.columnHeaders = columnHeaders
@@ -545,7 +545,7 @@ local function UpdateRow(row, data)
     end
 end
 
--- Function to update the frame
+-- update the frame
 local function UpdateFrame()
     if readyCheckActive == false then return end
     if not mainFrame or not mainFrame:IsShown() then 
@@ -563,7 +563,7 @@ local function UpdateFrame()
     
     -- Update ready count
     local readyCount = CountReadyPlayers()
-    local totalCount = GetNumGroupMembers()
+    local totalCount = #playerData -- was GetNumGroupMembers()
     mainFrame.readyCount:SetFormattedText("%d/%d", readyCount, totalCount)
     
     -- Ensure we have enough rows
@@ -595,6 +595,17 @@ local function UpdateFrame()
     mainFrame:SetHeight(frameHeight)
 end
 
+-- reset frame states
+local function ResetFrame()
+    if not mainFrame then return end
+    mainFrame:Hide()
+    mainFrame.failTexture:Hide()
+    mainFrame.readyTexture:Hide()
+    mainFrame.notReadyText:Hide()
+    mainFrame.content:Show()
+end
+
+
 -- Event handlers
 function SLRC:READY_CHECK(event, initiator, duration)
     DebugPrint("READY_CHECK event triggered by", initiator, "for", duration, "seconds")
@@ -625,12 +636,7 @@ function SLRC:READY_CHECK(event, initiator, duration)
     UpdateFrame()
     
     -- Register events for updates
-    self:RegisterEvent("UNIT_AURA", function(_, unit)
-        if unit == "player" or unit:match("^raid%d+$") or unit:match("^party%d+$") then
-            UpdateFrame()
-        end
-    end)
-    
+    self:RegisterEvent("UNIT_AURA")
     self:RegisterEvent("READY_CHECK_CONFIRM", UpdateFrame)
     
     -- Cancel previous timer if it exists
@@ -644,7 +650,7 @@ function SLRC:READY_CHECK_FINISHED()
 
     -- Check if everyone is ready
     local readyCount = CountReadyPlayers()
-    local totalCount = GetNumGroupMembers()
+    local totalCount = #playerData -- was GetNumGroupMembers()
     local allReady = (readyCount == totalCount)
     
     DebugPrint("Ready check finished - Ready:", readyCount, "Total:", totalCount, "All Ready:", allReady)
@@ -694,13 +700,7 @@ function SLRC:READY_CHECK_FINISHED()
     -- Close window 5 seconds after ready check completes
     closeTimer = C_Timer.NewTimer(5, function()
         DebugPrint("5 second timer expired, hiding frame")
-        if mainFrame then
-            mainFrame:Hide()
-            mainFrame.failTexture:Hide()
-            mainFrame.readyTexture:Hide()
-            mainFrame.notReadyText:Hide()
-            mainFrame.content:Show()
-        end
+        ResetFrame()
         SLRC:UnregisterEvent("UNIT_AURA")
         SLRC:UnregisterEvent("READY_CHECK_CONFIRM")
     end)
@@ -725,6 +725,18 @@ function SLRC:ENCOUNTER_START()
 
     if closeTimer then
         closeTimer:Cancel()
+    end
+end
+
+function SLRC:UNIT_AURA(event, unit)
+    if not readyCheckActive then return end
+    if not mainFrame or not mainFrame:IsShown() then return end
+
+    if unit == "player"
+        or strsub(unit, 1, 4) == "raid"
+        or strsub(unit, 1, 5) == "party" then
+
+        UpdateFrame()
     end
 end
 
@@ -814,28 +826,18 @@ local function ToggleTest()
     
     mainFrame:Show()
     DebugPrint("Frame shown")
-    UpdateFrame() -- update frame works, but updateplayerdata doesnt fire because im not in a group
+    UpdateFrame()
     
     -- Register events for updates 
-    SLRC:RegisterEvent("UNIT_AURA", function(_, unit)
-        if unit == "player" then
-            UpdateFrame() -- update frame works, but updateplayerdata doesnt fire because im not in a group
-        end
-    end)
-    
+    SLRC:RegisterEvent("UNIT_AURA")
+
     -- Cancel previous timer if it exists
     if closeTimer then
         closeTimer:Cancel()
     end
 
     closeTimer = C_Timer.NewTimer(35, function()
-        if mainFrame then
-            mainFrame:Hide()
-            mainFrame.failTexture:Hide()
-            mainFrame.readyTexture:Hide()
-            mainFrame.notReadyText:Hide()
-            mainFrame.content:Show()
-        end
+        ResetFrame()
         SLRC:UnregisterEvent("UNIT_AURA")
         SLRC:UnregisterEvent("READY_CHECK_CONFIRM")
     end)
