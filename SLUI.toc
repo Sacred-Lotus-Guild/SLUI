@@ -15,3 +15,4 @@ SLUI.lua
 Media.lua
 SLinvite.lua
 SLRC.lua
+SLCT.lua
