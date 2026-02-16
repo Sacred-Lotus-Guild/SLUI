@@ -2,6 +2,7 @@ local SLUI = select(2,...)
 
 --- @class SLCT: AceModule, AceEvent-3.0
 local SLCT = SLUI:NewModule("SLCT", "AceEvent-3.0")
+local sldb
 
 -- Defaults
 SLUI.defaults.global.timer = {
@@ -23,7 +24,6 @@ end
 local LSM = LibStub("LibSharedMedia-3.0")
 local fontPath = LSM:Fetch("font", "PT Sans Narrow")
 local timerRefresh
-local sldb
 local GetTime = GetTime
 local InCombatLockdown = InCombatLockdown
 
@@ -170,7 +170,7 @@ function SLCT:OnInitialize()
     self:RegisterEvent("PLAYER_REGEN_ENABLED")
     self:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
 
-    AddonPrint("loaded. Type |cffffffff/slct help|r for commands.")
+    AddonPrint("loaded. Type |cffffcc00/slct help|r for commands.")
 end
 
 function SLCT:OnEnable()
