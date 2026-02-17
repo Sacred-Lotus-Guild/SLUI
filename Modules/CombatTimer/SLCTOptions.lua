@@ -5,7 +5,7 @@ SLUI.options.args.timer = {
     type = "group",
 }
 local timerOptions {
-    
+
 }
 
 SLUI.options.args.timer.args = timerOptions
