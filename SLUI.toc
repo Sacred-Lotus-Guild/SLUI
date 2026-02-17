@@ -15,5 +15,5 @@ SLUI.lua
 Media.lua
 Modules\InviteTools\SLINV.lua
 Modules\ReadyCheck\SLRC.lua
-Modules\CombatTimer\SLCT.lua
 Modules\CombatTimer\SLCTOptions.lua
+Modules\CombatTimer\SLCT.lua

@@ -2,18 +2,8 @@ local SLUI = select(2,...)
 
 --- @class SLCT: AceModule, AceEvent-3.0
 local SLCT = SLUI:NewModule("SLCT", "AceEvent-3.0")
+SLUI.SLCT = SLCT
 local sldb
-
--- Defaults
-SLUI.defaults.global.timer = {
-    enabled = false,
-    showBrackets = true,
-    positions = {
-        [1] = { point = "CENTER", x = 0, y = -100 },  -- Tank
-        [2] = { point = "CENTER", x = 0, y = -100 },  -- Healer
-        [3] = { point = "CENTER", x = 0, y = -100 },  -- DPS
-    }
-}
 
 -- Addon Messages
 local function AddonPrint(...)
@@ -21,8 +11,9 @@ local function AddonPrint(...)
 end
 
 -- locals
-local LSM = LibStub("LibSharedMedia-3.0")
-local fontPath = LSM:Fetch("font", "PT Sans Narrow")
+local timerFrame
+local timerText
+local timerBg
 local timerRefresh
 local GetTime = GetTime
 local InCombatLockdown = InCombatLockdown
@@ -34,25 +25,28 @@ local state = {
     currentSpec = 3  -- Default to DPS
 }
 
--- Main timer frame
-local timerFrame = CreateFrame("Frame", "SLCTFrame", UIParent)
-timerFrame:SetSize(80, 36)
-timerFrame:SetPoint("CENTER", 0, -100)
-timerFrame:Hide()
+local function DrawFrame()
+    -- Main timer frame
+    timerFrame = CreateFrame("Frame", "SLCTFrame", UIParent)
+    timerFrame:SetSize(sldb.fontSize * 3, sldb.fontSize + 4)
+    timerFrame:SetPoint("CENTER", 0, -100)
+    timerFrame:Hide()
 
--- Timer text
-local timerText = timerFrame:CreateFontString(nil, "OVERLAY")
-timerText:SetFont(fontPath, 28, "OUTLINE")
-timerText:SetPoint("CENTER")
-timerText:SetTextColor(1, 1, 1)
-timerText:SetText("[0:00]")
+    -- Timer text
+    local fontPath = SLUI.media:Fetch(SLUI.media.MediaType.FONT, sldb.font) or "Fonts\\FRIZQT__.TTF"
+    timerText = timerFrame:CreateFontString(nil, "OVERLAY")
+    timerText:SetFont(fontPath, sldb.fontSize, "OUTLINE")
+    timerText:SetPoint("CENTER")
+    timerText:SetTextColor(1, 1, 1)
+    timerText:SetText("[0:00]")
 
--- Background for visibility during move mode
-local timerBg = timerFrame:CreateTexture(nil, "BACKGROUND")
-timerBg:SetAllPoints()
-timerBg:SetColorTexture(0, 0, 0, 0)
+    -- Background for visibility during move mode
+    timerBg = timerFrame:CreateTexture(nil, "BACKGROUND")
+    timerBg:SetAllPoints()
+    timerBg:SetColorTexture(0, 0, 0, 0)
+end
 
--- Helper function to get current spec role
+-- Determine role
 local function GetCurrentSpecRole()
     local specIndex = GetSpecialization()
     if not specIndex then return 3 end  -- Default to DPS. this should never happen, just a fallback
@@ -78,6 +72,7 @@ end
 
 -- Update timer display
 local function UpdateTimerText()
+    if not timerText then return end
     local timeSec = 0
 
     if state.combatStart then
@@ -118,11 +113,16 @@ local function LoadPosition()
     end
 end
 
--- Update loop
-local function OnUpdate()
-    if timerFrame:IsShown() then
-        UpdateTimerText()
-    end
+function SLCT:ApplySettings()
+    if not timerText then return end
+
+    -- Font
+    local fontPath = SLUI.media:Fetch(SLUI.media.MediaType.FONT, sldb.font) or "Fonts\\FRIZQT__.TTF"
+    timerText:SetFont(fontPath, sldb.fontSize, "OUTLINE")
+    timerFrame:SetSize(sldb.fontSize * 3, sldb.fontSize + 4)
+
+    -- Brackets change affects display text
+    UpdateTimerText()
 end
 
 -- Entering combat
@@ -136,7 +136,7 @@ function SLCT:PLAYER_REGEN_DISABLED()
     end
 
     if sldb.enabled and not timerRefresh then
-        timerRefresh = C_Timer.NewTicker(1, OnUpdate)
+        timerRefresh = C_Timer.NewTicker(1, UpdateTimerText)
     end
 
 end
@@ -156,7 +156,7 @@ function SLCT:PLAYER_REGEN_ENABLED()
 end
 
 -- Spec changed, save old position and load new one
-function SLCT:PLAYER_SPECIALIZATION_CHANGED(event, unit)
+function SLCT:PLAYER_SPECIALIZATION_CHANGED(_, unit)
     if unit ~= "player" then return end
     SavePosition()
     state.currentSpec = GetCurrentSpecRole()
@@ -174,6 +174,7 @@ function SLCT:OnInitialize()
 end
 
 function SLCT:OnEnable()
+    DrawFrame()
     -- Load initial position. we have to slightly delay this so that talent information is available
     state.currentSpec = GetCurrentSpecRole()
     LoadPosition()
@@ -211,6 +212,7 @@ end
 -- Toggle timer visibility
 local function ToggleTimer()
     sldb.enabled = not sldb.enabled
+    LibStub("AceConfigRegistry-3.0"):NotifyChange("SLUI")
     
     if sldb.enabled then
         AddonPrint("Timer enabled")
@@ -223,36 +225,37 @@ local function ToggleTimer()
     end
 end
 
--- Toggle move mode
-local function ToggleMoveMode()
-    state.moveMode = not state.moveMode
-    
+-- Toggle lock mode
+function SLCT:SetLocked(locked)
+    sldb.lock = locked
+    state.moveMode = not locked
+
     if state.moveMode then
         timerFrame:EnableMouse(true)
         timerFrame:SetMovable(true)
         timerFrame:RegisterForDrag("LeftButton")
-        timerBg:SetColorTexture(0, 0, 0, 0.5)
+        timerBg:SetColorTexture(0,0,0,0.5)
         timerFrame:Show()
-        UpdateTimerText()
-        AddonPrint("Move mode enabled. Drag to reposition.")
     else
         timerFrame:EnableMouse(false)
         timerFrame:SetMovable(false)
-        timerBg:SetColorTexture(0, 0, 0, 0)
+        timerBg:SetColorTexture(0,0,0,0)
         SavePosition()
-        UpdateTimerText()
-        
+
         if not sldb.enabled or not InCombatLockdown() then
             timerFrame:Hide()
         end
-        
-        AddonPrint("Move mode disabled. Position saved.")
     end
+
+    UpdateTimerText()
+    LibStub("AceConfigRegistry-3.0"):NotifyChange("SLUI")
 end
+
 
 -- Toggle brackets
 local function ToggleBrackets()
     sldb.showBrackets = not sldb.showBrackets
+    LibStub("AceConfigRegistry-3.0"):NotifyChange("SLUI")
     
     if sldb.showBrackets then
         AddonPrint("Brackets enabled")
@@ -270,7 +273,7 @@ local function SlashCommandHandler(msg)
     if command == "show" then
         ToggleTimer()
     elseif command == "move" then
-        ToggleMoveMode()
+        SLCT:SetLocked(not sldb.lock)
     elseif command == "brackets" then
         ToggleBrackets()
     elseif command == "help" or command == "" then
@@ -281,5 +284,5 @@ local function SlashCommandHandler(msg)
 end
 
 -- Register slash commands
-    SLASH_SLCT1 = "/slct"
-    SlashCmdList["SLCT"] = SlashCommandHandler
+SLASH_SLCT1 = "/slct"
+SlashCmdList["SLCT"] = SlashCommandHandler
