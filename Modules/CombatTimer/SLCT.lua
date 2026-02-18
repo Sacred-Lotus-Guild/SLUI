@@ -10,13 +10,8 @@ local function AddonPrint(...)
 end
 
 -- locals
-local timerFrame
-local timerText
-local timerBg
+local timerFrame, timerText, timerBg
 local timerRefresh
-local GetTime = GetTime
-local InCombatLockdown = InCombatLockdown
-
 local state = {
     combatStart = nil,
     combatEnd = nil,
@@ -24,7 +19,7 @@ local state = {
     currentSpec = 3  -- Default to DPS
 }
 
-local function DrawFrame()
+local function CreateCombatTimer()
     -- Main timer frame
     timerFrame = CreateFrame("Frame", "SLCTFrame", UIParent)
     timerFrame:EnableMouse(false)
@@ -34,25 +29,19 @@ local function DrawFrame()
     timerText = timerFrame:CreateFontString(nil, "OVERLAY")
     timerText:SetPoint("CENTER")
 
-    -- Background for visibility during move mode
+    -- Background for visibility during unlock
     timerBg = timerFrame:CreateTexture(nil, "BACKGROUND")
     timerBg:SetAllPoints()
     timerBg:SetColorTexture(0, 0, 0, 0)
 end
 
--- Determine role
-local function GetCurrentSpecRole()
-    local specIndex = GetSpecialization()
-    if not specIndex then return 3 end  -- Default to DPS. this should never happen, just a fallback
-    
-    local role = GetSpecializationRole(specIndex)
-
-    if role == "TANK" then
-        return 1
-    elseif role == "HEALER" then
-        return 2
+-- Show timer in combat and when unlocked if enabled
+local function UpdateVisibility()
+    if not timerFrame then return end
+    if state.moveMode or (sldb.enabled and PlayerIsInCombat()) then
+        timerFrame:Show()
     else
-        return 3  -- DPS
+        timerFrame:Hide()
     end
 end
 
@@ -84,6 +73,22 @@ local function UpdateTimerText()
     timerText:SetText(text)
 end
 
+-- Determine role
+local function GetCurrentSpecRole()
+    local specIndex = GetSpecialization()
+    if not specIndex then return 3 end  -- Default to DPS. this should never happen, just a fallback
+    
+    local role = GetSpecializationRole(specIndex)
+
+    if role == "TANK" then
+        return 1
+    elseif role == "HEALER" then
+        return 2
+    else
+        return 3  -- DPS
+    end
+end
+
 -- Save current position
 local function SavePosition()
     local point, _, _, x, y = timerFrame:GetPoint()
@@ -106,7 +111,7 @@ local function LoadPosition()
 end
 
 function SLCT:ApplySettings()
-    if not timerText then return end
+    if not timerFrame then return end
 
     -- Font
     local fontPath = SLUI.media:Fetch(SLUI.media.MediaType.FONT, sldb.font) or "Fonts\\FRIZQT__.TTF"
@@ -125,10 +130,7 @@ function SLCT:PLAYER_REGEN_DISABLED()
     state.combatStart = GetTime()
     state.combatEnd = nil
     UpdateTimerText()
-
-    if sldb.enabled then
-        timerFrame:Show()
-    end
+    UpdateVisibility()
 
     if sldb.enabled and not timerRefresh then
         timerRefresh = C_Timer.NewTicker(1, UpdateTimerText)
@@ -144,9 +146,7 @@ function SLCT:PLAYER_REGEN_ENABLED()
         timerRefresh = nil
     end
 
-    if not state.moveMode then
-        timerFrame:Hide()
-    end
+    UpdateVisibility()
 end
 
 -- Spec changed, save old position and load new one
@@ -169,7 +169,7 @@ end
 
 -- Initial Load. We have to slightly delay this so that talent information is available
 function SLCT:OnEnable()
-    DrawFrame()
+    CreateCombatTimer()
     SLCT:ApplySettings()
     state.currentSpec = GetCurrentSpecRole()
     LoadPosition()
@@ -205,16 +205,13 @@ function SLCT:SetLocked(locked)
         timerFrame:SetMovable(true)
         timerFrame:RegisterForDrag("LeftButton")
         timerBg:SetColorTexture(0,0,0,0.5)
-        timerFrame:Show()
+        UpdateVisibility()
     else
         timerFrame:EnableMouse(false)
         timerFrame:SetMovable(false)
         timerBg:SetColorTexture(0,0,0,0)
         SavePosition()
-
-        if not sldb.enabled or not InCombatLockdown() then
-            timerFrame:Hide()
-        end
+        UpdateVisibility()
     end
 
     UpdateTimerText()
