@@ -2,7 +2,6 @@ local SLUI = select(2,...)
 
 --- @class SLCT: AceModule, AceEvent-3.0
 local SLCT = SLUI:NewModule("SLCT", "AceEvent-3.0")
-SLUI.SLCT = SLCT
 local sldb
 
 -- Addon Messages
@@ -28,17 +27,12 @@ local state = {
 local function DrawFrame()
     -- Main timer frame
     timerFrame = CreateFrame("Frame", "SLCTFrame", UIParent)
-    timerFrame:SetSize(sldb.fontSize * 3, sldb.fontSize + 4)
-    timerFrame:SetPoint("CENTER", 0, -100)
+    timerFrame:EnableMouse(false)
     timerFrame:Hide()
 
     -- Timer text
-    local fontPath = SLUI.media:Fetch(SLUI.media.MediaType.FONT, sldb.font) or "Fonts\\FRIZQT__.TTF"
     timerText = timerFrame:CreateFontString(nil, "OVERLAY")
-    timerText:SetFont(fontPath, sldb.fontSize, "OUTLINE")
     timerText:SetPoint("CENTER")
-    timerText:SetTextColor(1, 1, 1)
-    timerText:SetText("[0:00]")
 
     -- Background for visibility during move mode
     timerBg = timerFrame:CreateTexture(nil, "BACKGROUND")
@@ -63,27 +57,25 @@ local function GetCurrentSpecRole()
 end
 
 -- Format time as M:SS
-local function FormatTime(seconds)
-    seconds = math.floor(seconds)
-    local minutes = math.floor(seconds / 60)
-    local secs = seconds % 60
-    return string.format("%d:%02d", minutes, secs)
+local function FormatTime(sec)
+    sec = math.floor(sec)
+    return string.format("%d:%02d", math.floor(sec/60), sec%60)
 end
 
 -- Update timer display
 local function UpdateTimerText()
     if not timerText then return end
-    local timeSec = 0
+    local combatTime = 0
 
     if state.combatStart then
         if state.combatEnd then
-            timeSec = state.combatEnd - state.combatStart
+            combatTime = state.combatEnd - state.combatStart
         else
-            timeSec = GetTime() - state.combatStart
+            combatTime = GetTime() - state.combatStart
         end
     end
 
-    local text = state.moveMode and "0:00" or FormatTime(timeSec)
+    local text = state.moveMode and "0:00" or FormatTime(combatTime)
 
     if sldb.showBrackets then
         text = "[" .. text .. "]"
@@ -127,6 +119,9 @@ end
 
 -- Entering combat
 function SLCT:PLAYER_REGEN_DISABLED()
+    if state.moveMode == true then
+        SLCT:SetLocked(true)
+    end
     state.combatStart = GetTime()
     state.combatEnd = nil
     UpdateTimerText()
@@ -138,7 +133,6 @@ function SLCT:PLAYER_REGEN_DISABLED()
     if sldb.enabled and not timerRefresh then
         timerRefresh = C_Timer.NewTicker(1, UpdateTimerText)
     end
-
 end
 
 -- Leaving combat
@@ -163,7 +157,7 @@ function SLCT:PLAYER_SPECIALIZATION_CHANGED(_, unit)
     LoadPosition()
 end
 
--- Initialize addon
+-- Register DB and Events
 function SLCT:OnInitialize()
     sldb = SLUI.db.global.timer
     self:RegisterEvent("PLAYER_REGEN_DISABLED")
@@ -173,16 +167,13 @@ function SLCT:OnInitialize()
     AddonPrint("loaded. Type |cffffcc00/slct help|r for commands.")
 end
 
+-- Initial Load. We have to slightly delay this so that talent information is available
 function SLCT:OnEnable()
     DrawFrame()
-    -- Load initial position. we have to slightly delay this so that talent information is available
+    SLCT:ApplySettings()
     state.currentSpec = GetCurrentSpecRole()
     LoadPosition()
-    -- Start timer if we logged in midcombat 
-    if InCombatLockdown() and sldb.enabled then
-        SLCT:PLAYER_REGEN_DISABLED()
-    end
-        
+
     timerFrame:SetScript("OnDragStart", function(self)
         if state.moveMode then
             self:StartMoving()
@@ -195,37 +186,16 @@ function SLCT:OnEnable()
             SavePosition()
         end
     end)
-    
-    -- Make clickthrough by default
-    timerFrame:EnableMouse(false)
 end
 
 -- Slash commands
 local function ShowHelp()
     AddonPrint("Available commands:")
-    print("  |cffffffff/slct show|r - Toggle timer on/off")
     print("  |cffffffff/slct move|r - Toggle move mode")
-    print("  |cffffffff/slct brackets|r - Toggle bracket display")
     print("  |cffffffff/slct help|r - Show this help")
 end
 
--- Toggle timer visibility
-local function ToggleTimer()
-    sldb.enabled = not sldb.enabled
-    LibStub("AceConfigRegistry-3.0"):NotifyChange("SLUI")
-    
-    if sldb.enabled then
-        AddonPrint("Timer enabled")
-        if InCombatLockdown() or state.moveMode then
-            timerFrame:Show()
-        end
-    else
-        AddonPrint("Timer disabled")
-        timerFrame:Hide()
-    end
-end
-
--- Toggle lock mode
+-- Lock/Unlock
 function SLCT:SetLocked(locked)
     sldb.lock = locked
     state.moveMode = not locked
@@ -251,31 +221,13 @@ function SLCT:SetLocked(locked)
     LibStub("AceConfigRegistry-3.0"):NotifyChange("SLUI")
 end
 
-
--- Toggle brackets
-local function ToggleBrackets()
-    sldb.showBrackets = not sldb.showBrackets
-    LibStub("AceConfigRegistry-3.0"):NotifyChange("SLUI")
-    
-    if sldb.showBrackets then
-        AddonPrint("Brackets enabled")
-    else
-        AddonPrint("Brackets disabled")
-    end
-    
-    UpdateTimerText()
-end
-
 -- Slash command handler
 local function SlashCommandHandler(msg)
-    local command, arg = msg:match("^(%S*)%s*(.-)$")
+    local command = msg:match("^(%S*)%s*(.-)$")
     command = command:lower()
-    if command == "show" then
-        ToggleTimer()
-    elseif command == "move" then
+
+    if command == "move" then
         SLCT:SetLocked(not sldb.lock)
-    elseif command == "brackets" then
-        ToggleBrackets()
     elseif command == "help" or command == "" then
         ShowHelp()
     else
