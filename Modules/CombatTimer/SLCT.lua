@@ -47,8 +47,7 @@ end
 
 -- Format time as M:SS
 local function FormatTime(sec)
-    sec = math.floor(sec)
-    return string.format("%d:%02d", math.floor(sec/60), sec%60)
+    return string.format("%d:%02d", sec / 60, sec % 60)
 end
 
 -- Update timer display
