@@ -6,22 +6,20 @@ setglobal("SLUI", SLUI)
 
 --- @type AceDB.Schema
 SLUI.defaults = {
-    global = {
-    }
+    global = {}
 }
 
 --- @type AceConfig.OptionsTable
 SLUI.options = {
     name = format("|cff00ff98%s|r v%s", "SLUI", C_AddOns.GetAddOnMetadata("SLUI", "Version")),
     type = "group",
-    handler = SLUI,
     get = function(info) return SLUI.db.global[info[#info]] end,
     set = function(info, val) SLUI.db.global[info[#info]] = val end,
     args = {
         apply = {
             order = 1000,
             name = "Apply changes",
-            desc = "To apply changes, you need to reload your UI.",
+            desc = "To apply changes, you might need to reload your UI.",
             type = "execute",
             func = function() return ReloadUI() end,
         },
@@ -35,9 +33,9 @@ SLUI.options = {
             func = function()
                 SLUI.db:ResetDB(DEFAULT)
                 return ReloadUI()
-            end
-        }
-    }
+            end,
+        },
+    },
 }
 
 function SLUI:OnInitialize()
