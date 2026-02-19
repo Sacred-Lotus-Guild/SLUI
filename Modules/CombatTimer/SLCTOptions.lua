@@ -1,12 +1,5 @@
 local SLUI = select(2,...)
 
--- not sure if i need this because SLUI loads before each module so these should always be created
-SLUI.defaults = SLUI.defaults or {}
-SLUI.defaults.global = SLUI.defaults.global or {}
-
-SLUI.options = SLUI.options or {}
-SLUI.options.args = SLUI.options.args or {}
-
 -- Defaults
 SLUI.defaults.global.timer = {
     enabled = false,
