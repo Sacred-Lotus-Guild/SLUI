@@ -88,6 +88,11 @@ function InviteTools:CacheGuildMembers()
         local numGuildMembers = GetNumGuildMembers() or 0
         for i = 1, numGuildMembers do
             local name, _, rankIndex = GetGuildRosterInfo(i)
+
+            -- The `rankIndex` returned is 0-indexed while guildRank from
+            -- `GuildControlGetRankName` is 1-indexed, so we use < rather than
+            -- <= here to compare them.
+            -- see: https://warcraft.wiki.gg/wiki/API_GetGuildRosterInfo
             if name and rankIndex < SLUI.db.global.invite.guildRank then
                 tinsert(self.promoteGuildMembers, Ambiguate(name, "none"))
             end
