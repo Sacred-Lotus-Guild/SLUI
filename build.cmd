@@ -4,7 +4,7 @@ setlocal enabledelayedexpansion
 bash release.sh -dz
 
 :: Function to create directory structure in .release
-for /f "delims=" %%i in ('dir /b /s /a-d *.lua ^| findstr /v .release') do (
+for /f "delims=" %%i in ('dir /b /s /a-d *.lua *.xml ^| findstr /v .release') do (
     set "file=%%i"
     set "relpath=!file:%cd%\=!"
     set "targetdir=.release\SLUI\!relpath!"
