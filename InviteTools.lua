@@ -1,6 +1,6 @@
 --- @class SLUI
 local SLUI = select(2, ...)
---- @class InviteTools: AceAddon, AceEvent-3.0, AceHook-3.0
+--- @class InviteTools: AceModule, AceEvent-3.0, AceHook-3.0
 local InviteTools = SLUI:NewModule("InviteTools", "AceEvent-3.0", "AceHook-3.0")
 
 SLUI.defaults.global.invite = {
