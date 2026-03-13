@@ -1,7 +1,7 @@
 --- @class SLUI
 local SLUI = select(2, ...)
---- @class TierTokens: AceModule, AceEvent-3.0, AceHook-3.0
-local TierTokens = SLUI:NewModule("TierTokens", "AceEvent-3.0", "AceHook-3.0")
+--- @class TierTokens: AceModule, AceHook-3.0
+local TierTokens = SLUI:NewModule("TierTokens", "AceHook-3.0")
 
 SLUI.defaults.global.tierTokens = {
     encounterJournal = true,

@@ -1,7 +1,7 @@
 local addon = select(2, ...)
 
---- @class SLUI: AceAddon, AceEvent-3.0, AceHook-3.0
-local SLUI = LibStub("AceAddon-3.0"):NewAddon(addon, "SLUI", "AceEvent-3.0", "AceHook-3.0")
+--- @class SLUI: AceAddon, AceHook-3.0
+local SLUI = LibStub("AceAddon-3.0"):NewAddon(addon, "SLUI", "AceHook-3.0")
 setglobal("SLUI", SLUI)
 
 --- @type AceDB.Schema
