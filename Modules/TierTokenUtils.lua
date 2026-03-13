@@ -11,18 +11,20 @@ SLUI.defaults.global.tierTokens = {
 SLUI.options.args.tierTokens = {
     name = "Tier Token Utils",
     type = "group",
-    get = function(info) return SLUI.db.global.tierTokens[info[#info]] end,
-    set = function(info, val) SLUI.db.global.tierTokens[info[#info]] = val end,
     args = {
         encounterJournal = {
             name = "Encounter Journal",
             desc = "Add token names to the encounter journal.",
             type = "toggle",
+            get = function() return SLUI.db.global.tierTokens.encounterJournal end,
+            set = function(_, val) SLUI.db.global.tierTokens.encounterJournal = val end,
         },
         tooltips = {
             name = "Tooltips",
             desc = "Append armor type and item slot to tier token tooltips.",
             type = "toggle",
+            get = function() return SLUI.db.global.tierTokens.tooltips end,
+            set = function(_, val) SLUI.db.global.tierTokens.tooltips = val end,
         },
     },
 }

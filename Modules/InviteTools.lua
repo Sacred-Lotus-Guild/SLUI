@@ -12,8 +12,6 @@ SLUI.defaults.global.invite = {
 SLUI.options.args.invite = {
     name = "Invite Tools",
     type = "group",
-    get = function(info) return SLUI.db.global.invite[info[#info]] end,
-    set = function(info, val) SLUI.db.global.invite[info[#info]] = val end,
     args = {
         keywords = {
             order = 1,
@@ -52,6 +50,7 @@ SLUI.options.args.invite = {
             name = "Auto-promote rank",
             desc = "Auto-promote characters of this guild rank or \"higher\" (actually a lower index value).",
             type = "select",
+            get = function() return SLUI.db.global.invite.guildRank end,
             set = function(_, val)
                 SLUI.db.global.invite.guildRank = val
                 InviteTools:CacheGuildMembers()

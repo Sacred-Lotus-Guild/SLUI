@@ -13,8 +13,7 @@ SLUI.defaults = {
 SLUI.options = {
     name = format("|cff00ff98%s|r v%s", "SLUI", C_AddOns.GetAddOnMetadata("SLUI", "Version")),
     type = "group",
-    get = function(info) return SLUI.db.global[info[#info]] end,
-    set = function(info, val) SLUI.db.global[info[#info]] = val end,
+    childGroups = "tab",
     args = {
         apply = {
             order = 1000,
