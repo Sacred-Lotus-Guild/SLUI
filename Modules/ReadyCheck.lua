@@ -1,22 +1,22 @@
 -- Dravus #1 Beta Tester
+--- @class SLUI
 local SLUI = select(2, ...)
-
---- @class SLRC: AceModule, AceEvent-3.0
-local SLRC = SLUI:NewModule("SLRC", "AceEvent-3.0")
+--- @class ReadyCheck: AceModule, AceEvent-3.0
+local ReadyCheck = SLUI:NewModule("ReadyCheck", "AceEvent-3.0")
 
 -- Default settings
 SLUI.defaults.global.ready = {
-        position = {
-            point = "CENTER",
-            relativeTo = "UIParent",
-            relativePoint = "CENTER",
-            xOfs = 0,
-            yOfs = 0,
-        },
-        width = 460,
-        height = 400,
-        debug = false,
-        show = false,
+    position = {
+        point = "CENTER",
+        relativeTo = "UIParent",
+        relativePoint = "CENTER",
+        xOfs = 0,
+        yOfs = 0,
+    },
+    width = 460,
+    height = 400,
+    debug = false,
+    show = false,
 }
 
 -- Debug
@@ -43,14 +43,14 @@ local READY_CHECK_READY = "ready"
 
 -- Spell IDs to monitor
 local SPELL_IDS = {
-    Rune = {1234969, 1242347},
-    Int = {1459},
-    Atk = {6673},
-    Vers = {1126},
-    Stam = {21562},
-    Mastery = {462854},
-    Move = {381758, 381732, 381746, 381748, 381750, 381749, 381751, 381752, 381753, 381754, 381756, 381757, 381741},
-    SS = {20707},
+    Rune = { 1234969, 1242347 },
+    Int = { 1459 },
+    Atk = { 6673 },
+    Vers = { 1126 },
+    Stam = { 21562 },
+    Mastery = { 462854 },
+    Move = { 381758, 381732, 381746, 381748, 381750, 381749, 381751, 381752, 381753, 381754, 381756, 381757, 381741 },
+    SS = { 20707 },
 }
 
 -- Spell lookup functions
@@ -77,7 +77,7 @@ local function ShowWindow()
     local isLeader = UnitIsGroupLeader("player")
     local isAssistant = UnitIsGroupAssistant("player")
     local isShow = SLUI.db.global.ready.show
-    
+
     DebugPrint("Leader:", isLeader, "Assistant:", isAssistant, "Showing Window", isShow)
 
     return isLeader or isAssistant or isShow
@@ -86,7 +86,7 @@ end
 -- Function to get player buffs
 local function GetPlayerBuffs(unit)
     DebugPrint("Getting buffs for unit:", unit)
-    
+
     local buffs = {
         Food = nil,
         Flask = nil,
@@ -101,73 +101,73 @@ local function GetPlayerBuffs(unit)
         SS = nil,
         Durability = 100,
     }
-    
+
     -- Check auras
     local index = 1
     local buffCount = 0
     while true do
         local auraData = C_UnitAuras.GetAuraDataByIndex(unit, index, "HELPFUL")
-        
+
         if not auraData then break end
         buffCount = buffCount + 1
-        
+
         local name = auraData.name
         local icon = auraData.icon
         local spellId = auraData.spellId
         local expirationTime = auraData.expirationTime
-        
+
         -- Check for Well Fed
         if name and name == "Well Fed" and not buffs.Food then
-            buffs.Food = {icon = icon, expirationTime = expirationTime}
+            buffs.Food = { icon = icon, expirationTime = expirationTime }
         end
-        
+
         -- Check for Food (eating)
         if name and name == "Food" and not buffs.Food then
-            buffs.Food = {icon = icon, expirationTime = expirationTime}
+            buffs.Food = { icon = icon, expirationTime = expirationTime }
         end
-        
+
         -- Check for Flask
         if name and name:match("^Flask of") and not buffs.Flask then
-            buffs.Flask = {icon = icon, expirationTime = expirationTime}
+            buffs.Flask = { icon = icon, expirationTime = expirationTime }
         end
-        
+
         -- Check for Vantus Rune
         if name and name:match("^Vantus Rune:") and not buffs.Vantus then
-            buffs.Vantus = {icon = icon, expirationTime = expirationTime}
+            buffs.Vantus = { icon = icon, expirationTime = expirationTime }
         end
-        
+
         -- Check spell IDs
         if spellId then
             if runeLookup[spellId] and not buffs.Rune then
-                buffs.Rune = {icon = icon, expirationTime = expirationTime}
+                buffs.Rune = { icon = icon, expirationTime = expirationTime }
             elseif intLookup[spellId] and not buffs.Int then
-                buffs.Int = {icon = icon, expirationTime = expirationTime}
+                buffs.Int = { icon = icon, expirationTime = expirationTime }
             elseif atkLookup[spellId] and not buffs.Atk then
-                buffs.Atk = {icon = icon, expirationTime = expirationTime}
+                buffs.Atk = { icon = icon, expirationTime = expirationTime }
             elseif versLookup[spellId] and not buffs.Vers then
-                buffs.Vers = {icon = icon, expirationTime = expirationTime}
+                buffs.Vers = { icon = icon, expirationTime = expirationTime }
             elseif stamLookup[spellId] and not buffs.Stam then
-                buffs.Stam = {icon = icon, expirationTime = expirationTime}
+                buffs.Stam = { icon = icon, expirationTime = expirationTime }
             elseif masteryLookup[spellId] and not buffs.Mastery then
-                buffs.Mastery = {icon = icon, expirationTime = expirationTime}
+                buffs.Mastery = { icon = icon, expirationTime = expirationTime }
             elseif moveLookup[spellId] and not buffs.Move then
-                buffs.Move = {icon = icon, expirationTime = expirationTime}
+                buffs.Move = { icon = icon, expirationTime = expirationTime }
             elseif ssLookup[spellId] and not buffs.SS then
-                buffs.SS = {icon = icon, expirationTime = expirationTime}
+                buffs.SS = { icon = icon, expirationTime = expirationTime }
             end
         end
-        
+
         index = index + 1
     end
-    
+
     DebugPrint("  Total buffs scanned for", unit, ":", buffCount)
-    
+
     -- Calculate durability (only for player)
     if UnitIsUnit(unit, "player") then
         local totalDurability = 0
         local totalMaxDurability = 0
-        local slots = {1, 3, 5, 6, 7, 8, 9, 10, 16, 17} -- Equipment slots
-        
+        local slots = { 1, 3, 5, 6, 7, 8, 9, 10, 16, 17 } -- Equipment slots
+
         for _, slot in ipairs(slots) do
             local current, max = GetInventoryItemDurability(slot)
             if current and max then
@@ -175,19 +175,19 @@ local function GetPlayerBuffs(unit)
                 totalMaxDurability = totalMaxDurability + max
             end
         end
-        
+
         if totalMaxDurability > 0 then
             buffs.Durability = (totalDurability / totalMaxDurability) * 100
         end
     end
-    
+
     return buffs
 end
 
 -- Create the main frame
 local function CreateMainFrame()
     DebugPrint("Creating main ready check frame")
-    
+
     local frame = CreateFrame("Frame", "SLRCFrame", UIParent, "BackdropTemplate")
     frame:SetSize(SLUI.db.global.ready.width, SLUI.db.global.ready.height)
     frame:SetBackdrop({
@@ -198,18 +198,18 @@ local function CreateMainFrame()
     frame:EnableMouse(true)
     frame:SetClampedToScreen(true)
     frame:Hide()
-    
+
     -- Set to last known position
     local pos = SLUI.db.global.ready.position
     frame:SetPoint(pos.point, pos.relativeTo, pos.relativePoint, pos.xOfs, pos.yOfs)
-    
+
     -- Title bar
     local titleBar = CreateFrame("Frame", nil, frame, "BackdropTemplate")
     titleBar:SetSize(frame:GetWidth() - 2, 30)
     titleBar:SetPoint("TOP", frame, "TOP", 0, -2)
     titleBar:SetBackdrop({
         bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
-        insets = {left = 4, right = 4, top = 4, bottom = 4},
+        insets = { left = 4, right = 4, top = 4, bottom = 4 },
     })
     titleBar:SetBackdropColor(0.1, 0.1, 0.1, 1)
     titleBar:EnableMouse(true)
@@ -230,21 +230,21 @@ local function CreateMainFrame()
         }
     end)
     frame.titleBar = titleBar
-    
+
     -- Title text
     local titleText = titleBar:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     titleText:SetPoint("CENTER", titleBar, "CENTER", 0, 0)
     titleText:SetText("<SL> Ready Check: 0s")
     titleText:SetTextColor(0, 0.9, 0.9, 1)
     frame.titleText = titleText
-    
+
     -- Ready count text
     local readyCount = titleBar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     readyCount:SetPoint("LEFT", titleBar, "LEFT", 10, 0)
     readyCount:SetText("0/0")
     readyCount:SetTextColor(1, 1, 1, 1)
     frame.readyCount = readyCount
-    
+
     -- Close button with fancy skinning because why not
     local closeButton = CreateFrame("Button", nil, titleBar, "BackdropTemplate")
     closeButton:SetSize(18, 18)
@@ -260,26 +260,25 @@ local function CreateMainFrame()
     closeX:SetPoint("CENTER")
     closeX:SetSize(12, 12)
     closeX:SetTexture("Interface\\AddOns\\SLUI\\Media\\Textures\\Ready\\Close")
-    
+
     closeButton:SetScript("OnEnter", function(self)
         self:SetBackdropBorderColor(0, 0.9, 0.9, 1)
     end)
     closeButton:SetScript("OnLeave", function(self)
         self:SetBackdropBorderColor(1, 1, 1, 0.1)
-
     end)
     closeButton:SetScript("OnClick", function()
         frame:Hide()
     end)
     frame.closeButton = closeButton
-    
+
     -- Content frame
     local content = CreateFrame("Frame", nil, frame)
     content:SetPoint("TOPLEFT", titleBar, "BOTTOMLEFT", 5, -5)
     content:SetPoint("TOPRIGHT", titleBar, "BOTTOMRIGHT", -5, -5)
     content:SetHeight(200) -- Initial height, will be adjusted
     frame.content = content
-    
+
     -- Ready texture (shown when everyone is ready at check finish)
     local readyTexture = frame:CreateTexture(nil, "ARTWORK")
     readyTexture:SetTexture("Interface\\Addons\\SLUI\\Media\\Textures\\Ready\\Pass")
@@ -288,7 +287,7 @@ local function CreateMainFrame()
     readyTexture:SetSize(200, 200)
     readyTexture:Hide() -- Hidden by default
     frame.readyTexture = readyTexture
-    
+
     -- Fail texture (shown when not everyone is ready at check finish)
     local failTexture = frame:CreateTexture(nil, "ARTWORK")
     failTexture:SetTexture("Interface\\Addons\\SLUI\\Media\\Textures\\Ready\\Fail")
@@ -297,7 +296,7 @@ local function CreateMainFrame()
     failTexture:SetSize(200, 200)
     failTexture:Hide() -- Hidden by default
     frame.failTexture = failTexture
-    
+
     -- Not ready players text (shown over fail texture)
     local notReadyText = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     notReadyText:SetPoint("CENTER", frame, "CENTER", 0, 0)
@@ -307,26 +306,26 @@ local function CreateMainFrame()
     notReadyText:SetWidth(frame:GetWidth() - 40)
     notReadyText:Hide() -- Hidden by default
     frame.notReadyText = notReadyText
-    
+
     -- Column headers
     local columnHeaders = {
-        {name = "Food", width = 30},
-        {name = "Flask", width = 30},
-        {name = "Rune", width = 30},
-        {name = "Int", width = 30},
-        {name = "Atk", width = 30},
-        {name = "Vers", width = 30},
-        {name = "Stam", width = 30},
-        {name = "Mast", width = 30},
-        {name = "Move", width = 32},
-        {name = "Vantus", width = 30},
-        {name = "SS", width = 30},
-        {name = "Repair", width = 40},
+        { name = "Food",   width = 30 },
+        { name = "Flask",  width = 30 },
+        { name = "Rune",   width = 30 },
+        { name = "Int",    width = 30 },
+        { name = "Atk",    width = 30 },
+        { name = "Vers",   width = 30 },
+        { name = "Stam",   width = 30 },
+        { name = "Mast",   width = 30 },
+        { name = "Move",   width = 32 },
+        { name = "Vantus", width = 30 },
+        { name = "SS",     width = 30 },
+        { name = "Repair", width = 40 },
     }
-    
+
     frame.columnHeaders = columnHeaders
     frame.rows = {}
-    
+
     -- Create header row
     -- name is left justified
     local nameText = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -342,9 +341,9 @@ local function CreateMainFrame()
         headerText:SetTextColor(1, 1, 1, 1)
         xOffset = xOffset + header.width
     end
-    
+
     DebugPrint("Main frame created successfully")
-    
+
     return frame
 end
 
@@ -357,32 +356,32 @@ local function CreateRow(parent, index)
         bgFile = "Interface\\Buttons\\WHITE8X8",
         edgeFile = nil,
     })
-    
+
     if index % 2 == 0 then
         row:SetBackdropColor(0.1, 0.1, 0.1, 0.5)
     else
         row:SetBackdropColor(0.15, 0.15, 0.15, 0.5)
     end
-    
+
     -- Name text
     local nameText = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     nameText:SetPoint("LEFT", row, "LEFT", 5, 0)
     nameText:SetWidth(80)
     nameText:SetJustifyH("LEFT")
     row.nameText = nameText
-    
+
     -- Icons
     local xOffset = 100
     row.icons = {}
-    local iconOrder = {"Food", "Flask", "Rune", "Int", "Atk", "Vers", "Stam", "Mastery", "Move", "Vantus", "SS"}
-    
+    local iconOrder = { "Food", "Flask", "Rune", "Int", "Atk", "Vers", "Stam", "Mastery", "Move", "Vantus", "SS" }
+
     for _, buffName in ipairs(iconOrder) do
         local icon = row:CreateTexture(nil, "ARTWORK")
         icon:SetSize(24, 24)
         icon:SetPoint("CENTER", row, "LEFT", xOffset, 0)
         icon:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
         icon:Hide()
-        
+
         -- Red overlay for low duration
         local overlay = row:CreateTexture(nil, "OVERLAY")
         overlay:SetSize(24, 24)
@@ -390,18 +389,18 @@ local function CreateRow(parent, index)
         overlay:SetColorTexture(1, 0, 0, 0.5)
         overlay:Hide()
         icon.overlay = overlay
-        
+
         row.icons[buffName] = icon
         xOffset = xOffset + 30
     end
-    
+
     -- Durability text
     local durText = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     durText:SetPoint("CENTER", row, "LEFT", xOffset, 0)
     durText:SetWidth(40)
     durText:SetJustifyH("CENTER")
     row.durText = durText
-    
+
     return row
 end
 
@@ -422,17 +421,17 @@ local function UpdateRow(row, data)
         row:Hide()
         return
     end
-    
+
     row:Show()
     row.nameText:SetText(data.name)
-    
+
     -- Update ready status color
     if data.ready then
         row.nameText:SetTextColor(0, 1, 0, 1)
     else
         row.nameText:SetTextColor(1, 1, 1, 1)
     end
-    
+
     -- Update buff icons
     local currentTime = GetTime()
     for buffName, icon in pairs(row.icons) do
@@ -440,7 +439,7 @@ local function UpdateRow(row, data)
         if buff and buff.icon then
             icon:SetTexture(buff.icon)
             icon:Show()
-            
+
             -- Check if buff expires in less than 10 minutes
             if buff.expirationTime and buff.expirationTime > 0 then
                 local timeLeft = buff.expirationTime - currentTime
@@ -457,7 +456,7 @@ local function UpdateRow(row, data)
             icon.overlay:Hide()
         end
     end
-    
+
     -- Update durability
     if data.buffs.Durability then
         row.durText:SetFormattedText("%.0f%%", data.buffs.Durability)
@@ -493,16 +492,15 @@ local function UpdateAllPlayers()
         unitIndexMap["player"] = 1
         DebugPrint(playerName, "ReadyStatus:", readyStatus)
     end
-    
+
     if not IsInGroup() then
         DebugPrint("Not in group, skipping player data update")
         return
     else
-
         local isRaid = IsInRaid()
         local numMembers = GetNumGroupMembers()
         DebugPrint("Updating player data for", numMembers, isRaid and "raid" or "party", "members")
-        
+
         -- Add group members
         local startIndex = 2
         if isRaid then
@@ -510,10 +508,10 @@ local function UpdateAllPlayers()
             for i = 1, numMembers do
                 local unit = "raid" .. i
                 local name = UnitName(unit)
-                
+
                 if name and name ~= playerName then
                     local readyStatus = GetReadyCheckStatus(unit)
-                    
+
                     playerData[startIndex] = {
                         name = name,
                         unit = unit,
@@ -530,10 +528,10 @@ local function UpdateAllPlayers()
             for i = 1, numMembers - 1 do
                 local unit = "party" .. i
                 local name = UnitName(unit)
-                
+
                 if name then
                     local readyStatus = GetReadyCheckStatus(unit)
-                    
+
                     playerData[startIndex] = {
                         name = name,
                         unit = unit,
@@ -546,7 +544,7 @@ local function UpdateAllPlayers()
                 end
             end
         end
-        
+
         DebugPrint("Total players added to data:", #playerData)
     end
 end
@@ -570,31 +568,31 @@ end
 -- Update the frame
 local function UpdateFrame()
     if readyCheckActive == false then return end
-    if not mainFrame or not mainFrame:IsShown() then 
+    if not mainFrame or not mainFrame:IsShown() then
         DebugPrint("Frame not shown, skipping update")
-        return 
+        return
     end
-    
+
     DebugPrint("Updating frame display")
-    
+
     UpdateAllPlayers()
-    
+
     -- Update title with remaining time
     local timeLeft = math.max(0, readyCheckEndTime - GetTime())
     mainFrame.titleText:SetFormattedText("<SL> Ready Check: %.0fs", timeLeft)
-    
+
     -- Update ready count
     local readyCount = CountReadyPlayers()
     local totalCount = #playerData -- was GetNumGroupMembers()
     mainFrame.readyCount:SetFormattedText("%d/%d", readyCount, totalCount)
-    
+
     -- Ensure we have enough rows
     local numPlayers = #playerData
     while #mainFrame.rows < numPlayers do
         local row = CreateRow(mainFrame.content, #mainFrame.rows + 1)
         table.insert(mainFrame.rows, row)
     end
-    
+
     -- Update rows
     for i = 1, numPlayers do
         if not mainFrame.rows[i] then
@@ -602,18 +600,18 @@ local function UpdateFrame()
         end
         UpdateRow(mainFrame.rows[i], playerData[i])
     end
-    
+
     -- Hide unused rows
     for i = numPlayers + 1, #mainFrame.rows do
         mainFrame.rows[i]:Hide()
     end
-    
+
     -- Resize frame based on number of players
     local contentHeight = 30 + numPlayers * 28 -- Header (30) + rows (28 each)
     mainFrame.content:SetHeight(contentHeight)
-    
+
     -- Adjust main frame height to fit content
-    local frameHeight = math.max(200,40 + contentHeight + 10) -- Title bar (40) + content + padding (10)
+    local frameHeight = math.max(200, 40 + contentHeight + 10) -- Title bar (40) + content + padding (10)
     mainFrame:SetHeight(frameHeight)
 end
 
@@ -629,45 +627,45 @@ end
 
 
 -- Event handlers
-function SLRC:READY_CHECK(event, initiator, duration)
+function ReadyCheck:READY_CHECK(event, initiator, duration)
     DebugPrint("READY_CHECK event triggered by", initiator, "for", duration, "seconds")
-    
-    if not IsInGroup() then 
+
+    if not IsInGroup() then
         DebugPrint("Not in group, ignoring ready check")
-        return 
+        return
     end
-    
+
     -- Check if player is showing window
     if not ShowWindow() then
         DebugPrint("Show Window is off")
         return
     end
-    
+
     readyCheckActive = true
     readyCheckEndTime = GetTime() + (duration or 40)
-    
+
     DebugPrint("Ready check will end at:", readyCheckEndTime)
-    
+
     -- Create frame, show it, then update it
     if not mainFrame then
         mainFrame = CreateMainFrame()
     end
-    
+
     mainFrame:Show()
     DebugPrint("Frame shown")
     UpdateFrame()
-    
+
     -- Register events for updates
     self:RegisterEvent("UNIT_AURA")
     self:RegisterEvent("READY_CHECK_CONFIRM")
-    
+
     -- Cancel previous timer if it exists
     if closeTimer then
         closeTimer:Cancel()
     end
 end
 
-function SLRC:READY_CHECK_CONFIRM(_, unit)
+function ReadyCheck:READY_CHECK_CONFIRM(_, unit)
     local index = unitIndexMap[unit]
     if not index then return end
 
@@ -689,17 +687,17 @@ function SLRC:READY_CHECK_CONFIRM(_, unit)
     end
 end
 
-function SLRC:READY_CHECK_FINISHED()
+function ReadyCheck:READY_CHECK_FINISHED()
     DebugPrint("READY_CHECK_FINISHED")
 
     -- Check if everyone is ready
     local readyCount = CountReadyPlayers()
     local totalCount = #playerData -- was GetNumGroupMembers()
     local allReady = (readyCount == totalCount)
-    
+
     DebugPrint("Ready check finished - Ready:", readyCount, "Total:", totalCount, "All Ready:", allReady)
     readyCheckActive = false
-    
+
     if not mainFrame or not mainFrame:IsShown() then
         DebugPrint("Frame closed early, skipping display complete")
         return
@@ -713,12 +711,11 @@ function SLRC:READY_CHECK_FINISHED()
         -- Everyone is ready - show pass texture
         DebugPrint("Everyone is ready - showing pass texture")
         mainFrame.readyTexture:Show()
-
     else
         -- Not everyone is ready - show fail texture and list of not ready players
         DebugPrint("Not everyone ready - showing fail texture and player list")
         mainFrame.failTexture:Show()
-        
+
         -- Who isnt ready
         local notReadyPlayers = {}
         for _, data in ipairs(playerData) do
@@ -726,31 +723,31 @@ function SLRC:READY_CHECK_FINISHED()
                 table.insert(notReadyPlayers, data.name)
             end
         end
-        
+
         -- Display the list
         local notReadyList = table.concat(notReadyPlayers, "\n")
         mainFrame.notReadyText:SetText(notReadyList)
         mainFrame.notReadyText:Show()
-        
+
         DebugPrint("Not ready players:", notReadyList)
     end
-    
+
     -- Cancel previous timer if it exists
     if closeTimer then
         closeTimer:Cancel()
     end
-    
+
     DebugPrint("Starting 5 second timer to close window")
     -- Close window 5 seconds after ready check completes
     closeTimer = C_Timer.NewTimer(5, function()
         DebugPrint("5 second timer expired, hiding frame")
         ResetFrame()
-        SLRC:UnregisterEvent("UNIT_AURA")
-        SLRC:UnregisterEvent("READY_CHECK_CONFIRM")
+        ReadyCheck:UnregisterEvent("UNIT_AURA")
+        ReadyCheck:UnregisterEvent("READY_CHECK_CONFIRM")
     end)
 end
 
-function SLRC:ENCOUNTER_START()
+function ReadyCheck:ENCOUNTER_START()
     DebugPrint("ENCOUNTER_START")
 
     -- Stop everything, someone pulled early
@@ -764,50 +761,49 @@ function SLRC:ENCOUNTER_START()
         mainFrame.content:Show()
     end
 
-    SLRC:UnregisterEvent("UNIT_AURA")
-    SLRC:UnregisterEvent("READY_CHECK_CONFIRM")
+    ReadyCheck:UnregisterEvent("UNIT_AURA")
+    ReadyCheck:UnregisterEvent("READY_CHECK_CONFIRM")
 
     if closeTimer then
         closeTimer:Cancel()
     end
 end
 
-function SLRC:UNIT_AURA(event, unit)
+function ReadyCheck:UNIT_AURA(event, unit)
     if not readyCheckActive then return end
     if not mainFrame or not mainFrame:IsShown() then return end
 
     if unit == "player"
         or strsub(unit, 1, 4) == "raid"
         or strsub(unit, 1, 5) == "party" then
-
         UpdatePlayer(unit)
     end
 end
 
 -- Module initialization
-function SLRC:OnInitialize()
+function ReadyCheck:OnInitialize()
     DebugPrint("SLRC module initializing")
 
     -- Register events
     self:RegisterEvent("READY_CHECK")
     self:RegisterEvent("READY_CHECK_FINISHED")
     self:RegisterEvent("ENCOUNTER_START")
-    
+
     DebugPrint("Events registered")
-    
+
     -- Module loaded message
     AddonPrint("loaded. Type |cffffcc00/slrc help|r for commands")
-    
+
     if SLUI.db.global.ready.debug then
         print("  |cffff9900Debug mode is ENABLED|r")
     end
 end
 
-function SLRC:OnEnable()
+function ReadyCheck:OnEnable()
     DebugPrint("SLRC module enabled")
 end
 
-function SLRC:OnDisable()
+function ReadyCheck:OnDisable()
     DebugPrint("SLRC module disabled")
     if mainFrame then
         mainFrame:Hide()
@@ -862,18 +858,18 @@ local function ToggleTest()
     AddonPrint("|cff00ff00Test Window ENABLED|r")
     readyCheckActive = true
     readyCheckEndTime = GetTime() + 35
-    
+
     -- Create frame, show it, then update it
     if not mainFrame then
         mainFrame = CreateMainFrame()
     end
-    
+
     mainFrame:Show()
     DebugPrint("Frame shown")
     UpdateFrame()
-    
-    -- Register events for updates 
-    SLRC:RegisterEvent("UNIT_AURA")
+
+    -- Register events for updates
+    ReadyCheck:RegisterEvent("UNIT_AURA")
 
     -- Cancel previous timer if it exists
     if closeTimer then
@@ -882,8 +878,8 @@ local function ToggleTest()
 
     closeTimer = C_Timer.NewTimer(35, function()
         ResetFrame()
-        SLRC:UnregisterEvent("UNIT_AURA")
-        SLRC:UnregisterEvent("READY_CHECK_CONFIRM")
+        ReadyCheck:UnregisterEvent("UNIT_AURA")
+        ReadyCheck:UnregisterEvent("READY_CHECK_CONFIRM")
     end)
 end
 

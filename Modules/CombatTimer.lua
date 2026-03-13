@@ -1,9 +1,100 @@
 --- @class SLUI
 local SLUI = select(2, ...)
---- @class SLCT: AceModule, AceEvent-3.0
-local SLCT = SLUI:NewModule("SLCT", "AceEvent-3.0")
+--- @class CombatTimer: AceModule, AceEvent-3.0
+local CombatTimer = SLUI:NewModule("CombatTimer", "AceEvent-3.0")
 local Media = LibStub("LibSharedMedia-3.0")
+local fonts = Media:List(Media.MediaType.FONT)
 local sldb
+
+-- Defaults
+SLUI.defaults.global.timer = {
+    enabled = false,
+    lock = true,
+    font = "PT Sans Narrow",
+    fontSize = 28,
+    showBrackets = true,
+    positions = {
+        [1] = { point = "CENTER", x = 0, y = -100 }, -- Tank
+        [2] = { point = "CENTER", x = 0, y = -100 }, -- Healer
+        [3] = { point = "CENTER", x = 0, y = -100 }, -- DPS
+    }
+}
+
+local function TimerDisabled()
+    return not SLUI.db.global.timer.enabled
+end
+
+SLUI.options.args.timer = {
+    name = "Combat Timer",
+    type = "group",
+    args = {
+        enabled = {
+            name = "Enabled",
+            type = "toggle",
+            get = function() return SLUI.db.global.timer.enabled end,
+            set = function(_, value) SLUI.db.global.timer.enabled = value end,
+            width = "normal",
+            order = 0,
+        },
+        lock = {
+            name = "Lock",
+            type = "toggle",
+            get = function() return SLUI.db.global.timer.lock end,
+            set = function(_, value)
+                CombatTimer:SetLocked(value)
+            end,
+            width = "double",
+            disabled = TimerDisabled,
+            order = 1,
+        },
+        font = {
+            type = "select",
+            name = "Font",
+            values = fonts,
+            get = function()
+                for i, v in ipairs(fonts) do
+                    if v == SLUI.db.global.timer.font then
+                        return i
+                    end
+                end
+            end,
+            set = function(_, value)
+                SLUI.db.global.timer.font = fonts[value]
+                CombatTimer:ApplySettings()
+            end,
+            width = 1.2,
+            disabled = TimerDisabled,
+            order = 2,
+        },
+        textSize = {
+            name = "Text Size",
+            type = "range",
+            min = 5,
+            max = 60,
+            bigStep = 1,
+            get = function() return SLUI.db.global.timer.fontSize end,
+            set = function(_, value)
+                SLUI.db.global.timer.fontSize = value
+                CombatTimer:ApplySettings()
+            end,
+            width = "normal",
+            disabled = TimerDisabled,
+            order = 3,
+        },
+        showBrackets = {
+            name = "Brackets",
+            type = "toggle",
+            get = function() return SLUI.db.global.timer.showBrackets end,
+            set = function(_, value)
+                SLUI.db.global.timer.showBrackets = value
+                CombatTimer:ApplySettings()
+            end,
+            width = "normal",
+            disabled = TimerDisabled,
+            order = 4,
+        },
+    }
+}
 
 -- Addon Messages
 local function AddonPrint(...)
@@ -110,7 +201,7 @@ local function LoadPosition()
     end
 end
 
-function SLCT:ApplySettings()
+function CombatTimer:ApplySettings()
     if not timerFrame then return end
 
     -- Font
@@ -123,9 +214,9 @@ function SLCT:ApplySettings()
 end
 
 -- Entering combat
-function SLCT:PLAYER_REGEN_DISABLED()
+function CombatTimer:PLAYER_REGEN_DISABLED()
     if state.moveMode == true then
-        SLCT:SetLocked(true)
+        CombatTimer:SetLocked(true)
     end
     state.combatStart = GetTime()
     state.combatEnd = nil
@@ -138,7 +229,7 @@ function SLCT:PLAYER_REGEN_DISABLED()
 end
 
 -- Leaving combat
-function SLCT:PLAYER_REGEN_ENABLED()
+function CombatTimer:PLAYER_REGEN_ENABLED()
     state.combatEnd = GetTime()
 
     if timerRefresh then
@@ -150,7 +241,7 @@ function SLCT:PLAYER_REGEN_ENABLED()
 end
 
 -- Spec changed, save old position and load new one
-function SLCT:PLAYER_SPECIALIZATION_CHANGED(_, unit)
+function CombatTimer:PLAYER_SPECIALIZATION_CHANGED(_, unit)
     if unit ~= "player" then return end
     SavePosition()
     state.currentSpec = GetCurrentSpecRole()
@@ -158,7 +249,7 @@ function SLCT:PLAYER_SPECIALIZATION_CHANGED(_, unit)
 end
 
 -- Register DB and Events
-function SLCT:OnInitialize()
+function CombatTimer:OnInitialize()
     sldb = SLUI.db.global.timer
     self:RegisterEvent("PLAYER_REGEN_DISABLED")
     self:RegisterEvent("PLAYER_REGEN_ENABLED")
@@ -168,9 +259,9 @@ function SLCT:OnInitialize()
 end
 
 -- Initial Load. We have to slightly delay this so that talent information is available
-function SLCT:OnEnable()
+function CombatTimer:OnEnable()
     CreateCombatTimer()
-    SLCT:ApplySettings()
+    CombatTimer:ApplySettings()
     state.currentSpec = GetCurrentSpecRole()
     LoadPosition()
 
@@ -196,7 +287,7 @@ local function ShowHelp()
 end
 
 -- Lock/Unlock
-function SLCT:SetLocked(locked)
+function CombatTimer:SetLocked(locked)
     sldb.lock = locked
     state.moveMode = not locked
 
@@ -224,7 +315,7 @@ local function SlashCommandHandler(msg)
     command = command:lower()
 
     if command == "move" then
-        SLCT:SetLocked(not sldb.lock)
+        CombatTimer:SetLocked(not sldb.lock)
     elseif command == "help" or command == "" then
         ShowHelp()
     else
