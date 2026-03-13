@@ -1,4 +1,6 @@
-local SLUI = select(2,...)
+--- @class SLUI
+local SLUI = select(2, ...)
+local Media = LibStub("LibSharedMedia-3.0")
 
 -- Defaults
 SLUI.defaults.global.timer = {
@@ -8,9 +10,9 @@ SLUI.defaults.global.timer = {
     fontSize = 28,
     showBrackets = true,
     positions = {
-        [1] = { point = "CENTER", x = 0, y = -100 },  -- Tank
-        [2] = { point = "CENTER", x = 0, y = -100 },  -- Healer
-        [3] = { point = "CENTER", x = 0, y = -100 },  -- DPS
+        [1] = { point = "CENTER", x = 0, y = -100 }, -- Tank
+        [2] = { point = "CENTER", x = 0, y = -100 }, -- Healer
+        [3] = { point = "CENTER", x = 0, y = -100 }, -- DPS
     }
 }
 
@@ -19,7 +21,7 @@ SLUI.options.args.timer = {
     type = "group",
 }
 
-local fonts = SLUI.media:List(SLUI.media.MediaType.FONT)
+local fonts = Media:List(Media.MediaType.FONT)
 
 local function RefreshTimer()
     local module = SLUI:GetModule("SLCT", true)
@@ -37,7 +39,7 @@ local timerOptions = {
         name = "Enabled",
         type = "toggle",
         get = function() return SLUI.db.global.timer.enabled end,
-        set = function(_,value) SLUI.db.global.timer.enabled = value end,
+        set = function(_, value) SLUI.db.global.timer.enabled = value end,
         width = "normal",
         order = 0,
     },
@@ -81,7 +83,10 @@ local timerOptions = {
         max = 60,
         bigStep = 1,
         get = function() return SLUI.db.global.timer.fontSize end,
-        set = function(_, value) SLUI.db.global.timer.fontSize = value RefreshTimer() end,
+        set = function(_, value)
+            SLUI.db.global.timer.fontSize = value
+            RefreshTimer()
+        end,
         width = "normal",
         disabled = TimerDisabled,
         order = 3,
@@ -90,7 +95,10 @@ local timerOptions = {
         name = "Brackets",
         type = "toggle",
         get = function() return SLUI.db.global.timer.showBrackets end,
-        set = function(_,value) SLUI.db.global.timer.showBrackets = value RefreshTimer() end,
+        set = function(_, value)
+            SLUI.db.global.timer.showBrackets = value
+            RefreshTimer()
+        end,
         width = "normal",
         disabled = TimerDisabled,
         order = 4,

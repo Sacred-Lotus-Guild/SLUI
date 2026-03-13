@@ -5,9 +5,9 @@ local SharedMedia = LibStub("LibSharedMedia-3.0")
 
 SLUI.logo = [[Interface\AddOns\SLUI\Media\Textures\logo.blp]]
 SLUI.breakImages = {
-    [[Interface\AddOns\SLUI\Media\Textures\HorseBio.tga]],
     [[Interface\AddOns\SLUI\Media\Textures\CalemKnee.tga]],
     [[Interface\AddOns\SLUI\Media\Textures\ForThomas.tga]],
+    [[Interface\AddOns\SLUI\Media\Textures\HorseBio.tga]],
     [[Interface\AddOns\SLUI\Media\Textures\Priory.tga]],
     [[Interface\AddOns\SLUI\Media\Textures\StripperBio.tga]],
     [[Interface\AddOns\SLUI\Media\Textures\WerthersOriginal.tga]],

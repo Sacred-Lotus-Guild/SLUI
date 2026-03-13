@@ -12,8 +12,9 @@
 embeds.xml
 
 SLUI.lua
-Media.lua
-Modules\InviteTools\SLINV.lua
+Media\Media.lua
+Modules\InviteTools.lua
+Modules\TierTokenUtils.lua
 Modules\ReadyCheck\SLRC.lua
 Modules\CombatTimer\SLCTOptions.lua
 Modules\CombatTimer\SLCT.lua

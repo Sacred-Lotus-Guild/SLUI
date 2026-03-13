@@ -1,7 +1,8 @@
-local SLUI = select(2,...)
-
+--- @class SLUI
+local SLUI = select(2, ...)
 --- @class SLCT: AceModule, AceEvent-3.0
 local SLCT = SLUI:NewModule("SLCT", "AceEvent-3.0")
+local Media = LibStub("LibSharedMedia-3.0")
 local sldb
 
 -- Addon Messages
@@ -16,7 +17,7 @@ local state = {
     combatStart = nil,
     combatEnd = nil,
     moveMode = false,
-    currentSpec = 3  -- Default to DPS
+    currentSpec = 3 -- Default to DPS
 }
 
 local function CreateCombatTimer()
@@ -75,8 +76,8 @@ end
 -- Determine role
 local function GetCurrentSpecRole()
     local specIndex = GetSpecialization()
-    if not specIndex then return 3 end  -- Default to DPS. this should never happen, just a fallback
-    
+    if not specIndex then return 3 end -- Default to DPS. this should never happen, just a fallback
+
     local role = GetSpecializationRole(specIndex)
 
     if role == "TANK" then
@@ -84,14 +85,14 @@ local function GetCurrentSpecRole()
     elseif role == "HEALER" then
         return 2
     else
-        return 3  -- DPS
+        return 3 -- DPS
     end
 end
 
 -- Save current position
 local function SavePosition()
     local point, _, _, x, y = timerFrame:GetPoint()
-    
+
     sldb.positions[state.currentSpec] = {
         point = point,
         x = x,
@@ -102,7 +103,7 @@ end
 -- Load position for current spec
 local function LoadPosition()
     local pos = sldb.positions[state.currentSpec]
-    
+
     if pos then
         timerFrame:ClearAllPoints()
         timerFrame:SetPoint(pos.point, UIParent, pos.point, pos.x, pos.y)
@@ -113,7 +114,7 @@ function SLCT:ApplySettings()
     if not timerFrame then return end
 
     -- Font
-    local fontPath = SLUI.media:Fetch(SLUI.media.MediaType.FONT, sldb.font) or "Fonts\\FRIZQT__.TTF"
+    local fontPath = Media:Fetch(Media.MediaType.FONT, sldb.font) or "Fonts\\FRIZQT__.TTF"
     timerText:SetFont(fontPath, sldb.fontSize, "OUTLINE")
     timerFrame:SetSize(sldb.fontSize * 3, sldb.fontSize + 4)
 
@@ -178,7 +179,7 @@ function SLCT:OnEnable()
             self:StartMoving()
         end
     end)
-    
+
     timerFrame:SetScript("OnDragStop", function(self)
         if state.moveMode then
             self:StopMovingOrSizing()
@@ -203,12 +204,12 @@ function SLCT:SetLocked(locked)
         timerFrame:EnableMouse(true)
         timerFrame:SetMovable(true)
         timerFrame:RegisterForDrag("LeftButton")
-        timerBg:SetColorTexture(0,0,0,0.5)
+        timerBg:SetColorTexture(0, 0, 0, 0.5)
         UpdateVisibility()
     else
         timerFrame:EnableMouse(false)
         timerFrame:SetMovable(false)
-        timerBg:SetColorTexture(0,0,0,0)
+        timerBg:SetColorTexture(0, 0, 0, 0)
         SavePosition()
         UpdateVisibility()
     end
