@@ -38,6 +38,16 @@ SLUI.options = {
     },
 }
 
+--- Log data to DevTool if it's available. Useful for debugging without spamming
+--- the chat.
+---@param data any
+---@param dataName? string
+function SLUI:Debug(data, dataName)
+    if DevTool and data then
+        DevTool:AddData(data, format("[SLUI] %s", dataName or "Debug"))
+    end
+end
+
 function SLUI:OnInitialize()
     SLUI.db = LibStub("AceDB-3.0"):New("SLUIDB", SLUI.defaults, DEFAULT)
     LibStub("AceConfig-3.0"):RegisterOptionsTable("SLUI", SLUI.options)

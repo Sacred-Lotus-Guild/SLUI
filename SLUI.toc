@@ -12,5 +12,6 @@
 embeds.xml
 
 SLUI.lua
-InviteTools.lua
-Media.lua
+Media\Media.lua
+Modules\InviteTools.lua
+Modules\TierTokenUtils.lua
