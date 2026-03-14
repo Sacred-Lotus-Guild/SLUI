@@ -4,6 +4,7 @@ local SLUI = select(2, ...)
 local InviteTools = SLUI:NewModule("InviteTools", "AceEvent-3.0", "AceHook-3.0")
 
 SLUI.defaults.global.invite = {
+    enable = true,
     keywords = { "inv", "invite", "raidinv", },
     characters = {},
     guildRank = 1,
@@ -13,6 +14,18 @@ SLUI.options.args.invite = {
     name = "Invite Tools",
     type = "group",
     args = {
+        enable = {
+            order = 0,
+            name = "Enable",
+            desc = "Enable or disable the Invite Tools module.",
+            type = "toggle",
+            get = function() return SLUI.db.global.invite.enable end,
+            set = function(_, val)
+                SLUI.db.global.invite.enable = val
+                if val then InviteTools:Enable() else InviteTools:Disable() end
+            end,
+            width = "full",
+        },
         keywords = {
             order = 1,
             name = "Keywords",
@@ -27,6 +40,7 @@ SLUI.options.args.invite = {
                     end
                 end
             end,
+            disabled = function() return not SLUI.db.global.invite.enable end,
             width = "full",
         },
         characters = {
@@ -43,6 +57,7 @@ SLUI.options.args.invite = {
                     end
                 end
             end,
+            disabled = function() return not SLUI.db.global.invite.enable end,
             width = "full",
         },
         guildRank = {
@@ -65,7 +80,7 @@ SLUI.options.args.invite = {
                 end
                 return ranks
             end,
-            disabled = function() return not IsInGuild() end,
+            disabled = function() return not SLUI.db.global.invite.enable or not IsInGuild() end,
         },
     }
 }
@@ -176,12 +191,14 @@ function InviteTools:ClearDemotedPlayers()
 end
 
 function InviteTools:OnInitialize()
+    self:SetEnabledState(SLUI.db.global.invite.enable)
     self.demotedPlayers = {}
     self.promoteGuildMembers = {}
 end
 
 function InviteTools:OnEnable()
     self:CacheGuildMembers()
+    self:ClearDemotedPlayers()
     self:RegisterEvent("GUILD_ROSTER_UPDATE", "CacheGuildMembers")
 
     self:RegisterEvent("CHAT_MSG_WHISPER")
@@ -196,4 +213,9 @@ function InviteTools:OnEnable()
             self.demotedPlayers[UnitName(unit)] = true
         end
     end)
+end
+
+function InviteTools:OnDisable()
+    self:UnregisterAllEvents()
+    self:UnhookAll()
 end
