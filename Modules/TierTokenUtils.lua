@@ -1,6 +1,6 @@
---- @class SLUI
+---@class SLUI
 local SLUI = select(2, ...)
---- @class TierTokens: AceModule, AceHook-3.0
+---@class TierTokens: AceModule, AceHook-3.0
 local TierTokens = SLUI:NewModule("TierTokens", "AceHook-3.0")
 
 SLUI.defaults.global.tierTokens = {
@@ -11,18 +11,20 @@ SLUI.defaults.global.tierTokens = {
 SLUI.options.args.tierTokens = {
     name = "Tier Token Utils",
     type = "group",
-    get = function(info) return SLUI.db.global.tierTokens[info[#info]] end,
-    set = function(info, val) SLUI.db.global.tierTokens[info[#info]] = val end,
     args = {
         encounterJournal = {
             name = "Encounter Journal",
             desc = "Add token names to the encounter journal.",
             type = "toggle",
+            get = function() return SLUI.db.global.tierTokens.encounterJournal end,
+            set = function(_, val) SLUI.db.global.tierTokens.encounterJournal = val end,
         },
         tooltips = {
             name = "Tooltips",
             desc = "Append armor type and item slot to tier token tooltips.",
             type = "toggle",
+            get = function() return SLUI.db.global.tierTokens.tooltips end,
+            set = function(_, val) SLUI.db.global.tierTokens.tooltips = val end,
         },
     },
 }
@@ -52,15 +54,15 @@ local TIER_TOKENS = {
     [249366] = "Plate Shoulder Token",   -- Voidforged Unraveled Nullcore,
 }
 
---- @param tooltip GameTooltip
---- @param data TooltipData | { id: number? }
+---@param tooltip GameTooltip
+---@param data TooltipData | { id: number? }
 local function RenameTierTokens(tooltip, data)
     if not data.id or issecretvalue(data.id) or not TIER_TOKENS[data.id] then return end
     tooltip:AppendText(format(" (%s)", TIER_TOKENS[data.id]))
 end
 
---- @param button Button | { itemID: number?, slot: FontString }
---- @param elementData { index: number }
+---@param button Button | { itemID: number?, slot: FontString }
+---@param elementData { index: number }
 local function AddTierTokenText(button, elementData)
     if not button.itemID or issecretvalue(button.itemID) or not TIER_TOKENS[button.itemID] then return end
     button.slot:SetText(TIER_TOKENS[button.itemID])

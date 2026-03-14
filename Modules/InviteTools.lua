@@ -1,6 +1,6 @@
---- @class SLUI
+---@class SLUI
 local SLUI = select(2, ...)
---- @class InviteTools: AceModule, AceEvent-3.0, AceHook-3.0
+---@class InviteTools: AceModule, AceEvent-3.0, AceHook-3.0
 local InviteTools = SLUI:NewModule("InviteTools", "AceEvent-3.0", "AceHook-3.0")
 
 SLUI.defaults.global.invite = {
@@ -12,8 +12,6 @@ SLUI.defaults.global.invite = {
 SLUI.options.args.invite = {
     name = "Invite Tools",
     type = "group",
-    get = function(info) return SLUI.db.global.invite[info[#info]] end,
-    set = function(info, val) SLUI.db.global.invite[info[#info]] = val end,
     args = {
         keywords = {
             order = 1,
@@ -52,6 +50,7 @@ SLUI.options.args.invite = {
             name = "Auto-promote rank",
             desc = "Auto-promote characters of this guild rank or \"higher\" (actually a lower index value).",
             type = "select",
+            get = function() return SLUI.db.global.invite.guildRank end,
             set = function(_, val)
                 SLUI.db.global.invite.guildRank = val
                 InviteTools:CacheGuildMembers()
@@ -140,8 +139,8 @@ end
 
 --- Returns true if the player should be promoted to assistant based on their
 --- guild rank or character name.
---- @param unit string
---- @return boolean
+---@param unit string
+---@return boolean
 function InviteTools:ShouldPromote(unit)
     if self.demotedPlayers[UnitName(unit)] then
         return false
