@@ -32,7 +32,10 @@ SLUI.options.args.timer = {
             name = "Enabled",
             type = "toggle",
             get = function() return SLUI.db.global.timer.enabled end,
-            set = function(_, value) SLUI.db.global.timer.enabled = value end,
+            set = function(_, value)
+                SLUI.db.global.timer.enabled = value
+                if value then CombatTimer:Enable() else CombatTimer:Disable() end
+            end,
             width = "normal",
             order = 0,
         },
@@ -112,6 +115,8 @@ local state = {
 }
 
 local function CreateCombatTimer()
+    if timerFrame then return end
+
     -- Main timer frame
     timerFrame = CreateFrame("Frame", "SLCTFrame", UIParent)
     timerFrame:EnableMouse(false)
@@ -251,11 +256,7 @@ end
 -- Register DB and Events
 function CombatTimer:OnInitialize()
     sldb = SLUI.db.global.timer
-    self:RegisterEvent("PLAYER_REGEN_DISABLED")
-    self:RegisterEvent("PLAYER_REGEN_ENABLED")
-    self:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
-
-    AddonPrint("loaded. Type |cffffcc00/slct help|r for commands.")
+    self:SetEnabledState(sldb.enabled)
 end
 
 -- Initial Load. We have to slightly delay this so that talent information is available
@@ -277,6 +278,21 @@ function CombatTimer:OnEnable()
             SavePosition()
         end
     end)
+
+    self:RegisterEvent("PLAYER_REGEN_DISABLED")
+    self:RegisterEvent("PLAYER_REGEN_ENABLED")
+    self:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
+
+    AddonPrint("loaded. Type |cffffcc00/slct help|r for commands.")
+end
+
+function CombatTimer:OnDisable()
+    if timerFrame then
+        timerFrame:SetScript("OnDragStart", nil)
+        timerFrame:SetScript("OnDragStop", nil)
+        timerFrame:Hide()
+    end
+    self:UnregisterAllEvents()
 end
 
 -- Slash commands

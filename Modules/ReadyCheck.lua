@@ -783,31 +783,31 @@ end
 -- Module initialization
 function ReadyCheck:OnInitialize()
     DebugPrint("SLRC module initializing")
+    self:SetEnabledState(SLUI.db.global.ready.show)
+end
+
+function ReadyCheck:OnEnable()
+    DebugPrint("SLRC module enabled")
 
     -- Register events
     self:RegisterEvent("READY_CHECK")
     self:RegisterEvent("READY_CHECK_FINISHED")
     self:RegisterEvent("ENCOUNTER_START")
-
     DebugPrint("Events registered")
 
     -- Module loaded message
     AddonPrint("loaded. Type |cffffcc00/slrc help|r for commands")
-
     if SLUI.db.global.ready.debug then
-        print("  |cffff9900Debug mode is ENABLED|r")
+        AddonPrint("  |cffff9900Debug mode is ENABLED|r")
     end
-end
-
-function ReadyCheck:OnEnable()
-    DebugPrint("SLRC module enabled")
 end
 
 function ReadyCheck:OnDisable()
-    DebugPrint("SLRC module disabled")
+    AddonPrint("module disabled.")
     if mainFrame then
         mainFrame:Hide()
     end
+    self:UnregisterAllEvents()
 end
 
 -- Update timer
@@ -848,9 +848,9 @@ end
 local function ToggleShow()
     SLUI.db.global.ready.show = not SLUI.db.global.ready.show
     if SLUI.db.global.ready.show then
-        AddonPrint("|cff00ff00Ready Check Window ENABLED|r")
+        ReadyCheck:Enable()
     else
-        AddonPrint("|cffff0000Ready Check Window DISABLED|r")
+        ReadyCheck:Disable()
     end
 end
 
