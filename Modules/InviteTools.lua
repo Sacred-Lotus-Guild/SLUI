@@ -1,6 +1,6 @@
---- @class SLUI
+---@class SLUI
 local SLUI = select(2, ...)
---- @class InviteTools: AceModule, AceEvent-3.0, AceHook-3.0
+---@class InviteTools: AceModule, AceEvent-3.0, AceHook-3.0
 local InviteTools = SLUI:NewModule("InviteTools", "AceEvent-3.0", "AceHook-3.0")
 
 SLUI.defaults.global.invite = {
@@ -139,8 +139,8 @@ end
 
 --- Returns true if the player should be promoted to assistant based on their
 --- guild rank or character name.
---- @param unit string
---- @return boolean
+---@param unit string
+---@return boolean
 function InviteTools:ShouldPromote(unit)
     if self.demotedPlayers[UnitName(unit)] then
         return false

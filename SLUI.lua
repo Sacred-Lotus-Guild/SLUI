@@ -1,15 +1,15 @@
 local addon = select(2, ...)
 
---- @class SLUI: AceAddon, AceHook-3.0
+---@class SLUI: AceAddon, AceHook-3.0
 local SLUI = LibStub("AceAddon-3.0"):NewAddon(addon, "SLUI", "AceHook-3.0")
 setglobal("SLUI", SLUI)
 
---- @type AceDB.Schema
+---@type AceDB.Schema
 SLUI.defaults = {
     global = {}
 }
 
---- @type AceConfig.OptionsTable
+---@type AceConfig.OptionsTable
 SLUI.options = {
     name = format("|cff00ff98%s|r v%s", "SLUI", C_AddOns.GetAddOnMetadata("SLUI", "Version")),
     type = "group",

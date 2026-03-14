@@ -1,6 +1,6 @@
---- @class SLUI
+---@class SLUI
 local SLUI = select(2, ...)
---- @class TierTokens: AceModule, AceHook-3.0
+---@class TierTokens: AceModule, AceHook-3.0
 local TierTokens = SLUI:NewModule("TierTokens", "AceHook-3.0")
 
 SLUI.defaults.global.tierTokens = {
@@ -54,15 +54,15 @@ local TIER_TOKENS = {
     [249366] = "Plate Shoulder Token",   -- Voidforged Unraveled Nullcore,
 }
 
---- @param tooltip GameTooltip
---- @param data TooltipData | { id: number? }
+---@param tooltip GameTooltip
+---@param data TooltipData | { id: number? }
 local function RenameTierTokens(tooltip, data)
     if not data.id or issecretvalue(data.id) or not TIER_TOKENS[data.id] then return end
     tooltip:AppendText(format(" (%s)", TIER_TOKENS[data.id]))
 end
 
---- @param button Button | { itemID: number?, slot: FontString }
---- @param elementData { index: number }
+---@param button Button | { itemID: number?, slot: FontString }
+---@param elementData { index: number }
 local function AddTierTokenText(button, elementData)
     if not button.itemID or issecretvalue(button.itemID) or not TIER_TOKENS[button.itemID] then return end
     button.slot:SetText(TIER_TOKENS[button.itemID])
