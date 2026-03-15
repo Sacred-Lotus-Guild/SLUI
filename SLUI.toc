@@ -10,8 +10,11 @@
 
 # Dependencies
 embeds.xml
+libs\LibEditMode\namespaced.lua
+libs\LibEditMode\embed.xml
 
 SLUI.lua
 Media\Media.lua
 Modules\InviteTools.lua
 Modules\TierTokenUtils.lua
+Modules\BreakTimer.lua
