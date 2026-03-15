@@ -10,7 +10,7 @@ local TTS_LOW_TIME_WARNING = "Break ends in %d seconds"
 
 local defaultPosition = {
     point = "CENTER",
-    x = -200,
+    x = -400,
     y = 100
 }
 
@@ -88,7 +88,7 @@ local editModeSettings = {
 
 SLUI.defaults.global.breakTimer = {
     enable = true,
-    position = {-defaultPosition.x, defaultPosition.y},
+    position = {point = "CENTER", x = -defaultPosition.x, y = defaultPosition.y},
     scale = 1,
     lowWarning = "",
     ttsVolume = 100,
@@ -98,12 +98,10 @@ function BreakTimer:OnInitialize()
     self:SetEnabledState(SLUI.db.global.breakTimer.enable)
 
     local function OnPositionChanged(frame, layoutName, point, x, y)
-        SLUI.db.global.breakTimer.position = {x, y}
+        SLUI.db.global.breakTimer.position = {point = point, x = x, y = y}
     end
 
-    EditMode:RegisterCallback('layout', function(layoutName)
-        BreakTimer:UpdatePosition()
-    end)
+    EditMode:RegisterCallback('layout', function(layoutName) BreakTimer:UpdatePosition() end)
 
     EditMode:AddFrame(BreakTimer.frame, OnPositionChanged, defaultPosition)
 
@@ -244,7 +242,7 @@ end
 
 function BreakTimer:UpdatePosition()
     BreakTimer.frame:ClearAllPoints()
-    BreakTimer.frame:SetPoint("CENTER", SLUI.db.global.breakTimer.position[1], SLUI.db.global.breakTimer.position[2])
+    BreakTimer.frame:SetPoint(SLUI.db.global.breakTimer.position.point, SLUI.db.global.breakTimer.position.x, SLUI.db.global.breakTimer.position.y)
 end
 
 function BreakTimer:PlayLowWarningMessage()
