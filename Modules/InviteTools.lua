@@ -121,9 +121,16 @@ function InviteTools:CheckAndConvertToRaid()
     end
 end
 
+--- Returns true if the player will suggest invite instead of invite themselves.
+function WillSuggestInvite()
+    return IsInGroup() and not (
+        UnitIsGroupLeader("player") or UnitIsGroupAssistant("player")
+    )
+end
+
 --- Handle whispers for invite keywords.
 function InviteTools:CHAT_MSG_WHISPER(_, text, playerName)
-    if IsRaidCombatRestricted() then
+    if IsRaidCombatRestricted() or WillSuggestInvite() then
         return
     end
 
@@ -137,7 +144,7 @@ end
 
 --- Handle Battle.net whispers for invite keywords.
 function InviteTools:CHAT_MSG_BN_WHISPER(_, text, _, _, _, _, _, _, _, _, _, _, _, bnSenderID)
-    if IsRaidCombatRestricted() then
+    if IsRaidCombatRestricted() or WillSuggestInvite() then
         return
     end
 
