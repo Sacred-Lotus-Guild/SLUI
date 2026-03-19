@@ -31,7 +31,10 @@ SLUI.options.args.timer = {
             name = "Enabled",
             type = "toggle",
             get = function() return SLUI.db.global.timer.enabled end,
-            set = function(_, value) SLUI.db.global.timer.enabled = value end,
+            set = function(_, value)
+                SLUI.db.global.timer.enabled = value
+                if value then CombatTimer:Enable() else CombatTimer:Disable() end
+            end,
             width = "normal",
             order = 0,
         },
@@ -289,6 +292,7 @@ end
 
 function CombatTimer:OnInitialize()
     self.db = SLUI.db.global.timer
+    self:SetEnabledState(self.db.enabled)
     LibStub("AceConsole-3.0"):RegisterChatCommand("slct", function(msg)
         msg = msg:trim()
         if msg == "move" then
