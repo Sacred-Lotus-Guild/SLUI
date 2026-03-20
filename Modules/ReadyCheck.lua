@@ -53,7 +53,7 @@ SLUI.options.args.ready = {
             order = 1,
             name = "Test",
             type = "execute",
-            func = function() ReadyCheck:READY_CHECK("READY_CHECK", UnitName("player"), 35) end,
+            func = function() ReadyCheck:READY_CHECK("READY_CHECK", UnitName("player"), 40) end,
             disabled = Disabled,
         },
         position = {
@@ -193,8 +193,9 @@ local moveLookup = CreateSpellLookup(SPELL_IDS.Move)
 local ssLookup = CreateSpellLookup(SPELL_IDS.SS)
 
 -- Determine if window should be shown
-function ReadyCheck:ShowWindow()
-    return self.db.enable and (UnitIsGroupLeader("player") or UnitIsGroupAssistant("player"))
+function ReadyCheck:ShowWindow(initiatorName)
+    return self.db.enable and
+        (UnitIsGroupLeader("player") or UnitIsGroupAssistant("player") or UnitName("player") == initiatorName)
 end
 
 -- Function to get player buffs
@@ -291,7 +292,6 @@ local function GetPlayerBuffs(unit)
         end
     end
 
-    SLUI:Debug(buffs, "Buffs for " .. unit)
     return buffs
 end
 
@@ -730,7 +730,7 @@ end
 
 -- Event handlers
 function ReadyCheck:READY_CHECK(_, initiatorName, readyCheckTimeLeft)
-    if not self.frame or not self:ShowWindow() then return end
+    if not self.frame or not self:ShowWindow(initiatorName) then return end
 
     self.endTime = GetTime() + (readyCheckTimeLeft or 40)
 
