@@ -453,6 +453,7 @@ function ReadyCheck:CreateFrame()
     end
 
     self.frame = frame
+    self:UpdateFrameOptions()
 end
 
 function ReadyCheck:UpdateFrameOptions()
@@ -728,11 +729,48 @@ function ReadyCheck:UNIT_AURA(_, unit)
     end
 end
 
+function ReadyCheck:READY_CHECK_CONFIRM(_, unitTarget, isReady)
+    if not self.frame or not self.frame:IsShown() then return end
+
+    local index = unitIndexMap[unitTarget]
+    if not index then return end
+
+    local data = playerData[index]
+    if not data then return end
+
+    local readyStatus = GetReadyCheckStatus(unitTarget)
+    data.ready = readyStatus == READY_CHECK_READY
+
+    local row = self.frame.rows[index]
+    if row then UpdateRow(row, data) end
+
+    -- update count display
+    local readyCount = CountReadyPlayers()
+    self.frame.readyCount:SetFormattedText("%d/%d", readyCount, #playerData)
+end
+
+function ReadyCheck:HideFrame()
+    if self.frame then
+        self.frame:SetScript("OnUpdate", nil)
+        self.frame:Hide()
+    end
+
+    -- Cancel previous timer if it exists
+    if self.closeTimer then
+        self.closeTimer:Cancel()
+        self.closeTimer = nil
+    end
+
+    self:UnregisterEvent("UNIT_AURA")
+    self:UnregisterEvent("READY_CHECK_CONFIRM")
+end
+
 -- Event handlers
 function ReadyCheck:READY_CHECK(_, initiatorName, readyCheckTimeLeft)
     if not self.frame or not self:ShowWindow(initiatorName) then return end
 
-    self.endTime = GetTime() + (readyCheckTimeLeft or 40)
+    if not readyCheckTimeLeft then readyCheckTimeLeft = 40 end
+    self.endTime = GetTime() + readyCheckTimeLeft
 
     self.frame:Show()
     self.frame.content:Show()
@@ -758,37 +796,10 @@ function ReadyCheck:READY_CHECK(_, initiatorName, readyCheckTimeLeft)
     self:RegisterEvent("READY_CHECK_CONFIRM")
 
     -- Cancel previous timer if it exists
-    if self.closeTimer then
-        self.closeTimer:Cancel()
-        self.closeTimer = nil
-    end
-
-    self.closeTimer = C_Timer.NewTimer(readyCheckTimeLeft or 40, function()
-        self.frame:SetScript("OnUpdate", nil)
-        self.frame:Hide()
-        self:UnregisterEvent("UNIT_AURA")
-        self:UnregisterEvent("READY_CHECK_CONFIRM")
+    if self.closeTimer then self.closeTimer:Cancel() end
+    self.closeTimer = C_Timer.NewTimer(readyCheckTimeLeft, function()
+        self:HideFrame()
     end)
-end
-
-function ReadyCheck:READY_CHECK_CONFIRM(_, unitTarget, isReady)
-    if not self.frame or not self.frame:IsShown() then return end
-
-    local index = unitIndexMap[unitTarget]
-    if not index then return end
-
-    local data = playerData[index]
-    if not data then return end
-
-    local readyStatus = GetReadyCheckStatus(unitTarget)
-    data.ready = readyStatus == READY_CHECK_READY
-
-    local row = self.frame.rows[index]
-    if row then UpdateRow(row, data) end
-
-    -- update count display
-    local readyCount = CountReadyPlayers()
-    self.frame.readyCount:SetFormattedText("%d/%d", readyCount, #playerData)
 end
 
 function ReadyCheck:READY_CHECK_FINISHED()
@@ -825,35 +836,15 @@ function ReadyCheck:READY_CHECK_FINISHED()
         self.frame.notReadyText:Show()
     end
 
-    -- Cancel previous timer if it exists
-    if self.closeTimer then
-        self.closeTimer:Cancel()
-        self.closeTimer = nil
-    end
-
     -- Close window 5 seconds after ready check completes
+    if self.closeTimer then self.closeTimer:Cancel() end
     self.closeTimer = C_Timer.NewTimer(5, function()
-        self.frame:SetScript("OnUpdate", nil)
-        self.frame:Hide()
-        self:UnregisterEvent("UNIT_AURA")
-        self:UnregisterEvent("READY_CHECK_CONFIRM")
+        self:HideFrame()
     end)
 end
 
 function ReadyCheck:ENCOUNTER_START()
-    if self.frame then
-        self.frame:SetScript("OnUpdate", nil)
-        self.frame:Hide()
-    end
-
-    self:UnregisterEvent("UNIT_AURA")
-    self:UnregisterEvent("READY_CHECK_CONFIRM")
-
-    -- Cancel previous timer if it exists
-    if self.closeTimer then
-        self.closeTimer:Cancel()
-        self.closeTimer = nil
-    end
+    self:HideFrame()
 end
 
 -- Module initialization
@@ -872,10 +863,6 @@ function ReadyCheck:OnEnable()
 end
 
 function ReadyCheck:OnDisable()
-    if self.frame then
-        self.frame:SetScript("OnUpdate", nil)
-        self.frame:Hide()
-    end
-
+    self:HideFrame()
     self:UnregisterAllEvents()
 end
