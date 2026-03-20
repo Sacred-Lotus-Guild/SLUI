@@ -505,6 +505,7 @@ local function CreateRow(parent, index)
     local iconOrder = { "Food", "Flask", "Rune", "Int", "Atk", "Vers", "Stam", "Mastery", "Move", "Vantus", "SS" }
 
     for _, buffName in ipairs(iconOrder) do
+        ---@type Texture|table
         local icon = row:CreateTexture(nil, "ARTWORK")
         icon:SetSize(24, 24)
         icon:SetPoint("CENTER", row, "LEFT", xOffset, 0)
