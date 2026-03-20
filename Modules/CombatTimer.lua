@@ -6,18 +6,15 @@ local Media = LibStub("LibSharedMedia-3.0")
 
 -- Defaults
 SLUI.defaults.global.timer = {
-    enabled = false,
+    enable = false,
     lock = true,
     font = "PT Sans Narrow",
     fontSize = 28,
     showBrackets = true,
     positions = {
-        ["TANK"] = { "CENTER", "UIParent", "CENTER", 0, -100 },
-        ["HEALER"] = { "CENTER", "UIParent", "CENTER", 0, -100 },
-        ["DAMAGER"] = { "CENTER", "UIParent", "CENTER", 0, -100 },
+        ["*"] = { "CENTER", "UIParent", "CENTER", 0, -100 },
     }
 }
-
 
 local ANCHOR_POINTS = {
     ["TOPLEFT"] = "TOPLEFT",
@@ -31,38 +28,45 @@ local ANCHOR_POINTS = {
     ["BOTTOMRIGHT"] = "BOTTOMRIGHT"
 }
 
-local function TimerDisabled()
-    return not SLUI.db.global.timer.enabled
+local function Disabled()
+    return not SLUI.db.global.timer.enable
+end
+
+--- Determine role
+---@return "TANK" | "HEALER" | "DAMAGER"
+local function GetCurrentSpecRole()
+    return GetSpecializationRole(GetSpecialization()) or "DAMAGER"
 end
 
 local fonts = Media:List(Media.MediaType.FONT)
-
+local currentSpec = GetCurrentSpecRole()
 -- Options
 SLUI.options.args.timer = {
     name = "Combat Timer",
     type = "group",
     args = {
-        enabled = {
-            name = "Enabled",
+        enable = {
+            order = 0,
+            name = "Enable",
             type = "toggle",
-            get = function() return SLUI.db.global.timer.enabled end,
+            get = function() return SLUI.db.global.timer.enable end,
             set = function(_, value)
-                SLUI.db.global.timer.enabled = value
+                SLUI.db.global.timer.enable = value
                 if value then CombatTimer:Enable() else CombatTimer:Disable() end
             end,
-            width = "normal",
-            order = 0,
+            width = "full",
         },
         lock = {
+            order = 1,
             name = "Lock",
             type = "toggle",
             get = function() return SLUI.db.global.timer.lock end,
             set = function(_, value) CombatTimer:SetLocked(value) end,
-            width = "double",
-            disabled = TimerDisabled,
-            order = 1,
+            width = "full",
+            disabled = Disabled,
         },
         font = {
+            order = 2,
             type = "select",
             name = "Font",
             values = fonts,
@@ -77,11 +81,10 @@ SLUI.options.args.timer = {
                 SLUI.db.global.timer.font = fonts[value]
                 CombatTimer:ApplySettings()
             end,
-            width = 1.2,
-            disabled = TimerDisabled,
-            order = 2,
+            disabled = Disabled,
         },
         textSize = {
+            order = 3,
             name = "Text Size",
             type = "range",
             min = 5,
@@ -92,11 +95,10 @@ SLUI.options.args.timer = {
                 SLUI.db.global.timer.fontSize = value
                 CombatTimer:ApplySettings()
             end,
-            width = "normal",
-            disabled = TimerDisabled,
-            order = 3,
+            disabled = Disabled,
         },
         showBrackets = {
+            order = 4,
             name = "Brackets",
             type = "toggle",
             get = function() return SLUI.db.global.timer.showBrackets end,
@@ -104,19 +106,19 @@ SLUI.options.args.timer = {
                 SLUI.db.global.timer.showBrackets = value
                 CombatTimer:ApplySettings()
             end,
-            width = "normal",
-            disabled = TimerDisabled,
-            order = 4,
+            disabled = Disabled,
         },
         position = {
+            order = 5,
             name = "Position",
             type = "group",
             inline = true,
+            disabled = Disabled,
             args = {
                 description = {
                     order = 0,
                     name = function()
-                        return format("Set the position for your %s specializations.", CombatTimer.currentSpec:lower())
+                        return format("Set the position for your %s specializations.", currentSpec:lower())
                     end,
                     type = "description",
 
@@ -126,9 +128,9 @@ SLUI.options.args.timer = {
                     name = "Anchor from",
                     type = "select",
                     values = ANCHOR_POINTS,
-                    get = function() return SLUI.db.global.timer.positions[CombatTimer.currentSpec][1] end,
+                    get = function() return SLUI.db.global.timer.positions[currentSpec][1] end,
                     set = function(_, value)
-                        SLUI.db.global.timer.positions[CombatTimer.currentSpec][1] = value
+                        SLUI.db.global.timer.positions[currentSpec][1] = value
                         CombatTimer:ApplySettings()
                     end,
                 },
@@ -136,9 +138,9 @@ SLUI.options.args.timer = {
                     order = 1,
                     name = "Anchored to",
                     type = "input",
-                    get = function() return SLUI.db.global.timer.positions[CombatTimer.currentSpec][2] end,
+                    get = function() return SLUI.db.global.timer.positions[currentSpec][2] end,
                     set = function(_, value)
-                        SLUI.db.global.timer.positions[CombatTimer.currentSpec][2] = value
+                        SLUI.db.global.timer.positions[currentSpec][2] = value
                         CombatTimer:ApplySettings()
                     end,
                 },
@@ -147,9 +149,9 @@ SLUI.options.args.timer = {
                     name = "to frame's",
                     type = "select",
                     values = ANCHOR_POINTS,
-                    get = function() return SLUI.db.global.timer.positions[CombatTimer.currentSpec][3] end,
+                    get = function() return SLUI.db.global.timer.positions[currentSpec][3] end,
                     set = function(_, value)
-                        SLUI.db.global.timer.positions[CombatTimer.currentSpec][3] = value
+                        SLUI.db.global.timer.positions[currentSpec][3] = value
                         CombatTimer:ApplySettings()
                     end,
                 },
@@ -160,9 +162,9 @@ SLUI.options.args.timer = {
                     min = -1000,
                     max = 1000,
                     bigStep = 1,
-                    get = function() return SLUI.db.global.timer.positions[CombatTimer.currentSpec][4] end,
+                    get = function() return SLUI.db.global.timer.positions[currentSpec][4] end,
                     set = function(_, value)
-                        SLUI.db.global.timer.positions[CombatTimer.currentSpec][4] = value
+                        SLUI.db.global.timer.positions[currentSpec][4] = value
                         CombatTimer:ApplySettings()
                     end,
                 },
@@ -173,9 +175,9 @@ SLUI.options.args.timer = {
                     min = -1000,
                     max = 1000,
                     bigStep = 1,
-                    get = function() return SLUI.db.global.timer.positions[CombatTimer.currentSpec][5] end,
+                    get = function() return SLUI.db.global.timer.positions[currentSpec][5] end,
                     set = function(_, value)
-                        SLUI.db.global.timer.positions[CombatTimer.currentSpec][5] = value
+                        SLUI.db.global.timer.positions[currentSpec][5] = value
                         CombatTimer:ApplySettings()
                     end,
                 },
@@ -183,11 +185,6 @@ SLUI.options.args.timer = {
         }
     }
 }
-
--- Determine role
-local function GetCurrentSpecRole()
-    return GetSpecializationRole(GetSpecialization())
-end
 
 -- Format time as M:SS
 local function FormatTime(sec)
@@ -221,7 +218,7 @@ function CombatTimer:ApplySettings()
 
     self.frame:SetSize(self.db.fontSize * 3, self.db.fontSize + 4)
     self.frame:ClearAllPoints()
-    self.frame:SetPoint(unpack(self.db.positions[self.currentSpec]))
+    self.frame:SetPoint(unpack(self.db.positions[currentSpec]))
 
     self.text:SetFont(Media:Fetch(Media.MediaType.FONT, self.db.font), self.db.fontSize, "OUTLINE")
 
@@ -252,14 +249,14 @@ function CombatTimer:CreateFrame()
     end)
 
     -- Timer text
-    local text = frame:CreateFontString("SCLTText", "OVERLAY")
+    local text = frame:CreateFontString("SLCTText", "OVERLAY")
     text:SetPoint("CENTER", frame, "CENTER", 0, 0)
     text:SetJustifyH("CENTER")
     text:SetJustifyV("MIDDLE")
     frame.text = text
 
     -- Background for visibility during unlock
-    local bg = frame:CreateTexture(nil, "BACKGROUND")
+    local bg = frame:CreateTexture("SLCTBackground", "BACKGROUND")
     bg:SetAllPoints()
     bg:SetColorTexture(0, 0, 0, 0)
     frame.bg = bg
@@ -273,7 +270,7 @@ end
 function CombatTimer:UpdateVisibility()
     if not self.frame then return end
 
-    if not self.db.lock or (self.db.enabled and PlayerIsInCombat()) then
+    if not self.db.lock or (self.db.enable and PlayerIsInCombat()) then
         self.frame:Show()
     else
         self.frame:Hide()
@@ -286,7 +283,7 @@ end
 function CombatTimer:SavePosition()
     local position = { self.frame:GetPoint() }
     position[2] = position[2] and position[2]:GetName() or "UIParent"
-    self.db.positions[self.currentSpec] = position
+    self.db.positions[currentSpec] = position
     LibStub("AceConfigRegistry-3.0"):NotifyChange("SLUI")
 end
 
@@ -321,7 +318,7 @@ function CombatTimer:PLAYER_REGEN_DISABLED()
     self:UpdateTimerText()
     self:UpdateVisibility()
 
-    if self.db.enabled and not self.timerRefresh then
+    if self.db.enable and not self.timerRefresh then
         self.timerRefresh = C_Timer.NewTicker(1, function() self:UpdateTimerText() end)
     end
 end
@@ -343,45 +340,17 @@ end
 function CombatTimer:PLAYER_SPECIALIZATION_CHANGED(_, unit)
     if unit ~= "player" then return end
     self:SavePosition()
-    self.currentSpec = GetCurrentSpecRole()
+    currentSpec = GetCurrentSpecRole()
     self:ApplySettings()
-end
-
--- Addon Messages
-local function AddonPrint(...)
-    print(format("|cff00ff98%s|r", "SLUI Combat Timer"), ...)
-end
-
-local function HelpPrint(cmd, helptext)
-    print(format("  |cffffcc00%s|r - %s", cmd, helptext))
-end
-
--- Slash command handler
-function CombatTimer:SlashCommandHandler(msg)
-    msg = msg:trim()
-
-    if msg == "move" then
-        self:SetLocked(not self.db.lock)
-    elseif msg == "help" or msg == "" then
-        AddonPrint("Available commands:")
-        HelpPrint("/slct move", "Toggle move mode")
-        HelpPrint("/slct help", "Show this help")
-    else
-        AddonPrint("Unknown command. Type |cffffcc00/slct help|r for commands.")
-    end
 end
 
 function CombatTimer:OnInitialize()
     self.db = SLUI.db.global.timer
-    self:SetEnabledState(self.db.enabled)
-    LibStub("AceConsole-3.0"):RegisterChatCommand("slct", function(msg) self:SlashCommandHandler(msg) end)
+    self:SetEnabledState(self.db.enable)
 end
 
--- Initial Load. We have to slightly delay this so that talent information is available
 function CombatTimer:OnEnable()
-    AddonPrint("loaded. Type |cffffcc00/slct help|r for commands.")
-
-    self.currentSpec = GetCurrentSpecRole()
+    currentSpec = GetCurrentSpecRole()
 
     self:CreateFrame()
     -- Apply settings after frame is created

@@ -6,6 +6,7 @@ local ReadyCheck = SLUI:NewModule("ReadyCheck", "AceEvent-3.0")
 
 -- Default settings
 SLUI.defaults.global.ready = {
+    enable = false,
     position = {
         point = "CENTER",
         relativeTo = "UIParent",
@@ -13,32 +14,151 @@ SLUI.defaults.global.ready = {
         xOfs = 0,
         yOfs = 0,
     },
-    width = 460,
-    height = 400,
-    debug = false,
-    show = false,
+    width = 500,
+    height = 220,
 }
 
--- Debug
-local function DebugPrint(...)
-    if SLUI.db.global.ready.debug then
-        print("|cff00ff00[SLRC Debug]|r", ...)
-    end
+local ANCHOR_POINTS = {
+    ["TOPLEFT"] = "TOPLEFT",
+    ["TOP"] = "TOP",
+    ["TOPRIGHT"] = "TOPRIGHT",
+    ["LEFT"] = "LEFT",
+    ["CENTER"] = "CENTER",
+    ["RIGHT"] = "RIGHT",
+    ["BOTTOMLEFT"] = "BOTTOMLEFT",
+    ["BOTTOM"] = "BOTTOM",
+    ["BOTTOMRIGHT"] = "BOTTOMRIGHT"
+}
+
+local function Disabled()
+    return not SLUI.db.global.ready.enable
 end
 
--- Addon Messages
-local function AddonPrint(...)
-    print("|cff1e90ff[SLRC]|r", ...)
-end
+SLUI.options.args.ready = {
+    type = "group",
+    name = "Ready Check",
+    args = {
+        enable = {
+            name = "Enable",
+            type = "toggle",
+            get = function() return SLUI.db.global.ready.enable end,
+            set = function(_, value)
+                SLUI.db.global.ready.enable = value
+                if value then ReadyCheck:Enable() else ReadyCheck:Disable() end
+            end,
+            width = "full",
+            order = 0,
+        },
+        test = {
+            order = 1,
+            name = "Test",
+            type = "execute",
+            func = function() ReadyCheck:READY_CHECK("READY_CHECK", UnitName("player"), 35) end,
+            disabled = Disabled,
+        },
+        position = {
+            order = 2,
+            name = "Position",
+            type = "group",
+            inline = true,
+            disabled = Disabled,
+            args = {
+                point = {
+                    order = 2,
+                    name = "Anchor from",
+                    type = "select",
+                    values = ANCHOR_POINTS,
+                    get = function() return SLUI.db.global.ready.position.point end,
+                    set = function(_, value)
+                        SLUI.db.global.ready.position.point = value
+                        ReadyCheck:UpdateFrameOptions()
+                    end,
+                },
+                relativeTo = {
+                    order = 1,
+                    name = "Anchored to",
+                    type = "input",
+                    get = function() return SLUI.db.global.ready.position.relativeTo end,
+                    set = function(_, value)
+                        SLUI.db.global.ready.position.relativeTo = value
+                        ReadyCheck:UpdateFrameOptions()
+                    end,
+                },
+                relativePoint = {
+                    order = 3,
+                    name = "to frame's",
+                    type = "select",
+                    values = ANCHOR_POINTS,
+                    get = function() return SLUI.db.global.ready.position.relativePoint end,
+                    set = function(_, value)
+                        SLUI.db.global.ready.position.relativePoint = value
+                        ReadyCheck:UpdateFrameOptions()
+                    end,
+                },
+                offsetX = {
+                    order = 4,
+                    name = "X Offset",
+                    type = "range",
+                    min = -1000,
+                    max = 1000,
+                    bigStep = 1,
+                    get = function() return SLUI.db.global.ready.position.xOfs end,
+                    set = function(_, value)
+                        SLUI.db.global.ready.position.xOfs = value
+                        ReadyCheck:UpdateFrameOptions()
+                    end,
+                },
+                offsetY = {
+                    order = 5,
+                    name = "Y Offset",
+                    type = "range",
+                    min = -1000,
+                    max = 1000,
+                    bigStep = 1,
+                    get = function() return SLUI.db.global.ready.position.yOfs end,
+                    set = function(_, value)
+                        SLUI.db.global.ready.position.yOfs = value
+                        ReadyCheck:UpdateFrameOptions()
+                    end,
+                },
+            },
+        },
+        --[[ changing the size isn't really a good idea
+        frameWidth = {
+            order = 3,
+            name = "Width",
+            type = "range",
+            min = 0,
+            max = 1000,
+            bigStep = 1,
+            get = function() return SLUI.db.global.ready.width end,
+            set = function(_, value)
+                SLUI.db.global.ready.width = value
+                ReadyCheck:UpdateFrameOptions()
+            end,
+            disabled = Disabled,
+        },
+        frameHeight = {
+            order = 4,
+            name = "Height",
+            type = "range",
+            min = 0,
+            max = 1000,
+            bigStep = 1,
+            get = function() return SLUI.db.global.ready.height end,
+            set = function(_, value)
+                SLUI.db.global.ready.height = value
+                ReadyCheck:UpdateFrameOptions()
+            end,
+            disabled = Disabled,
+        },
+        --]]
+    },
+}
 
 -- Locals
-local mainFrame
 local playerData = {}
 local unitIndexMap = {}
-local strsub = string.sub
-local readyCheckEndTime = 0
-local readyCheckActive = false
-local closeTimer
 local READY_CHECK_READY = "ready"
 
 -- Spell IDs to monitor
@@ -73,20 +193,12 @@ local moveLookup = CreateSpellLookup(SPELL_IDS.Move)
 local ssLookup = CreateSpellLookup(SPELL_IDS.SS)
 
 -- Determine if window should be shown
-local function ShowWindow()
-    local isLeader = UnitIsGroupLeader("player")
-    local isAssistant = UnitIsGroupAssistant("player")
-    local isShow = SLUI.db.global.ready.show
-
-    DebugPrint("Leader:", isLeader, "Assistant:", isAssistant, "Showing Window", isShow)
-
-    return isLeader or isAssistant or isShow
+function ReadyCheck:ShowWindow()
+    return self.db.enable and (UnitIsGroupLeader("player") or UnitIsGroupAssistant("player"))
 end
 
 -- Function to get player buffs
 local function GetPlayerBuffs(unit)
-    DebugPrint("Getting buffs for unit:", unit)
-
     local buffs = {
         Food = nil,
         Flask = nil,
@@ -160,8 +272,6 @@ local function GetPlayerBuffs(unit)
         index = index + 1
     end
 
-    DebugPrint("  Total buffs scanned for", unit, ":", buffCount)
-
     -- Calculate durability (only for player)
     if UnitIsUnit(unit, "player") then
         local totalDurability = 0
@@ -181,15 +291,14 @@ local function GetPlayerBuffs(unit)
         end
     end
 
+    SLUI:Debug(buffs, "Buffs for " .. unit)
     return buffs
 end
 
 -- Create the main frame
-local function CreateMainFrame()
-    DebugPrint("Creating main ready check frame")
-
+function ReadyCheck:CreateFrame()
     local frame = CreateFrame("Frame", "SLRCFrame", UIParent, "BackdropTemplate")
-    frame:SetSize(SLUI.db.global.ready.width, SLUI.db.global.ready.height)
+    frame:SetSize(self.db.width, self.db.height)
     frame:SetBackdrop({
         bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
     })
@@ -200,7 +309,7 @@ local function CreateMainFrame()
     frame:Hide()
 
     -- Set to last known position
-    local pos = SLUI.db.global.ready.position
+    local pos = self.db.position
     frame:SetPoint(pos.point, pos.relativeTo, pos.relativePoint, pos.xOfs, pos.yOfs)
 
     -- Title bar
@@ -214,20 +323,21 @@ local function CreateMainFrame()
     titleBar:SetBackdropColor(0.1, 0.1, 0.1, 1)
     titleBar:EnableMouse(true)
     titleBar:RegisterForDrag("LeftButton")
-    titleBar:SetScript("OnDragStart", function(self)
+    titleBar:SetScript("OnDragStart", function()
         frame:StartMoving()
     end)
-    titleBar:SetScript("OnDragStop", function(self)
+    titleBar:SetScript("OnDragStop", function()
         frame:StopMovingOrSizing()
         -- Save position
         local point, relativeTo, relativePoint, xOfs, yOfs = frame:GetPoint()
-        SLUI.db.global.ready.position = {
+        self.db.position = {
             point = point,
-            relativeTo = "UIParent",
+            relativeTo = relativeTo and relativeTo:GetName() or "UIParent",
             relativePoint = relativePoint,
             xOfs = xOfs,
             yOfs = yOfs,
         }
+        LibStub("AceConfigRegistry-3.0"):NotifyChange("SLUI")
     end)
     frame.titleBar = titleBar
 
@@ -261,14 +371,16 @@ local function CreateMainFrame()
     closeX:SetSize(12, 12)
     closeX:SetTexture("Interface\\AddOns\\SLUI\\Media\\Textures\\Ready\\Close")
 
-    closeButton:SetScript("OnEnter", function(self)
-        self:SetBackdropBorderColor(0, 0.9, 0.9, 1)
+    closeButton:SetScript("OnEnter", function(f)
+        f:SetBackdropBorderColor(0, 0.9, 0.9, 1)
     end)
-    closeButton:SetScript("OnLeave", function(self)
-        self:SetBackdropBorderColor(1, 1, 1, 0.1)
+    closeButton:SetScript("OnLeave", function(f)
+        f:SetBackdropBorderColor(1, 1, 1, 0.1)
     end)
     closeButton:SetScript("OnClick", function()
+        frame:SetScript("OnUpdate", nil)
         frame:Hide()
+        frame.notReadyText:Hide()
     end)
     frame.closeButton = closeButton
 
@@ -308,7 +420,7 @@ local function CreateMainFrame()
     frame.notReadyText = notReadyText
 
     -- Column headers
-    local columnHeaders = {
+    frame.columnHeaders = {
         { name = "Food",   width = 30 },
         { name = "Flask",  width = 30 },
         { name = "Rune",   width = 30 },
@@ -322,8 +434,6 @@ local function CreateMainFrame()
         { name = "SS",     width = 30 },
         { name = "Repair", width = 40 },
     }
-
-    frame.columnHeaders = columnHeaders
     frame.rows = {}
 
     -- Create header row
@@ -334,7 +444,7 @@ local function CreateMainFrame()
     nameText:SetTextColor(1, 1, 1, 1)
     --rest of the headers
     local xOffset = 100
-    for i, header in ipairs(columnHeaders) do
+    for _, header in ipairs(frame.columnHeaders) do
         local headerText = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         headerText:SetPoint("CENTER", content, "TOPLEFT", xOffset, -5)
         headerText:SetText(header.name)
@@ -342,12 +452,30 @@ local function CreateMainFrame()
         xOffset = xOffset + header.width
     end
 
-    DebugPrint("Main frame created successfully")
-
-    return frame
+    self.frame = frame
 end
 
--- Create Row
+function ReadyCheck:UpdateFrameOptions()
+    if not self.frame then return end
+
+    self.frame:SetWidth(self.db.width)
+    self.frame:SetHeight(self.db.height)
+
+    local pos = self.db.position
+    self.frame:ClearAllPoints()
+    self.frame:SetPoint(pos.point, pos.relativeTo, pos.relativePoint, pos.xOfs, pos.yOfs)
+
+    self.frame.titleBar:SetSize(self.frame:GetWidth() - 2, 30)
+    self.frame.notReadyText:SetWidth(self.frame:GetWidth() - 40)
+
+    for _, row in ipairs(self.frame.rows) do
+        row:SetWidth(self.frame.content:GetWidth())
+    end
+end
+
+--- Create Row
+---@param parent Frame
+---@param index number
 local function CreateRow(parent, index)
     local row = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     row:SetSize(parent:GetWidth(), 28)
@@ -479,78 +607,105 @@ local function UpdateAllPlayers()
     wipe(playerData)
     wipe(unitIndexMap)
 
-    -- Add player first
+    -- Always add player first
     local playerName = UnitName("player")
-    if playerName then
-        local readyStatus = GetReadyCheckStatus("player")
-        playerData[1] = {
-            name = playerName,
-            unit = "player",
-            ready = true,
-            buffs = GetPlayerBuffs("player"),
-        }
-        unitIndexMap["player"] = 1
-        DebugPrint(playerName, "ReadyStatus:", readyStatus)
-    end
+    playerData[1] = {
+        name = playerName,
+        unit = "player",
+        ready = true,
+        buffs = GetPlayerBuffs("player"),
+    }
+    unitIndexMap["player"] = 1
 
-    if not IsInGroup() then
-        DebugPrint("Not in group, skipping player data update")
-        return
-    else
-        local isRaid = IsInRaid()
-        local numMembers = GetNumGroupMembers()
-        DebugPrint("Updating player data for", numMembers, isRaid and "raid" or "party", "members")
+    if not IsInGroup() then return end
 
-        -- Add group members
-        local startIndex = 2
-        if isRaid then
-            -- In raid, iterate through raid units
-            for i = 1, numMembers do
-                local unit = "raid" .. i
-                local name = UnitName(unit)
+    -- Add group members
+    local startIndex = 2
+    if IsInRaid() then
+        -- It's discouraged to use GetNumGroupMembers() since there can be "holes"
+        -- between raid1 to raid40.
+        -- see: https://warcraft.wiki.gg/wiki/API_GetRaidRosterInfo
+        for i = 1, MAX_RAID_MEMBERS do
+            local unit = "raid" .. i
+            local name = UnitName(unit)
 
-                if name and name ~= playerName then
-                    local readyStatus = GetReadyCheckStatus(unit)
-
-                    playerData[startIndex] = {
-                        name = name,
-                        unit = unit,
-                        ready = readyStatus == READY_CHECK_READY,
-                        buffs = GetPlayerBuffs(unit),
-                    }
-                    unitIndexMap[unit] = startIndex
-                    DebugPrint(name, "ReadyStatus:", readyStatus)
-                    startIndex = startIndex + 1
-                end
-            end
-        else
-            -- In party, iterate through party units
-            for i = 1, numMembers - 1 do
-                local unit = "party" .. i
-                local name = UnitName(unit)
-
-                if name then
-                    local readyStatus = GetReadyCheckStatus(unit)
-
-                    playerData[startIndex] = {
-                        name = name,
-                        unit = unit,
-                        ready = readyStatus == READY_CHECK_READY,
-                        buffs = GetPlayerBuffs(unit),
-                    }
-                    unitIndexMap[unit] = startIndex
-                    DebugPrint(name, "ReadyStatus:", readyStatus)
-                    startIndex = startIndex + 1
-                end
+            if name and name ~= playerName then
+                playerData[startIndex] = {
+                    name = name,
+                    unit = unit,
+                    ready = GetReadyCheckStatus(unit) == READY_CHECK_READY,
+                    buffs = GetPlayerBuffs(unit),
+                }
+                unitIndexMap[unit] = startIndex
+                startIndex = startIndex + 1
             end
         end
+    else
+        for i = 1, MAX_PARTY_MEMBERS do
+            local unit = "party" .. i
+            local name = UnitName(unit)
 
-        DebugPrint("Total players added to data:", #playerData)
+            if name then
+                playerData[startIndex] = {
+                    name = name,
+                    unit = unit,
+                    ready = GetReadyCheckStatus(unit) == READY_CHECK_READY,
+                    buffs = GetPlayerBuffs(unit),
+                }
+                unitIndexMap[unit] = startIndex
+                startIndex = startIndex + 1
+            end
+        end
     end
+
+    SLUI:Debug(playerData, "ReadyCheck.UpdateAllPlayers")
+end
+
+-- Update the frame
+function ReadyCheck:UpdateFrame()
+    if not self.frame or not self.frame:IsShown() then return end
+
+    UpdateAllPlayers()
+
+    -- Update title with remaining time
+    local timeLeft = math.max(0, self.endTime - GetTime())
+    self.frame.titleText:SetFormattedText("<SL> Ready Check: %ds", timeLeft)
+
+    -- Update ready count
+    local numReady = CountReadyPlayers()
+    local numPlayers = #playerData -- was GetNumGroupMembers()
+    self.frame.readyCount:SetFormattedText("%d/%d", numReady, numPlayers)
+
+    -- Ensure we have enough rows
+    while #self.frame.rows < numPlayers do
+        local row = CreateRow(self.frame.content, #self.frame.rows + 1)
+        table.insert(self.frame.rows, row)
+    end
+
+    -- Update rows
+    for i = 1, numPlayers do
+        if not self.frame.rows[i] then
+            self.frame.rows[i] = CreateRow(self.frame.content, i)
+        end
+        UpdateRow(self.frame.rows[i], playerData[i])
+    end
+
+    -- Hide unused rows
+    for i = numPlayers + 1, #self.frame.rows do
+        self.frame.rows[i]:Hide()
+    end
+
+    -- Resize frame based on number of players
+    local contentHeight = 30 + numPlayers * 28 -- Header (30) + rows (28 each)
+    self.frame.content:SetHeight(contentHeight)
+
+    -- Adjust main frame height to fit content
+    local frameHeight = math.max(200, 40 + contentHeight + 10) -- Title bar (40) + content + padding (10)
+    self.frame:SetHeight(frameHeight)
 end
 
 -- Update data for a single player
-local function UpdatePlayer(unit)
+function ReadyCheck:UpdatePlayer(unit)
     local index = unitIndexMap[unit]
     if not index then return end
 
@@ -559,162 +714,102 @@ local function UpdatePlayer(unit)
 
     data.buffs = GetPlayerBuffs(unit)
 
-    local row = mainFrame and mainFrame.rows[index]
+    local row = self.frame and self.frame.rows[index]
     if row then
         UpdateRow(row, data)
     end
 end
 
--- Update the frame
-local function UpdateFrame()
-    if readyCheckActive == false then return end
-    if not mainFrame or not mainFrame:IsShown() then
-        DebugPrint("Frame not shown, skipping update")
-        return
+function ReadyCheck:UNIT_AURA(_, unit)
+    if not self.frame or not self.frame:IsShown() then return end
+
+    if unit == "player" or strsub(unit, 1, 4) == "raid" or strsub(unit, 1, 5) == "party" then
+        self:UpdatePlayer(unit)
     end
-
-    DebugPrint("Updating frame display")
-
-    UpdateAllPlayers()
-
-    -- Update title with remaining time
-    local timeLeft = math.max(0, readyCheckEndTime - GetTime())
-    mainFrame.titleText:SetFormattedText("<SL> Ready Check: %.0fs", timeLeft)
-
-    -- Update ready count
-    local readyCount = CountReadyPlayers()
-    local totalCount = #playerData -- was GetNumGroupMembers()
-    mainFrame.readyCount:SetFormattedText("%d/%d", readyCount, totalCount)
-
-    -- Ensure we have enough rows
-    local numPlayers = #playerData
-    while #mainFrame.rows < numPlayers do
-        local row = CreateRow(mainFrame.content, #mainFrame.rows + 1)
-        table.insert(mainFrame.rows, row)
-    end
-
-    -- Update rows
-    for i = 1, numPlayers do
-        if not mainFrame.rows[i] then
-            mainFrame.rows[i] = CreateRow(mainFrame.content, i)
-        end
-        UpdateRow(mainFrame.rows[i], playerData[i])
-    end
-
-    -- Hide unused rows
-    for i = numPlayers + 1, #mainFrame.rows do
-        mainFrame.rows[i]:Hide()
-    end
-
-    -- Resize frame based on number of players
-    local contentHeight = 30 + numPlayers * 28 -- Header (30) + rows (28 each)
-    mainFrame.content:SetHeight(contentHeight)
-
-    -- Adjust main frame height to fit content
-    local frameHeight = math.max(200, 40 + contentHeight + 10) -- Title bar (40) + content + padding (10)
-    mainFrame:SetHeight(frameHeight)
 end
-
--- reset frame states
-local function ResetFrame()
-    if not mainFrame then return end
-    mainFrame:Hide()
-    mainFrame.failTexture:Hide()
-    mainFrame.readyTexture:Hide()
-    mainFrame.notReadyText:Hide()
-    mainFrame.content:Show()
-end
-
 
 -- Event handlers
-function ReadyCheck:READY_CHECK(event, initiator, duration)
-    DebugPrint("READY_CHECK event triggered by", initiator, "for", duration, "seconds")
+function ReadyCheck:READY_CHECK(_, initiatorName, readyCheckTimeLeft)
+    if not self.frame or not self:ShowWindow() then return end
 
-    if not IsInGroup() then
-        DebugPrint("Not in group, ignoring ready check")
-        return
-    end
+    self.endTime = GetTime() + (readyCheckTimeLeft or 40)
 
-    -- Check if player is showing window
-    if not ShowWindow() then
-        DebugPrint("Show Window is off")
-        return
-    end
+    self.frame:Show()
+    self.frame.content:Show()
+    self.frame.readyTexture:Hide()
+    self.frame.failTexture:Hide()
+    self.frame.notReadyText:Hide()
+    self:UpdateFrame()
 
-    readyCheckActive = true
-    readyCheckEndTime = GetTime() + (duration or 40)
+    self.frame:SetScript("OnUpdate", function(_, elapsed)
+        if not self.frame or not self.frame:IsShown() then return end
 
-    DebugPrint("Ready check will end at:", readyCheckEndTime)
+        -- Throttle updates
+        self.elapsed = (self.elapsed or 0) + elapsed
+        if self.elapsed < 0.5 then return end
+        self.elapsed = self.elapsed - 0.5
 
-    -- Create frame, show it, then update it
-    if not mainFrame then
-        mainFrame = CreateMainFrame()
-    end
-
-    mainFrame:Show()
-    DebugPrint("Frame shown")
-    UpdateFrame()
+        local timeLeft = math.max(0, self.endTime - GetTime())
+        self.frame.titleText:SetFormattedText("<SL> Ready Check: %ds", timeLeft)
+    end)
 
     -- Register events for updates
     self:RegisterEvent("UNIT_AURA")
     self:RegisterEvent("READY_CHECK_CONFIRM")
 
     -- Cancel previous timer if it exists
-    if closeTimer then
-        closeTimer:Cancel()
+    if self.closeTimer then
+        self.closeTimer:Cancel()
+        self.closeTimer = nil
     end
+
+    self.closeTimer = C_Timer.NewTimer(readyCheckTimeLeft or 40, function()
+        self.frame:SetScript("OnUpdate", nil)
+        self.frame:Hide()
+        self:UnregisterEvent("UNIT_AURA")
+        self:UnregisterEvent("READY_CHECK_CONFIRM")
+    end)
 end
 
-function ReadyCheck:READY_CHECK_CONFIRM(_, unit)
-    local index = unitIndexMap[unit]
+function ReadyCheck:READY_CHECK_CONFIRM(_, unitTarget, isReady)
+    if not self.frame or not self.frame:IsShown() then return end
+
+    local index = unitIndexMap[unitTarget]
     if not index then return end
 
     local data = playerData[index]
     if not data then return end
 
-    local readyStatus = GetReadyCheckStatus(unit)
+    local readyStatus = GetReadyCheckStatus(unitTarget)
     data.ready = readyStatus == READY_CHECK_READY
 
-    local row = mainFrame and mainFrame.rows[index]
-    if row then
-        UpdateRow(row, data)
-    end
+    local row = self.frame.rows[index]
+    if row then UpdateRow(row, data) end
 
     -- update count display
     local readyCount = CountReadyPlayers()
-    if mainFrame and mainFrame.readyCount then
-        mainFrame.readyCount:SetFormattedText("%d/%d", readyCount, #playerData)
-    end
+    self.frame.readyCount:SetFormattedText("%d/%d", readyCount, #playerData)
 end
 
 function ReadyCheck:READY_CHECK_FINISHED()
-    DebugPrint("READY_CHECK_FINISHED")
+    if not self.frame or not self.frame:IsShown() then return end
 
     -- Check if everyone is ready
     local readyCount = CountReadyPlayers()
-    local totalCount = #playerData -- was GetNumGroupMembers()
-    local allReady = (readyCount == totalCount)
-
-    DebugPrint("Ready check finished - Ready:", readyCount, "Total:", totalCount, "All Ready:", allReady)
-    readyCheckActive = false
-
-    if not mainFrame or not mainFrame:IsShown() then
-        DebugPrint("Frame closed early, skipping display complete")
-        return
-    end
+    local numPlayers = #playerData -- was GetNumGroupMembers()
+    local allReady = readyCount == numPlayers
 
     -- Update main frame
-    mainFrame.titleText:SetFormattedText("Ready Check Complete")
-    mainFrame.content:Hide()
+    self.frame.titleText:SetFormattedText("Ready Check Complete")
+    self.frame:SetScript("OnUpdate", nil) -- stop updating the timer text
+    self.frame.content:Hide()
 
     if allReady then
         -- Everyone is ready - show pass texture
-        DebugPrint("Everyone is ready - showing pass texture")
-        mainFrame.readyTexture:Show()
+        self.frame.readyTexture:Show()
     else
         -- Not everyone is ready - show fail texture and list of not ready players
-        DebugPrint("Not everyone ready - showing fail texture and player list")
-        mainFrame.failTexture:Show()
+        self.frame.failTexture:Show()
 
         -- Who isnt ready
         local notReadyPlayers = {}
@@ -726,182 +821,61 @@ function ReadyCheck:READY_CHECK_FINISHED()
 
         -- Display the list
         local notReadyList = table.concat(notReadyPlayers, "\n")
-        mainFrame.notReadyText:SetText(notReadyList)
-        mainFrame.notReadyText:Show()
-
-        DebugPrint("Not ready players:", notReadyList)
+        self.frame.notReadyText:SetText(notReadyList)
+        self.frame.notReadyText:Show()
     end
 
     -- Cancel previous timer if it exists
-    if closeTimer then
-        closeTimer:Cancel()
+    if self.closeTimer then
+        self.closeTimer:Cancel()
+        self.closeTimer = nil
     end
 
-    DebugPrint("Starting 5 second timer to close window")
     -- Close window 5 seconds after ready check completes
-    closeTimer = C_Timer.NewTimer(5, function()
-        DebugPrint("5 second timer expired, hiding frame")
-        ResetFrame()
-        ReadyCheck:UnregisterEvent("UNIT_AURA")
-        ReadyCheck:UnregisterEvent("READY_CHECK_CONFIRM")
+    self.closeTimer = C_Timer.NewTimer(5, function()
+        self.frame:SetScript("OnUpdate", nil)
+        self.frame:Hide()
+        self:UnregisterEvent("UNIT_AURA")
+        self:UnregisterEvent("READY_CHECK_CONFIRM")
     end)
 end
 
 function ReadyCheck:ENCOUNTER_START()
-    DebugPrint("ENCOUNTER_START")
-
-    -- Stop everything, someone pulled early
-    readyCheckActive = false
-
-    if mainFrame then
-        mainFrame:Hide()
-        mainFrame.failTexture:Hide()
-        mainFrame.readyTexture:Hide()
-        mainFrame.notReadyText:Hide()
-        mainFrame.content:Show()
+    if self.frame then
+        self.frame:SetScript("OnUpdate", nil)
+        self.frame:Hide()
     end
 
-    ReadyCheck:UnregisterEvent("UNIT_AURA")
-    ReadyCheck:UnregisterEvent("READY_CHECK_CONFIRM")
+    self:UnregisterEvent("UNIT_AURA")
+    self:UnregisterEvent("READY_CHECK_CONFIRM")
 
-    if closeTimer then
-        closeTimer:Cancel()
-    end
-end
-
-function ReadyCheck:UNIT_AURA(event, unit)
-    if not readyCheckActive then return end
-    if not mainFrame or not mainFrame:IsShown() then return end
-
-    if unit == "player"
-        or strsub(unit, 1, 4) == "raid"
-        or strsub(unit, 1, 5) == "party" then
-        UpdatePlayer(unit)
+    -- Cancel previous timer if it exists
+    if self.closeTimer then
+        self.closeTimer:Cancel()
+        self.closeTimer = nil
     end
 end
 
 -- Module initialization
 function ReadyCheck:OnInitialize()
-    DebugPrint("SLRC module initializing")
-    self:SetEnabledState(SLUI.db.global.ready.show)
+    self.db = SLUI.db.global.ready
+    self:SetEnabledState(self.db.enable)
 end
 
 function ReadyCheck:OnEnable()
-    DebugPrint("SLRC module enabled")
+    self:CreateFrame()
 
     -- Register events
     self:RegisterEvent("READY_CHECK")
     self:RegisterEvent("READY_CHECK_FINISHED")
     self:RegisterEvent("ENCOUNTER_START")
-    DebugPrint("Events registered")
-
-    -- Module loaded message
-    AddonPrint("loaded. Type |cffffcc00/slrc help|r for commands")
-    if SLUI.db.global.ready.debug then
-        AddonPrint("  |cffff9900Debug mode is ENABLED|r")
-    end
 end
 
 function ReadyCheck:OnDisable()
-    AddonPrint("module disabled.")
-    if mainFrame then
-        mainFrame:Hide()
+    if self.frame then
+        self.frame:SetScript("OnUpdate", nil)
+        self.frame:Hide()
     end
+
     self:UnregisterAllEvents()
 end
-
--- Update timer
-local timerUpdateThrottle = 0
-local updateFrame = CreateFrame("Frame")
-updateFrame:SetScript("OnUpdate", function(self, elapsed)
-    if not readyCheckActive or not mainFrame or not mainFrame:IsShown() then
-        return
-    end
-
-    timerUpdateThrottle = timerUpdateThrottle + elapsed
-    if timerUpdateThrottle >= 0.5 then
-        timerUpdateThrottle = 0
-
-        local timeLeft = math.max(0, readyCheckEndTime - GetTime())
-        mainFrame.titleText:SetFormattedText("<SL> Ready Check: %.0fs", timeLeft)
-    end
-end)
-
--- Slash commands
-local function ShowHelp()
-    AddonPrint("Available commands:")
-    print("  |cffffcc00/slrc debug|r - Toggle debug mode on/off")
-    print("  |cffffcc00/slrc show|r - Toggle ready check window")
-    print("  |cffffcc00/slrc test|r - Test Window")
-    print("  |cffffcc00/slrc help|r - Show this help message")
-end
-
-local function ToggleDebug()
-    SLUI.db.global.ready.debug = not SLUI.db.global.ready.debug
-    if SLUI.db.global.ready.debug then
-        AddonPrint("|cff00ff00Debug mode ENABLED|r")
-    else
-        AddonPrint("|cffff0000Debug mode DISABLED|r")
-    end
-end
-
-local function ToggleShow()
-    SLUI.db.global.ready.show = not SLUI.db.global.ready.show
-    if SLUI.db.global.ready.show then
-        ReadyCheck:Enable()
-    else
-        ReadyCheck:Disable()
-    end
-end
-
-local function ToggleTest()
-    AddonPrint("|cff00ff00Test Window ENABLED|r")
-    readyCheckActive = true
-    readyCheckEndTime = GetTime() + 35
-
-    -- Create frame, show it, then update it
-    if not mainFrame then
-        mainFrame = CreateMainFrame()
-    end
-
-    mainFrame:Show()
-    DebugPrint("Frame shown")
-    UpdateFrame()
-
-    -- Register events for updates
-    ReadyCheck:RegisterEvent("UNIT_AURA")
-
-    -- Cancel previous timer if it exists
-    if closeTimer then
-        closeTimer:Cancel()
-    end
-
-    closeTimer = C_Timer.NewTimer(35, function()
-        ResetFrame()
-        ReadyCheck:UnregisterEvent("UNIT_AURA")
-        ReadyCheck:UnregisterEvent("READY_CHECK_CONFIRM")
-    end)
-end
-
--- Slash command handler
-local function SlashCommandHandler(msg)
-    local command, arg = msg:match("^(%S*)%s*(.-)$")
-    command = command:lower()
-    if command == "debug" then
-        ToggleDebug()
-    elseif command == "show" then
-        ToggleShow()
-    elseif command == "test" then
-        ToggleTest()
-    elseif command == "help" or command == "" then
-        ShowHelp()
-    else
-        AddonPrint("|cffff0000Unknown command:|r " .. command)
-        ShowHelp()
-    end
-end
-
--- Register slash commands
-SLASH_SLRC1 = "/SLReadyCheck"
-SLASH_SLRC2 = "/SLRC"
-SlashCmdList["SLRC"] = SlashCommandHandler
