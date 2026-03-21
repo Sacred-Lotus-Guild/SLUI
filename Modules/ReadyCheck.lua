@@ -217,57 +217,40 @@ local function GetPlayerBuffs(unit)
 
     -- Check auras
     local index = 1
-    local buffCount = 0
     while true do
         local auraData = C_UnitAuras.GetAuraDataByIndex(unit, index, "HELPFUL")
 
         if not auraData then break end
-        buffCount = buffCount + 1
 
         local name = auraData.name
         local icon = auraData.icon
         local spellId = auraData.spellId
         local expirationTime = auraData.expirationTime
 
-        -- Check for Well Fed
-        if name and name == "Well Fed" and not buffs.Food then
+        if not buffs.Food and name and name:match("Well Fed") then
             buffs.Food = { icon = icon, expirationTime = expirationTime }
-        end
-
-        -- Check for Food (eating)
-        if name and name == "Food" and not buffs.Food then
+        elseif not buffs.Food and name and name == "Food" then -- Eating
             buffs.Food = { icon = icon, expirationTime = expirationTime }
-        end
-
-        -- Check for Flask
-        if name and name:match("^Flask of") and not buffs.Flask then
+        elseif not buffs.Flask and name and name:match("^Flask of") then
             buffs.Flask = { icon = icon, expirationTime = expirationTime }
-        end
-
-        -- Check for Vantus Rune
-        if name and name:match("^Vantus Rune:") and not buffs.Vantus then
+        elseif not buffs.Vantus and name and name:match("^Vantus Rune:") then
             buffs.Vantus = { icon = icon, expirationTime = expirationTime }
-        end
-
-        -- Check spell IDs
-        if spellId then
-            if runeLookup[spellId] and not buffs.Rune then
-                buffs.Rune = { icon = icon, expirationTime = expirationTime }
-            elseif intLookup[spellId] and not buffs.Int then
-                buffs.Int = { icon = icon, expirationTime = expirationTime }
-            elseif atkLookup[spellId] and not buffs.Atk then
-                buffs.Atk = { icon = icon, expirationTime = expirationTime }
-            elseif versLookup[spellId] and not buffs.Vers then
-                buffs.Vers = { icon = icon, expirationTime = expirationTime }
-            elseif stamLookup[spellId] and not buffs.Stam then
-                buffs.Stam = { icon = icon, expirationTime = expirationTime }
-            elseif masteryLookup[spellId] and not buffs.Mastery then
-                buffs.Mastery = { icon = icon, expirationTime = expirationTime }
-            elseif moveLookup[spellId] and not buffs.Move then
-                buffs.Move = { icon = icon, expirationTime = expirationTime }
-            elseif ssLookup[spellId] and not buffs.SS then
-                buffs.SS = { icon = icon, expirationTime = expirationTime }
-            end
+        elseif not buffs.Rune and spellId and runeLookup[spellId] then
+            buffs.Rune = { icon = icon, expirationTime = expirationTime }
+        elseif not buffs.Int and spellId and intLookup[spellId] then
+            buffs.Int = { icon = icon, expirationTime = expirationTime }
+        elseif not buffs.Atk and spellId and atkLookup[spellId] then
+            buffs.Atk = { icon = icon, expirationTime = expirationTime }
+        elseif not buffs.Vers and spellId and versLookup[spellId] then
+            buffs.Vers = { icon = icon, expirationTime = expirationTime }
+        elseif not buffs.Stam and spellId and stamLookup[spellId] then
+            buffs.Stam = { icon = icon, expirationTime = expirationTime }
+        elseif not buffs.Mastery and spellId and masteryLookup[spellId] then
+            buffs.Mastery = { icon = icon, expirationTime = expirationTime }
+        elseif not buffs.Move and spellId and moveLookup[spellId] then
+            buffs.Move = { icon = icon, expirationTime = expirationTime }
+        elseif not buffs.SS and spellId and ssLookup[spellId] then
+            buffs.SS = { icon = icon, expirationTime = expirationTime }
         end
 
         index = index + 1
