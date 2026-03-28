@@ -123,36 +123,6 @@ SLUI.options.args.ready = {
                 },
             },
         },
-        --[[ changing the size isn't really a good idea
-        frameWidth = {
-            order = 3,
-            name = "Width",
-            type = "range",
-            min = 0,
-            max = 1000,
-            bigStep = 1,
-            get = function() return SLUI.db.global.ready.width end,
-            set = function(_, value)
-                SLUI.db.global.ready.width = value
-                ReadyCheck:UpdateFrameOptions()
-            end,
-            disabled = Disabled,
-        },
-        frameHeight = {
-            order = 4,
-            name = "Height",
-            type = "range",
-            min = 0,
-            max = 1000,
-            bigStep = 1,
-            get = function() return SLUI.db.global.ready.height end,
-            set = function(_, value)
-                SLUI.db.global.ready.height = value
-                ReadyCheck:UpdateFrameOptions()
-            end,
-            disabled = Disabled,
-        },
-        --]]
     },
 }
 
@@ -162,7 +132,10 @@ local unitIndexMap = {}
 local READY_CHECK_READY = "ready"
 
 -- Spell IDs to monitor
-local SPELL_IDS = {
+local BUFF_ORDER = { "Food", "Flask", "Rune", "Int", "Atk", "Vers", "Stam", "Mastery", "Move", "Vantus", "SS" }
+local BUFFS = {
+    Food = "Well Fed", -- special case, we also check against "Food" for the eating buff
+    Flask = "^Flask of",
     Rune = { 1234969, 1242347 },
     Int = { 1459 },
     Atk = { 6673 },
@@ -170,27 +143,23 @@ local SPELL_IDS = {
     Stam = { 21562 },
     Mastery = { 462854 },
     Move = { 381758, 381732, 381746, 381748, 381750, 381749, 381751, 381752, 381753, 381754, 381756, 381757, 381741 },
+    Vantus = "^Vantus Rune:",
     SS = { 20707 },
 }
 
--- Spell lookup functions
-local function CreateSpellLookup(spellList)
-    local lookup = {}
-    for _, spellID in ipairs(spellList) do
-        lookup[spellID] = true
+---@type table<string, fun(auraData:table):boolean>
+local BUFF_LOOKUPS = {}
+for key, value in pairs(BUFFS) do
+    if type(value) == "string" then
+        BUFF_LOOKUPS[key] = function(auraData)
+            return auraData.name and auraData.name:match(value)
+        end
+    else
+        BUFF_LOOKUPS[key] = function(auraData)
+            return auraData.spellId and tContains(value, auraData.spellId)
+        end
     end
-    return lookup
 end
-
--- Create lookup tables for faster checks
-local runeLookup = CreateSpellLookup(SPELL_IDS.Rune)
-local intLookup = CreateSpellLookup(SPELL_IDS.Int)
-local atkLookup = CreateSpellLookup(SPELL_IDS.Atk)
-local versLookup = CreateSpellLookup(SPELL_IDS.Vers)
-local stamLookup = CreateSpellLookup(SPELL_IDS.Stam)
-local masteryLookup = CreateSpellLookup(SPELL_IDS.Mastery)
-local moveLookup = CreateSpellLookup(SPELL_IDS.Move)
-local ssLookup = CreateSpellLookup(SPELL_IDS.SS)
 
 -- Determine if window should be shown
 function ReadyCheck:ShowWindow(initiatorName)
@@ -200,57 +169,22 @@ end
 
 -- Function to get player buffs
 local function GetPlayerBuffs(unit)
-    local buffs = {
-        Food = nil,
-        Flask = nil,
-        Rune = nil,
-        Vantus = nil,
-        Int = nil,
-        Atk = nil,
-        Vers = nil,
-        Stam = nil,
-        Mastery = nil,
-        Move = nil,
-        SS = nil,
-        Durability = 100,
-    }
+    local buffs = {}
 
     -- Check auras
     local index = 1
     while true do
         local auraData = C_UnitAuras.GetAuraDataByIndex(unit, index, "HELPFUL")
+        if not auraData or issecrettable(auraData) or issecretvalue(auraData.name) or issecretvalue(auraData.spellId) then break end
 
-        if not auraData then break end
-
-        local name = auraData.name
-        local icon = auraData.icon
-        local spellId = auraData.spellId
-        local expirationTime = auraData.expirationTime
-
-        if not buffs.Food and name and name:match("Well Fed") then
-            buffs.Food = { icon = icon, expirationTime = expirationTime }
-        elseif not buffs.Food and name and name == "Food" then -- Eating
-            buffs.Food = { icon = icon, expirationTime = expirationTime }
-        elseif not buffs.Flask and name and name:match("^Flask of") then
-            buffs.Flask = { icon = icon, expirationTime = expirationTime }
-        elseif not buffs.Vantus and name and name:match("^Vantus Rune:") then
-            buffs.Vantus = { icon = icon, expirationTime = expirationTime }
-        elseif not buffs.Rune and spellId and runeLookup[spellId] then
-            buffs.Rune = { icon = icon, expirationTime = expirationTime }
-        elseif not buffs.Int and spellId and intLookup[spellId] then
-            buffs.Int = { icon = icon, expirationTime = expirationTime }
-        elseif not buffs.Atk and spellId and atkLookup[spellId] then
-            buffs.Atk = { icon = icon, expirationTime = expirationTime }
-        elseif not buffs.Vers and spellId and versLookup[spellId] then
-            buffs.Vers = { icon = icon, expirationTime = expirationTime }
-        elseif not buffs.Stam and spellId and stamLookup[spellId] then
-            buffs.Stam = { icon = icon, expirationTime = expirationTime }
-        elseif not buffs.Mastery and spellId and masteryLookup[spellId] then
-            buffs.Mastery = { icon = icon, expirationTime = expirationTime }
-        elseif not buffs.Move and spellId and moveLookup[spellId] then
-            buffs.Move = { icon = icon, expirationTime = expirationTime }
-        elseif not buffs.SS and spellId and ssLookup[spellId] then
-            buffs.SS = { icon = icon, expirationTime = expirationTime }
+        for buffName, lookup in pairs(BUFF_LOOKUPS) do
+            if not buffs[buffName] and lookup(auraData) then
+                buffs[buffName] = { icon = auraData.icon, expirationTime = auraData.expirationTime }
+            end
+        end
+        -- special case for eating
+        if not buffs.Food and auraData.name and auraData.name == "Food" then
+            buffs.Food = { icon = auraData.icon, expirationTime = auraData.expirationTime }
         end
 
         index = index + 1
@@ -485,9 +419,7 @@ local function CreateRow(parent, index)
     -- Icons
     local xOffset = 100
     row.icons = {}
-    local iconOrder = { "Food", "Flask", "Rune", "Int", "Atk", "Vers", "Stam", "Mastery", "Move", "Vantus", "SS" }
-
-    for _, buffName in ipairs(iconOrder) do
+    for _, buffName in ipairs(BUFF_ORDER) do
         ---@type Texture|table
         local icon = row:CreateTexture(nil, "ARTWORK")
         icon:SetSize(24, 24)
@@ -572,7 +504,7 @@ local function UpdateRow(row, data)
 
     -- Update durability
     if data.buffs.Durability then
-        row.durText:SetFormattedText("%.0f%%", data.buffs.Durability)
+        row.durText:SetFormattedText("%d%%", data.buffs.Durability)
         if data.buffs.Durability < 25 then
             row.durText:SetTextColor(1, 0, 0, 1)
         elseif data.buffs.Durability < 50 then
@@ -714,6 +646,7 @@ function ReadyCheck:UNIT_AURA(_, unit)
 end
 
 function ReadyCheck:READY_CHECK_CONFIRM(_, unitTarget, isReady)
+    SLUI:Debug({ unitTarget, isReady }, "ReadyCheck.READY_CHECK_CONFIRM")
     if not self.frame or not self.frame:IsShown() then return end
 
     local index = unitIndexMap[unitTarget]
@@ -722,11 +655,12 @@ function ReadyCheck:READY_CHECK_CONFIRM(_, unitTarget, isReady)
     local data = playerData[index]
     if not data then return end
 
-    local readyStatus = GetReadyCheckStatus(unitTarget)
-    data.ready = readyStatus == READY_CHECK_READY
+    data.ready = GetReadyCheckStatus(unitTarget) == READY_CHECK_READY
 
     local row = self.frame.rows[index]
-    if row then UpdateRow(row, data) end
+    if row then
+        UpdateRow(row, data)
+    end
 
     -- update count display
     local readyCount = CountReadyPlayers()
