@@ -7,27 +7,9 @@ local ReadyCheck = SLUI:NewModule("ReadyCheck", "AceEvent-3.0")
 -- Default settings
 SLUI.defaults.global.ready = {
     enable = false,
-    position = {
-        point = "CENTER",
-        relativeTo = "UIParent",
-        relativePoint = "CENTER",
-        xOfs = 0,
-        yOfs = 0,
-    },
+    position = { "CENTER", "UIParent", "CENTER", 0, 0 },
     width = 500,
     height = 220,
-}
-
-local ANCHOR_POINTS = {
-    ["TOPLEFT"] = "TOPLEFT",
-    ["TOP"] = "TOP",
-    ["TOPRIGHT"] = "TOPRIGHT",
-    ["LEFT"] = "LEFT",
-    ["CENTER"] = "CENTER",
-    ["RIGHT"] = "RIGHT",
-    ["BOTTOMLEFT"] = "BOTTOMLEFT",
-    ["BOTTOM"] = "BOTTOM",
-    ["BOTTOMRIGHT"] = "BOTTOMRIGHT"
 }
 
 local function Disabled()
@@ -46,7 +28,6 @@ SLUI.options.args.ready = {
                 SLUI.db.global.ready.enable = value
                 if value then ReadyCheck:Enable() else ReadyCheck:Disable() end
             end,
-            width = "full",
             order = 0,
         },
         test = {
@@ -56,8 +37,13 @@ SLUI.options.args.ready = {
             func = function() ReadyCheck:READY_CHECK("READY_CHECK", UnitName("player"), 40) end,
             disabled = Disabled,
         },
-        position = {
+        header = {
+            type = "header",
             order = 2,
+            name = "Ready Check",
+        },
+        position = {
+            order = 3,
             name = "Position",
             type = "group",
             inline = true,
@@ -67,10 +53,10 @@ SLUI.options.args.ready = {
                     order = 2,
                     name = "Anchor from",
                     type = "select",
-                    values = ANCHOR_POINTS,
-                    get = function() return SLUI.db.global.ready.position.point end,
+                    values = SLUI.ANCHOR_POINTS,
+                    get = function() return SLUI.db.global.ready.position[1] end,
                     set = function(_, value)
-                        SLUI.db.global.ready.position.point = value
+                        SLUI.db.global.ready.position[1] = value
                         ReadyCheck:UpdateFrameOptions()
                     end,
                 },
@@ -78,9 +64,9 @@ SLUI.options.args.ready = {
                     order = 1,
                     name = "Anchored to",
                     type = "input",
-                    get = function() return SLUI.db.global.ready.position.relativeTo end,
+                    get = function() return SLUI.db.global.ready.position[2] end,
                     set = function(_, value)
-                        SLUI.db.global.ready.position.relativeTo = value
+                        SLUI.db.global.ready.position[2] = value
                         ReadyCheck:UpdateFrameOptions()
                     end,
                 },
@@ -88,10 +74,10 @@ SLUI.options.args.ready = {
                     order = 3,
                     name = "to frame's",
                     type = "select",
-                    values = ANCHOR_POINTS,
-                    get = function() return SLUI.db.global.ready.position.relativePoint end,
+                    values = SLUI.ANCHOR_POINTS,
+                    get = function() return SLUI.db.global.ready.position[3] end,
                     set = function(_, value)
-                        SLUI.db.global.ready.position.relativePoint = value
+                        SLUI.db.global.ready.position[3] = value
                         ReadyCheck:UpdateFrameOptions()
                     end,
                 },
@@ -102,9 +88,9 @@ SLUI.options.args.ready = {
                     min = -1000,
                     max = 1000,
                     bigStep = 1,
-                    get = function() return SLUI.db.global.ready.position.xOfs end,
+                    get = function() return SLUI.db.global.ready.position[4] end,
                     set = function(_, value)
-                        SLUI.db.global.ready.position.xOfs = value
+                        SLUI.db.global.ready.position[4] = value
                         ReadyCheck:UpdateFrameOptions()
                     end,
                 },
@@ -115,9 +101,9 @@ SLUI.options.args.ready = {
                     min = -1000,
                     max = 1000,
                     bigStep = 1,
-                    get = function() return SLUI.db.global.ready.position.yOfs end,
+                    get = function() return SLUI.db.global.ready.position[5] end,
                     set = function(_, value)
-                        SLUI.db.global.ready.position.yOfs = value
+                        SLUI.db.global.ready.position[5] = value
                         ReadyCheck:UpdateFrameOptions()
                     end,
                 },
@@ -226,8 +212,7 @@ function ReadyCheck:CreateFrame()
     frame:Hide()
 
     -- Set to last known position
-    local pos = self.db.position
-    frame:SetPoint(pos.point, pos.relativeTo, pos.relativePoint, pos.xOfs, pos.yOfs)
+    frame:SetPoint(unpack(self.db.position))
 
     -- Title bar
     local titleBar = CreateFrame("Frame", nil, frame, "BackdropTemplate")
@@ -245,15 +230,10 @@ function ReadyCheck:CreateFrame()
     end)
     titleBar:SetScript("OnDragStop", function()
         frame:StopMovingOrSizing()
-        -- Save position
-        local point, relativeTo, relativePoint, xOfs, yOfs = frame:GetPoint()
-        self.db.position = {
-            point = point,
-            relativeTo = relativeTo and relativeTo:GetName() or "UIParent",
-            relativePoint = relativePoint,
-            xOfs = xOfs,
-            yOfs = yOfs,
-        }
+        -- Save position using frame name instead of reference
+        local position = { frame:GetPoint() }
+        position[2] = position[2] and position[2]:GetName() or "UIParent"
+        self.db.position = position
         LibStub("AceConfigRegistry-3.0"):NotifyChange("SLUI")
     end)
     frame.titleBar = titleBar
@@ -379,9 +359,8 @@ function ReadyCheck:UpdateFrameOptions()
     self.frame:SetWidth(self.db.width)
     self.frame:SetHeight(self.db.height)
 
-    local pos = self.db.position
     self.frame:ClearAllPoints()
-    self.frame:SetPoint(pos.point, pos.relativeTo, pos.relativePoint, pos.xOfs, pos.yOfs)
+    self.frame:SetPoint(unpack(self.db.position))
 
     self.frame.titleBar:SetSize(self.frame:GetWidth() - 2, 30)
     self.frame.notReadyText:SetWidth(self.frame:GetWidth() - 40)

@@ -16,18 +16,6 @@ SLUI.defaults.global.timer = {
     }
 }
 
-local ANCHOR_POINTS = {
-    ["TOPLEFT"] = "TOPLEFT",
-    ["TOP"] = "TOP",
-    ["TOPRIGHT"] = "TOPRIGHT",
-    ["LEFT"] = "LEFT",
-    ["CENTER"] = "CENTER",
-    ["RIGHT"] = "RIGHT",
-    ["BOTTOMLEFT"] = "BOTTOMLEFT",
-    ["BOTTOM"] = "BOTTOM",
-    ["BOTTOMRIGHT"] = "BOTTOMRIGHT"
-}
-
 local function Disabled()
     return not SLUI.db.global.timer.enable
 end
@@ -38,7 +26,6 @@ local function GetCurrentSpecRole()
     return GetSpecializationRole(GetSpecialization()) or "DAMAGER"
 end
 
-local fonts = Media:List(Media.MediaType.FONT)
 local currentSpec = GetCurrentSpecRole()
 -- Options
 SLUI.options.args.timer = {
@@ -54,7 +41,6 @@ SLUI.options.args.timer = {
                 SLUI.db.global.timer.enable = value
                 if value then CombatTimer:Enable() else CombatTimer:Disable() end
             end,
-            width = "full",
         },
         lock = {
             order = 1,
@@ -62,29 +48,28 @@ SLUI.options.args.timer = {
             type = "toggle",
             get = function() return SLUI.db.global.timer.lock end,
             set = function(_, value) CombatTimer:SetLocked(value) end,
-            width = "full",
             disabled = Disabled,
         },
-        font = {
+        header = {
+            type = "header",
             order = 2,
+            name = "Combat Timer",
+        },
+        font = {
+            order = 3,
             type = "select",
+            dialogControl = "LSM30_Font",
             name = "Font",
-            values = fonts,
-            get = function()
-                for i, v in ipairs(fonts) do
-                    if v == SLUI.db.global.timer.font then
-                        return i
-                    end
-                end
-            end,
+            values = Media:HashTable(Media.MediaType.FONT),
+            get = function() return SLUI.db.global.timer.font end,
             set = function(_, value)
-                SLUI.db.global.timer.font = fonts[value]
+                SLUI.db.global.timer.font = value
                 CombatTimer:ApplySettings()
             end,
             disabled = Disabled,
         },
         textSize = {
-            order = 3,
+            order = 4,
             name = "Text Size",
             type = "range",
             min = 5,
@@ -98,7 +83,7 @@ SLUI.options.args.timer = {
             disabled = Disabled,
         },
         showBrackets = {
-            order = 4,
+            order = 5,
             name = "Brackets",
             type = "toggle",
             get = function() return SLUI.db.global.timer.showBrackets end,
@@ -109,7 +94,7 @@ SLUI.options.args.timer = {
             disabled = Disabled,
         },
         position = {
-            order = 5,
+            order = 6,
             name = "Position",
             type = "group",
             inline = true,
@@ -127,7 +112,7 @@ SLUI.options.args.timer = {
                     order = 2,
                     name = "Anchor from",
                     type = "select",
-                    values = ANCHOR_POINTS,
+                    values = SLUI.ANCHOR_POINTS,
                     get = function() return SLUI.db.global.timer.positions[currentSpec][1] end,
                     set = function(_, value)
                         SLUI.db.global.timer.positions[currentSpec][1] = value
@@ -148,7 +133,7 @@ SLUI.options.args.timer = {
                     order = 3,
                     name = "to frame's",
                     type = "select",
-                    values = ANCHOR_POINTS,
+                    values = SLUI.ANCHOR_POINTS,
                     get = function() return SLUI.db.global.timer.positions[currentSpec][3] end,
                     set = function(_, value)
                         SLUI.db.global.timer.positions[currentSpec][3] = value
@@ -181,9 +166,9 @@ SLUI.options.args.timer = {
                         CombatTimer:ApplySettings()
                     end,
                 },
-            }
-        }
-    }
+            },
+        },
+    },
 }
 
 -- Format time as M:SS

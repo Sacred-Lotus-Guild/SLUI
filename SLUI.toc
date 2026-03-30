@@ -13,6 +13,7 @@ embeds.xml
 
 SLUI.lua
 Media\Media.lua
+Modules\CombatCross.lua
 Modules\CombatTimer.lua
 Modules\InviteTools.lua
 Modules\ReadyCheck.lua

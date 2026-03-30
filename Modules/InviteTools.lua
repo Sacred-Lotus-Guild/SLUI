@@ -24,10 +24,14 @@ SLUI.options.args.invite = {
                 SLUI.db.global.invite.enable = val
                 if val then InviteTools:Enable() else InviteTools:Disable() end
             end,
-            width = "full",
+        },
+        header = {
+            type = "header",
+            order = 1,
+            name = "Invite Tools",
         },
         keywords = {
-            order = 1,
+            order = 2,
             name = "Keywords",
             desc = "List of keywords to trigger an invite.",
             type = "input",
@@ -44,7 +48,7 @@ SLUI.options.args.invite = {
             width = "full",
         },
         characters = {
-            order = 2,
+            order = 3,
             name = "Auto-promote characters",
             desc = "List of characters to auto-promote to assist when they join the group.",
             type = "input",
@@ -61,7 +65,7 @@ SLUI.options.args.invite = {
             width = "full",
         },
         guildRank = {
-            order = 3,
+            order = 4,
             name = "Auto-promote rank",
             desc = "Auto-promote characters of this guild rank or \"higher\" (actually a lower index value).",
             type = "select",
