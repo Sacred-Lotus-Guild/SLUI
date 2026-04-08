@@ -128,6 +128,10 @@ end
 function InviteTools:CHAT_MSG_WHISPER(_, text, playerName)
     if WillSuggestInvite() or issecretvalue(text) or issecretvalue(playerName) then return end
 
+    -- BNet friends fire both CHAT_MSG_WHISPER and CHAT_MSG_BN_WHISPER;
+    -- the whisper sender for BNet is an encoded name ("|Kxxxx|k"), skip it
+    if playerName:find("|K") then return end
+
     if tContains(SLUI.db.global.invite.keywords, text:trim():lower()) then
         self:CheckAndConvertToRaid();
         C_PartyInfo.InviteUnit(Ambiguate(playerName, "none"))
