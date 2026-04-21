@@ -1,4 +1,4 @@
-## Interface: 120000, 120001
+## Interface: 120005
 ## Title: |cff00ff98SLUI|r
 ## Version: @project-version@
 ## Notes: Sacred Lotus UI Utilities
