@@ -253,6 +253,8 @@ function BreakTimer:StartBreak(seconds, reboot, debug)
     if not self.frame.texture:GetTexture() then
         if debug then
             self:SetImage(SLUI.breakImages[self:GetRandomImageIndex()])
+        elseif not UnitInRaid("PLAYER") and not UnitInParty("PLAYER") then
+            self:SetImage(nil)
         else
             C_Timer.After(1, function()
                 if not self.frame:IsShown() then
