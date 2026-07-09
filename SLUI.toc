@@ -7,11 +7,10 @@
 ## SavedVariables: SLUIDB
 ## X-Curse-Project-ID: 1207905
 ## X-Wago-ID: QNlq986e
+## OptionalDeps: BigWigs
 
 # Dependencies
 embeds.xml
-libs\LibEditMode\namespaced.lua
-libs\LibEditMode\embed.xml
 
 SLUI.lua
 Media\Media.lua

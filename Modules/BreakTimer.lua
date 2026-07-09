@@ -1,18 +1,8 @@
 ---@class SLUI
 local SLUI = select(2, ...)
 ---@class InviteTools: AceModule, AceEvent-3.0, AceHook-3.0
-local BreakTimer = SLUI:NewModule("BreakTimer", "AceEvent-3.0", "AceHook-3.0")
-local MEDIA = LibStub("LibSharedMedia-3.0")
-local COMMS = LibStub("AceComm-3.0")
-local EditMode = LibStub("LibEditMode")
-local BASE_SIZE = 200
-local TTS_LOW_TIME_WARNING = "Break ends in %d seconds"
-
-local defaultPosition = {
-    point = "CENTER",
-    x = -400,
-    y = 100
-}
+local BreakTimer = SLUI:NewModule("BreakTimer", "AceEvent-3.0", "AceComm-3.0")
+local media = LibStub("LibSharedMedia-3.0")
 
 SLUI.options.args.breakTimer = {
     name = "Break Timer",
@@ -62,51 +52,82 @@ SLUI.options.args.breakTimer = {
             func = function() BreakTimer:PlayLowWarningMessage() end,
             width = "half",
         },
-    }
-}
-
-local editModeSettings = {
-    {
-        name = 'Scale',
-        kind = EditMode.SettingType.Slider,
-        default = 1,
-        get = function(layoutName)
-            return SLUI.db.global.breakTimer.scale
-        end,
-        set = function(layoutName, value)
-            SLUI.db.global.breakTimer.scale = value
-            BreakTimer:UpdateUIFromSettings()
-        end,
-        minValue = 0.1,
-        maxValue = 5,
-        valueStep = 0.1,
-        formatter = function(value)
-            return FormatPercentage(value, true)
-        end,
-    }
+        position = {
+            order = 20,
+            name = "Position",
+            type = "group",
+            inline = true,
+            args = {
+                point = {
+                    order = 2,
+                    name = "Point",
+                    type = "select",
+                    values = SLUI.ANCHOR_POINTS,
+                    get = function() return SLUI.db.global.breakTimer.point end,
+                    set = function(_, value)
+                        SLUI.db.global.breakTimer.point = value
+                        BreakTimer:ApplySettings()
+                    end,
+                },
+                offsetX = {
+                    order = 4,
+                    name = "X Offset",
+                    type = "range",
+                    min = -1000,
+                    max = 1000,
+                    bigStep = 1,
+                    get = function() return SLUI.db.global.breakTimer.offsetX end,
+                    set = function(_, value)
+                        SLUI.db.global.breakTimer.offsetX = value
+                        BreakTimer:ApplySettings()
+                    end,
+                },
+                offsetY = {
+                    order = 5,
+                    name = "Y Offset",
+                    type = "range",
+                    min = -1000,
+                    max = 1000,
+                    bigStep = 1,
+                    get = function() return SLUI.db.global.breakTimer.offsetY end,
+                    set = function(_, value)
+                        SLUI.db.global.breakTimer.offsetY = value
+                        BreakTimer:ApplySettings()
+                    end,
+                },
+                size = {
+                    order = 6,
+                    name = "Size",
+                    type = "range",
+                    min = 10,
+                    max = 1000,
+                    bigStep = 1,
+                    get = function() return SLUI.db.global.breakTimer.size end,
+                    set = function(_, value)
+                        SLUI.db.global.breakTimer.size = value
+                        BreakTimer:ApplySettings()
+                    end,
+                },
+            },
+        }
+    },
 }
 
 SLUI.defaults.global.breakTimer = {
     enable = true,
-    position = {point = "CENTER", x = -defaultPosition.x, y = defaultPosition.y},
-    scale = 1,
+    point = "CENTER",
+    offsetX = -400,
+    offsetY = 100,
+    size = 200,
     lowWarning = "",
     ttsVolume = 100,
 }
 
 function BreakTimer:OnInitialize()
+    self:CreateBreakTimer()
     self:SetEnabledState(SLUI.db.global.breakTimer.enable)
 
-    local function OnPositionChanged(frame, layoutName, point, x, y)
-        SLUI.db.global.breakTimer.position = {point = point, x = x, y = y}
-    end
-
-    EditMode:RegisterCallback('layout', function(layoutName) BreakTimer:UpdatePosition() end)
-
-    EditMode:AddFrame(BreakTimer.frame, OnPositionChanged, defaultPosition)
-
-    EditMode:AddFrameSettings(BreakTimer.frame, editModeSettings)
-    COMMS:RegisterComm("SLUI_BreakImage", function(_, index) 
+    self:RegisterComm("SLUI_BreakImage", function(_, index) 
         if BreakTimer:IsEnabled() then
             BreakTimer:SetImage(SLUI.breakImages[index]) 
         end
@@ -116,47 +137,52 @@ end
 function BreakTimer:OnEnable()
     self:RegisterEvent("PLAYER_REGEN_ENABLED", function() BreakTimer:UpdateVisibility() end)
     self:RegisterEvent("PLAYER_REGEN_DISABLED", function() BreakTimer:UpdateVisibility() end)
-    self:RegisterMessage("SLUI_BREAK_DEBUG", function(_, timer) BreakTimer:StartBreak(timer, false, true) end)
-    BigWigsLoader.RegisterMessage(SLUI, "BigWigs_StartBreak", function(_, _, seconds, _, _, reboot) end)
-    BigWigsLoader.RegisterMessage(SLUI, "BigWigs_StopBreak", function(_, _, seconds, _, _, reboot) end)
+    if BigWigsLoader then
+        BigWigsLoader.RegisterMessage(SLUI, "BigWigs_StartBreak", function(_, _, seconds, _, _, reboot) self:StartBreak(seconds, reboot) end)
+        BigWigsLoader.RegisterMessage(SLUI, "BigWigs_StopBreak", function(_, _, seconds, _, _, reboot) self:StopBreak() end)
+    end
 
-    self:UpdateUIFromSettings()
+    self:ApplySettings()
 end
 
 function BreakTimer:OnDisable()
     self:UnregisterAllEvents()
     self:UnregisterAllMessages()
-    BigWigsLoader.UnregisterMessage(SLUI, "BigWigs_StartBreak")
-    BigWigsLoader.UnregisterMessage(SLUI, "BigWigs_StopBreak")
+    if BigWigsLoader then
+        BigWigsLoader.UnregisterMessage(SLUI, "BigWigs_StartBreak")
+        BigWigsLoader.UnregisterMessage(SLUI, "BigWigs_StopBreak")
+    end
 end
 
-local frame = CreateFrame("Frame", "Break Timer", UIParent)
-frame:SetFrameLevel(80)
-frame:SetSize(BASE_SIZE, BASE_SIZE)
+function BreakTimer:CreateBreakTimer()
+   local frame = CreateFrame("Frame", "Break Timer", UIParent)
+    frame:SetFrameLevel(80)
 
-frame.texture = frame:CreateTexture(nil, "ARTWORK")
-frame.texture:SetAllPoints()
+    frame.texture = frame:CreateTexture(nil, "ARTWORK")
+    frame.texture:SetAllPoints()
 
-frame.titleText = frame:CreateFontString(nil, "OVERLAY")
-frame.titleText:SetPoint("BOTTOM", frame, "TOP", 0, 2)
+    frame.titleText = frame:CreateFontString(nil, "OVERLAY")
+    frame.titleText:SetPoint("BOTTOM", frame, "TOP", 0, 2)
 
-frame.timerText = frame:CreateFontString(nil, "OVERLAY")
-frame.timerText:SetPoint("TOP", frame, "BOTTOM", 0, -4)
-frame:Hide()
+    frame.timerText = frame:CreateFontString(nil, "OVERLAY")
+    frame.timerText:SetPoint("TOP", frame, "BOTTOM", 0, -4)
+    frame:Hide()
 
-BreakTimer.frame = frame
+    BreakTimer.frame = frame
+end
 
-function BreakTimer:UpdateUIFromSettings()
-    local font = MEDIA:Fetch("font", "Expressway.ttf") or "fonts/frizqt__.ttf"
-    self.frame.titleText:SetFont(font, BASE_SIZE * 0.15, "OUTLINE")
-    self.frame.timerText:SetFont(font, BASE_SIZE * 0.2, "OUTLINE")
+function BreakTimer:ApplySettings()
+    local font = media:Fetch("font", "Expressway.ttf") or "fonts/frizqt__.ttf"
+    local size = SLUI.db.global.breakTimer.size or 200
+    self.frame.titleText:SetFont(font, size * 0.15, "OUTLINE")
+    self.frame.timerText:SetFont(font, size * 0.2, "OUTLINE")
     self.frame.titleText:SetText("On Break!")
+    self.frame:SetSize(size, size)
     self:UpdatePosition()
-    self.frame:SetScale(SLUI.db.global.breakTimer.scale)
 end
 
 function BreakTimer:UpdateVisibility()
-    self.frame:SetShown((self.editMode or self.frame.texture:GetTexture() ~= nil) and not PlayerIsInCombat())
+    self.frame:SetShown(self.frame.texture:GetTexture() ~= nil and not PlayerIsInCombat())
 end
 
 function BreakTimer:GetRandomImageIndex()
@@ -232,7 +258,7 @@ function BreakTimer:StartBreak(seconds, reboot, debug)
             end)
 
             if not reboot and UnitIsGroupLeader("player") then
-                COMMS:SendCommMessage("SLUI_BreakImage", tostring(frame:GetRandomImageIndex()), UnitInRaid("player") and "RAID" or "PARTY")
+                self:SendCommMessage("SLUI_BreakImage", tostring(self:GetRandomImageIndex()), UnitInRaid("player") and "RAID" or "PARTY")
             end
         end
     end
@@ -242,7 +268,7 @@ end
 
 function BreakTimer:UpdatePosition()
     BreakTimer.frame:ClearAllPoints()
-    BreakTimer.frame:SetPoint(SLUI.db.global.breakTimer.position.point, SLUI.db.global.breakTimer.position.x, SLUI.db.global.breakTimer.position.y)
+    BreakTimer.frame:SetPoint(SLUI.db.global.breakTimer.point, UIParent, SLUI.db.global.breakTimer.point, SLUI.db.global.breakTimer.offsetX, SLUI.db.global.breakTimer.offsetY)
 end
 
 function BreakTimer:PlayLowWarningMessage()
@@ -250,15 +276,3 @@ function BreakTimer:PlayLowWarningMessage()
         C_VoiceChat.SpeakText(0, SLUI.db.global.breakTimer.lowWarning, 1, SLUI.db.global.breakTimer.ttsVolume, false)
     end
 end
-
-EditMode:RegisterCallback('enter', function()
-    if BreakTimer:IsEnabled() then
-        BreakTimer.editMode = true
-        BreakTimer:UpdateVisibility()
-    end
-end)
-
-EditMode:RegisterCallback('exit', function()
-    BreakTimer.editMode = false
-    BreakTimer:UpdateVisibility()
-end)
