@@ -124,7 +124,6 @@ SLUI.defaults.global.breakTimer = {
 }
 
 function BreakTimer:OnInitialize()
-    self:CreateBreakTimer()
     self:SetEnabledState(SLUI.db.global.breakTimer.enable)
 
     self:RegisterComm("SLUI_BreakImage", function(_, index) 
@@ -135,6 +134,7 @@ function BreakTimer:OnInitialize()
 end
 
 function BreakTimer:OnEnable()
+    self:CreateBreakTimer()
     self:RegisterEvent("PLAYER_REGEN_ENABLED", function() BreakTimer:UpdateVisibility() end)
     self:RegisterEvent("PLAYER_REGEN_DISABLED", function() BreakTimer:UpdateVisibility() end)
     if BigWigsLoader then
@@ -155,20 +155,23 @@ function BreakTimer:OnDisable()
 end
 
 function BreakTimer:CreateBreakTimer()
-   local frame = CreateFrame("Frame", "Break Timer", UIParent)
-    frame:SetFrameLevel(80)
+    -- Ensure we only create this once
+    if not self.frame then
+        local frame = CreateFrame("Frame", "Break Timer", UIParent)
+        frame:SetFrameLevel(80)
 
-    frame.texture = frame:CreateTexture(nil, "ARTWORK")
-    frame.texture:SetAllPoints()
+        frame.texture = frame:CreateTexture(nil, "ARTWORK")
+        frame.texture:SetAllPoints()
 
-    frame.titleText = frame:CreateFontString(nil, "OVERLAY")
-    frame.titleText:SetPoint("BOTTOM", frame, "TOP", 0, 2)
+        frame.titleText = frame:CreateFontString(nil, "OVERLAY")
+        frame.titleText:SetPoint("BOTTOM", frame, "TOP", 0, 2)
 
-    frame.timerText = frame:CreateFontString(nil, "OVERLAY")
-    frame.timerText:SetPoint("TOP", frame, "BOTTOM", 0, -4)
-    frame:Hide()
+        frame.timerText = frame:CreateFontString(nil, "OVERLAY")
+        frame.timerText:SetPoint("TOP", frame, "BOTTOM", 0, -4)
+        frame:Hide()
 
-    BreakTimer.frame = frame
+        BreakTimer.frame = frame
+    end
 end
 
 function BreakTimer:ApplySettings()
