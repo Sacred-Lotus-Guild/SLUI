@@ -37,6 +37,18 @@ SLUI.options = {
     },
 }
 
+SLUI.ANCHOR_POINTS = {
+    ["TOPLEFT"] = "TOPLEFT",
+    ["TOP"] = "TOP",
+    ["TOPRIGHT"] = "TOPRIGHT",
+    ["LEFT"] = "LEFT",
+    ["CENTER"] = "CENTER",
+    ["RIGHT"] = "RIGHT",
+    ["BOTTOMLEFT"] = "BOTTOMLEFT",
+    ["BOTTOM"] = "BOTTOM",
+    ["BOTTOMRIGHT"] = "BOTTOMRIGHT",
+}
+
 --- Log data to DevTool if it's available. Useful for debugging without spamming
 --- the chat.
 ---@param data any

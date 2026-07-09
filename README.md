@@ -1,12 +1,13 @@
 # SLUI
 
-Shared &lt;Sacred Lotus&gt; UI Utilities for use with our guild WeakAura suite.
+&lt;Sacred Lotus&gt; UI Utilities.
 
 ## Includes:
 
-- Libraries required by Sacred Lotus WeakAuras
-- Guild Nicknames for ElvUI, Cell, WeakAuras, and more coming soon.
-- Shared sounds, textures, etc.
+- Combat Timer
+- Invite Tools: invite characters when whispered a configurable keyword
+- Ready Check: Check raid group buffs on ready check
+- Tier Token Tweaks: Adds the armor type and slot to tier token names in tooltips and the dungeon journal
 
 ## Converting images:
 
