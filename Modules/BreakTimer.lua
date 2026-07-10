@@ -128,7 +128,7 @@ function BreakTimer:OnInitialize()
 
     self:RegisterComm("SLUI_BreakImage", function(_, index) 
         if BreakTimer:IsEnabled() then
-            BreakTimer:SetImage(SLUI.breakImages[index]) 
+            BreakTimer:SetImage(SLUI.breakImages[tonumber(index)]) 
         end
     end)
 end
@@ -138,7 +138,7 @@ function BreakTimer:OnEnable()
     self:RegisterEvent("PLAYER_REGEN_ENABLED", function() BreakTimer:UpdateVisibility() end)
     self:RegisterEvent("PLAYER_REGEN_DISABLED", function() BreakTimer:UpdateVisibility() end)
     if BigWigsLoader then
-        BigWigsLoader.RegisterMessage(SLUI, "BigWigs_StartBreak", function(_, _, seconds, _, _, reboot) self:StartBreak(seconds, reboot) end)
+        BigWigsLoader.RegisterMessage(SLUI, "BigWigs_StartBreak", function(_, _, seconds, _, _, reboot) self:StartBreak(seconds, reboot, false) end)
         BigWigsLoader.RegisterMessage(SLUI, "BigWigs_StopBreak", function(_, _, seconds, _, _, reboot) self:StopBreak() end)
     end
 
