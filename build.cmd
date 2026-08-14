@@ -1,7 +1,7 @@
 @echo off
 setlocal enabledelayedexpansion
 
-bash release.sh -dz
+wsl bash release.sh -dz
 
 :: Function to create directory structure in .release
 for /f "delims=" %%i in ('dir /b /s /a-d *.lua *.xml ^| findstr /v .release') do (
