@@ -52,6 +52,29 @@ local TIER_TOKENS = {
     [249364] = "Leather Shoulder Token", -- Voidcured Unraveled Nullcore,
     [249365] = "Mail Shoulder Token",    -- Voidcast Unraveled Nullcore,
     [249366] = "Plate Shoulder Token",   -- Voidforged Unraveled Nullcore,
+    [249367] = "Omni Token",             -- Chiming Void Curio
+    --- 12.1
+    [270909] = "Omni Token",             -- Slumbering Coil Curio
+    [270910] = "Cloth Hand Token",       -- Venomwoven Idol,
+    [270911] = "Leather Hand Token",     -- Venomcured Idol,
+    [270912] = "Mail Hand Token",        -- Venomcast Idol,
+    [270913] = "Plate Hand Token",       -- Venomforged Idol,
+    [270914] = "Cloth Head Token",       -- Venomwoven Effigy,
+    [270915] = "Leather Head Token",     -- Venomcured Effigy,
+    [270916] = "Mail Head Token",        -- Venomcast Effigy,
+    [270917] = "Plate Head Token",       -- Venomforged Effigy,
+    [270918] = "Cloth Leg Token",        -- Venomwoven Relic,
+    [270919] = "Leather Leg Token",      -- Venomcured Relic,
+    [270920] = "Mail Leg Token",         -- Venomcast Relic,
+    [270921] = "Plate Leg Token",        -- Venomforged Relic,
+    [270922] = "Cloth Shoulder Token",   -- Venomwoven Remnant,
+    [270923] = "Leather Shoulder Token", -- Venomcured Remnant,
+    [270924] = "Mail Shoulder Token",    -- Venomcast Remnant,
+    [270925] = "Plate Shoulder Token",   -- Venomforged Remnant,
+    [270926] = "Cloth Chest Token",      -- Venomwoven Icon,
+    [270927] = "Leather Chest Token",    -- Venomcured Icon,
+    [270928] = "Mail Chest Token",       -- Venomcast Icon,
+    [270929] = "Plate Chest Token",      -- Venomforged Icon,
 }
 
 ---@param tooltip GameTooltip
