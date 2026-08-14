@@ -4,6 +4,7 @@ local SLUI = select(2, ...)
 local SharedMedia = LibStub("LibSharedMedia-3.0")
 
 SLUI.logo = [[Interface\AddOns\SLUI\Media\Textures\logo.blp]]
+SLUI.breakBackupImage = [[Interface\AddOns\SLUI\Media\Textures\Placeholder.tga]]
 SLUI.breakImages = {
     [[Interface\AddOns\SLUI\Media\Textures\CalemKnee.tga]],
     [[Interface\AddOns\SLUI\Media\Textures\ForThomas.tga]],
