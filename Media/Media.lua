@@ -19,6 +19,7 @@ SLUI.breakImages = {
     [[Interface\AddOns\SLUI\Media\Textures\HideAndSeek.tga]],
     [[Interface\AddOns\SLUI\Media\Textures\BioWorm.tga]],
     [[Interface\AddOns\SLUI\Media\Textures\BioCarpet.tga]],
+    [[Interface\AddOns\SLUI\Media\Textures\xalatath.tga]],
 }
 
 SharedMedia:Register("sound", "|cff00ff98Awoo|r", [[Interface\AddOns\SLUI\Media\Sounds\Awoo.ogg]])
