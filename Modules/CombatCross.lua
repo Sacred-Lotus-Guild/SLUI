@@ -82,14 +82,7 @@ SLUI.options.args.combatCross = {
             name = "Outline",
             type = "select",
             disabled = function() return not SLUI.db.global.combatCross.enable end,
-            values = {
-                [""] = "None",
-                ["OUTLINE"] = "Thin",
-                ["THICKOUTLINE"] = "Thick",
-                ["MONOCHROME"] = "Monochrome",
-                ["MONOCHROMEOUTLINE"] = "Monochrome Thin",
-                ["MONOCHROMETHICKOUTLINE"] = "Monochrome Thick",
-            },
+            values = SLUI.OUTLINES,
             get = function() return SLUI.db.global.combatCross.fontOutline end,
             set = function(_, value)
                 SLUI.db.global.combatCross.fontOutline = value

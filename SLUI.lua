@@ -49,6 +49,17 @@ SLUI.ANCHOR_POINTS = {
     ["BOTTOMRIGHT"] = "BOTTOMRIGHT",
 }
 
+SLUI.OUTLINES = {
+    [""] = "None",
+    ["SLUG"] = "Slug",
+    ["OUTLINE"] = "Thin",
+    ["OUTLINE,SLUG"] = "Thin Slug",
+    ["THICKOUTLINE"] = "Thick",
+    ["MONOCHROME"] = "Monochrome",
+    ["MONOCHROMEOUTLINE"] = "Monochrome Thin",
+    ["MONOCHROMETHICKOUTLINE"] = "Monochrome Thick",
+}
+
 --- Log data to DevTool if it's available. Useful for debugging without spamming
 --- the chat.
 ---@param data any

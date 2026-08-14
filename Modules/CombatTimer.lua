@@ -10,6 +10,7 @@ SLUI.defaults.global.timer = {
     lock = true,
     font = "PT Sans Narrow",
     fontSize = 28,
+    fontOutline = "OUTLINE",
     showBrackets = true,
     positions = {
         ["*"] = { "CENTER", "UIParent", "CENTER", 0, -100 },
@@ -68,9 +69,9 @@ SLUI.options.args.timer = {
             end,
             disabled = Disabled,
         },
-        textSize = {
+        fontSize = {
             order = 4,
-            name = "Text Size",
+            name = "Size",
             type = "range",
             min = 5,
             max = 60,
@@ -82,8 +83,20 @@ SLUI.options.args.timer = {
             end,
             disabled = Disabled,
         },
-        showBrackets = {
+        fontOutline = {
             order = 5,
+            name = "Outline",
+            type = "select",
+            values = SLUI.OUTLINES,
+            get = function() return SLUI.db.global.timer.fontOutline end,
+            set = function(_, value)
+                SLUI.db.global.timer.fontOutline = value
+                CombatTimer:ApplySettings()
+            end,
+            disabled = Disabled,
+        },
+        showBrackets = {
+            order = 6,
             name = "Brackets",
             type = "toggle",
             get = function() return SLUI.db.global.timer.showBrackets end,
@@ -94,7 +107,7 @@ SLUI.options.args.timer = {
             disabled = Disabled,
         },
         position = {
-            order = 6,
+            order = 7,
             name = "Position",
             type = "group",
             inline = true,
@@ -205,7 +218,7 @@ function CombatTimer:ApplySettings()
     self.frame:ClearAllPoints()
     self.frame:SetPoint(unpack(self.db.positions[currentSpec]))
 
-    self.text:SetFont(Media:Fetch(Media.MediaType.FONT, self.db.font), self.db.fontSize, "OUTLINE")
+    self.text:SetFont(Media:Fetch(Media.MediaType.FONT, self.db.font), self.db.fontSize, self.db.fontOutline)
 
     -- Brackets change affects display text
     self:UpdateTimerText()
