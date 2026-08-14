@@ -20,6 +20,7 @@ SLUI.breakImages = {
     [[Interface\AddOns\SLUI\Media\Textures\BioWorm.tga]],
     [[Interface\AddOns\SLUI\Media\Textures\BioCarpet.tga]],
     [[Interface\AddOns\SLUI\Media\Textures\xalatath.tga]],
+    [[Interface\AddOns\SLUI\Media\Textures\ShcorpAfk.tga]],
 }
 
 SharedMedia:Register("sound", "|cff00ff98Awoo|r", [[Interface\AddOns\SLUI\Media\Sounds\Awoo.ogg]])
