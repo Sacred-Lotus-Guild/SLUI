@@ -13,6 +13,13 @@ SLUI.breakImages = {
     [[Interface\AddOns\SLUI\Media\Textures\StripperBio.tga]],
     [[Interface\AddOns\SLUI\Media\Textures\WerthersOriginal.tga]],
     [[Interface\AddOns\SLUI\Media\Textures\Wolf.tga]],
+    [[Interface\AddOns\SLUI\Media\Textures\Glizzies.tga]],
+    [[Interface\AddOns\SLUI\Media\Textures\Voodoo.tga]],
+    [[Interface\AddOns\SLUI\Media\Textures\Spongebob.tga]],
+    [[Interface\AddOns\SLUI\Media\Textures\HideAndSeek.tga]],
+    [[Interface\AddOns\SLUI\Media\Textures\BioWorm.tga]],
+    [[Interface\AddOns\SLUI\Media\Textures\BioCarpet.tga]],
 }
 
 SharedMedia:Register("sound", "|cff00ff98Awoo|r", [[Interface\AddOns\SLUI\Media\Sounds\Awoo.ogg]])
+SharedMedia:Register("sound", "|cff00ff98Woah|r", [[Interface\AddOns\SLUI\Media\Sounds\TreeWoah.ogg]])
