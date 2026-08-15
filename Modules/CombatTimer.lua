@@ -1,6 +1,6 @@
---- @class SLUI
+---@class SLUI
 local SLUI = select(2, ...)
---- @class CombatTimer: AceModule, AceEvent-3.0
+---@class CombatTimer: AceModule, AceEvent-3.0
 local CombatTimer = SLUI:NewModule("CombatTimer", "AceEvent-3.0")
 local Media = LibStub("LibSharedMedia-3.0")
 

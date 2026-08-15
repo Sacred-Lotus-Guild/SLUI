@@ -1,6 +1,6 @@
 ---@class SLUI
 local SLUI = select(2, ...)
----@class InviteTools: AceModule, AceEvent-3.0, AceHook-3.0
+---@class BreakTimer: AceModule, AceEvent-3.0, AceComm-3.0
 local BreakTimer = SLUI:NewModule("BreakTimer", "AceEvent-3.0", "AceComm-3.0")
 local media = LibStub("LibSharedMedia-3.0")
 
@@ -126,9 +126,9 @@ SLUI.defaults.global.breakTimer = {
 function BreakTimer:OnInitialize()
     self:SetEnabledState(SLUI.db.global.breakTimer.enable)
 
-    self:RegisterComm("SLUI_BreakImage", function(_, index) 
+    self:RegisterComm("SLUI_BreakImage", function(_, index)
         if BreakTimer:IsEnabled() then
-            BreakTimer:SetImage(SLUI.breakImages[tonumber(index)]) 
+            BreakTimer:SetImage(SLUI.breakImages[tonumber(index)])
         end
     end)
 end
@@ -225,7 +225,7 @@ function BreakTimer:UpdateTimer()
                 self.lowWarningTriggered = true
                 BreakTimer:PlayLowWarningMessage()
             end
-            local minute, seconds = math.floor(remaining/60), math.fmod(remaining, 60) 
+            local minute, seconds = math.floor(remaining / 60), math.fmod(remaining, 60)
             if minute > 0 then
                 self.frame.timerText:SetFormattedText("%d:%02d", minute, seconds)
             else

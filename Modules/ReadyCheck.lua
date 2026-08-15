@@ -1,7 +1,7 @@
 -- Dravus #1 Beta Tester
---- @class SLUI
+---@class SLUI
 local SLUI = select(2, ...)
---- @class ReadyCheck: AceModule, AceEvent-3.0
+---@class ReadyCheck: AceModule, AceEvent-3.0
 local ReadyCheck = SLUI:NewModule("ReadyCheck", "AceEvent-3.0")
 
 -- Default settings

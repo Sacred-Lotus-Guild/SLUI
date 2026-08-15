@@ -1,6 +1,6 @@
---- @class SLUI
+---@class SLUI
 local SLUI = select(2, ...)
---- @class CombatCross: AceModule, AceEvent-3.0
+---@class CombatCross: AceModule, AceEvent-3.0
 local CombatCross = SLUI:NewModule("CombatCross", "AceEvent-3.0")
 local Media = LibStub("LibSharedMedia-3.0")
 
