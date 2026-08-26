@@ -8,6 +8,7 @@ SLUI.defaults.global.invite = {
     keywords = { "inv", "invite", "raidinv", },
     characters = {},
     guildRank = 1,
+    autoAccept = false,
 }
 
 SLUI.options.args.invite = {
@@ -86,12 +87,26 @@ SLUI.options.args.invite = {
             end,
             disabled = function() return not SLUI.db.global.invite.enable or not IsInGuild() end,
         },
+        autoAccept = {
+            order = 5,
+            name = "Auto Accept Invites",
+            desc = "Automatically accept group invites from Battle.net friends, character friends, or guild members.",
+            type = "toggle",
+            get = function() return SLUI.db.global.invite.autoAccept end,
+            set = function(_, val) SLUI.db.global.invite.autoAccept = val end,
+            disabled = function() return not SLUI.db.global.invite.enable end,
+        },
     }
 }
 
 --- Returns true if the player will suggest invite instead of invite themselves.
 local function WillSuggestInvite()
     return IsInGroup() and not (UnitIsGroupLeader("player") or UnitIsGroupAssistant("player"))
+end
+
+--- Returns true if the inviter is a Battle.net friend, character friend, or guild member.
+local function ShouldAcceptInvite(inviterGUID)
+    return C_BattleNet.GetGameAccountInfoByGUID(inviterGUID) or C_FriendList.IsFriend(inviterGUID) or IsGuildMember(inviterGUID)
 end
 
 --- Cache a list of guild members that should be promoted based on the configured
@@ -138,6 +153,20 @@ function InviteTools:CHAT_MSG_WHISPER(_, text, playerName)
     end
 end
 
+--- Auto-accept a group invite from a Battle.net friend, character friend, or
+--- guild member (ported from AtrocityEssentials/ElvUI's Misc:AutoInvite).
+function InviteTools:PARTY_INVITE_REQUEST(_, _, _, _, _, _, _, inviterGUID)
+    if not self.db.autoAccept or not inviterGUID or issecretvalue(inviterGUID) or IsInGroup() then return end
+
+    -- Don't accept an invite while queued for LFG/PvP.
+    if QueueStatusButton and QueueStatusButton:IsShown() then return end
+
+    if ShouldAcceptInvite(inviterGUID) then
+        self.inviteAccepted = true
+        AcceptGroup()
+    end
+end
+
 --- Handle Battle.net whispers for invite keywords.
 function InviteTools:CHAT_MSG_BN_WHISPER(_, text, _, _, _, _, _, _, _, _, _, _, _, bnSenderID)
     if WillSuggestInvite() or issecretvalue(text) or issecretvalue(bnSenderID) then return end
@@ -165,8 +194,18 @@ function InviteTools:ShouldPromote(unit)
 end
 
 --- Auto-promote players to assistant when they join the raid if they are in the
---- configured list of characters or have the required guild rank.
+--- configured list of characters or have the required guild rank. Also hides
+--- the invite popup once an auto-accepted invite has actually gone through --
+--- it otherwise lingers until the roster updates.
 function InviteTools:GROUP_ROSTER_UPDATE()
+    if self.inviteAccepted then
+        if LFGInvitePopup then
+            StaticPopupSpecial_Hide(LFGInvitePopup)
+        end
+        StaticPopup_Hide("PARTY_INVITE")
+        self.inviteAccepted = nil
+    end
+
     if not IsInRaid() or not UnitIsGroupLeader("player") then return end
 
     -- It's discouraged to use GetNumGroupMembers() since there can be "holes"
@@ -217,6 +256,7 @@ function InviteTools:OnEnable()
     self:RegisterEvent("GUILD_ROSTER_UPDATE")
     self:RegisterEvent("CHAT_MSG_WHISPER")
     self:RegisterEvent("CHAT_MSG_BN_WHISPER")
+    self:RegisterEvent("PARTY_INVITE_REQUEST")
     self:RegisterEvent("GROUP_ROSTER_UPDATE")
     self:RegisterEvent("GROUP_JOINED")
     self:RegisterEvent("GROUP_FORMED")
