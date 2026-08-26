@@ -12,7 +12,13 @@ SLUI.options.args.tierTokens = {
     name = "Tier Token Utils",
     type = "group",
     args = {
+        header = {
+            type = "header",
+            order = 0,
+            name = "Tier Token Utils",
+        },
         encounterJournal = {
+            order = 1,
             name = "Encounter Journal",
             desc = "Add token names to the encounter journal.",
             type = "toggle",
@@ -20,6 +26,7 @@ SLUI.options.args.tierTokens = {
             set = function(_, val) SLUI.db.global.tierTokens.encounterJournal = val end,
         },
         tooltips = {
+            order = 2,
             name = "Tooltips",
             desc = "Append armor type and item slot to tier token tooltips.",
             type = "toggle",
@@ -91,14 +98,18 @@ local function AddTierTokenText(button, elementData)
     button.slot:SetText(TIER_TOKENS[button.itemID])
 end
 
+function TierTokens:OnInitialize()
+    self.db = SLUI.db.global.tierTokens
+end
+
 function TierTokens:OnEnable()
-    if SLUI.db.global.tierTokens.encounterJournal then
+    if self.db.encounterJournal then
         EventUtil.ContinueOnAddOnLoaded("Blizzard_EncounterJournal", function()
             self:SecureHook(EncounterJournalItemMixin, "Init", AddTierTokenText)
         end)
     end
 
-    if SLUI.db.global.tierTokens.tooltips then
+    if self.db.tooltips then
         TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Item, RenameTierTokens)
     end
 end

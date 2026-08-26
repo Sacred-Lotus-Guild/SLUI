@@ -12,10 +12,6 @@ SLUI.defaults.global.ready = {
     height = 220,
 }
 
-local function Disabled()
-    return not SLUI.db.global.ready.enable
-end
-
 SLUI.options.args.ready = {
     type = "group",
     name = "Ready Check",
@@ -34,8 +30,8 @@ SLUI.options.args.ready = {
             order = 1,
             name = "Test",
             type = "execute",
+            disabled = function() return not SLUI.db.global.ready.enable end,
             func = function() ReadyCheck:READY_CHECK("READY_CHECK", UnitName("player"), 40) end,
-            disabled = Disabled,
         },
         header = {
             type = "header",
@@ -47,7 +43,7 @@ SLUI.options.args.ready = {
             name = "Position",
             type = "group",
             inline = true,
-            disabled = Disabled,
+            disabled = function() return not SLUI.db.global.ready.enable end,
             args = {
                 point = {
                     order = 2,
@@ -57,7 +53,7 @@ SLUI.options.args.ready = {
                     get = function() return SLUI.db.global.ready.position[1] end,
                     set = function(_, value)
                         SLUI.db.global.ready.position[1] = value
-                        ReadyCheck:UpdateFrameOptions()
+                        ReadyCheck:ApplySettings()
                     end,
                 },
                 relativeTo = {
@@ -67,7 +63,7 @@ SLUI.options.args.ready = {
                     get = function() return SLUI.db.global.ready.position[2] end,
                     set = function(_, value)
                         SLUI.db.global.ready.position[2] = value
-                        ReadyCheck:UpdateFrameOptions()
+                        ReadyCheck:ApplySettings()
                     end,
                 },
                 relativePoint = {
@@ -78,7 +74,7 @@ SLUI.options.args.ready = {
                     get = function() return SLUI.db.global.ready.position[3] end,
                     set = function(_, value)
                         SLUI.db.global.ready.position[3] = value
-                        ReadyCheck:UpdateFrameOptions()
+                        ReadyCheck:ApplySettings()
                     end,
                 },
                 offsetX = {
@@ -91,7 +87,7 @@ SLUI.options.args.ready = {
                     get = function() return SLUI.db.global.ready.position[4] end,
                     set = function(_, value)
                         SLUI.db.global.ready.position[4] = value
-                        ReadyCheck:UpdateFrameOptions()
+                        ReadyCheck:ApplySettings()
                     end,
                 },
                 offsetY = {
@@ -104,7 +100,7 @@ SLUI.options.args.ready = {
                     get = function() return SLUI.db.global.ready.position[5] end,
                     set = function(_, value)
                         SLUI.db.global.ready.position[5] = value
-                        ReadyCheck:UpdateFrameOptions()
+                        ReadyCheck:ApplySettings()
                     end,
                 },
             },
@@ -350,10 +346,10 @@ function ReadyCheck:CreateFrame()
     end
 
     self.frame = frame
-    self:UpdateFrameOptions()
+    self:ApplySettings()
 end
 
-function ReadyCheck:UpdateFrameOptions()
+function ReadyCheck:ApplySettings()
     if not self.frame then return end
 
     self.frame:SetWidth(self.db.width)

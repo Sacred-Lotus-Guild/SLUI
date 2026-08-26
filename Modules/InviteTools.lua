@@ -72,7 +72,7 @@ SLUI.options.args.invite = {
             get = function() return SLUI.db.global.invite.guildRank end,
             set = function(_, val)
                 SLUI.db.global.invite.guildRank = val
-                InviteTools:CacheGuildMembers()
+                InviteTools:GUILD_ROSTER_UPDATE()
             end,
             values = function()
                 local ranks = {}
@@ -88,6 +88,11 @@ SLUI.options.args.invite = {
         },
     }
 }
+
+--- Returns true if the player will suggest invite instead of invite themselves.
+local function WillSuggestInvite()
+    return IsInGroup() and not (UnitIsGroupLeader("player") or UnitIsGroupAssistant("player"))
+end
 
 --- Cache a list of guild members that should be promoted based on the configured
 --- minimum guild rank.
@@ -106,7 +111,7 @@ function InviteTools:GUILD_ROSTER_UPDATE()
         -- `GuildControlGetRankName` is 1-indexed, so we use < rather than
         -- <= here to compare them.
         -- see: https://warcraft.wiki.gg/wiki/API_GetGuildRosterInfo
-        if name and rankIndex < SLUI.db.global.invite.guildRank then
+        if name and rankIndex < self.db.guildRank then
             tinsert(self.promoteGuildMembers, Ambiguate(name, "none"))
         end
     end
@@ -119,11 +124,6 @@ function InviteTools:CheckAndConvertToRaid()
     end
 end
 
---- Returns true if the player will suggest invite instead of invite themselves.
-function WillSuggestInvite()
-    return IsInGroup() and not (UnitIsGroupLeader("player") or UnitIsGroupAssistant("player"))
-end
-
 --- Handle whispers for invite keywords.
 function InviteTools:CHAT_MSG_WHISPER(_, text, playerName)
     if WillSuggestInvite() or issecretvalue(text) or issecretvalue(playerName) then return end
@@ -132,7 +132,7 @@ function InviteTools:CHAT_MSG_WHISPER(_, text, playerName)
     -- the whisper sender for BNet is an encoded name ("|Kxxxx|k"), skip it
     if playerName:find("|K") then return end
 
-    if tContains(SLUI.db.global.invite.keywords, text:trim():lower()) then
+    if tContains(self.db.keywords, text:trim():lower()) then
         self:CheckAndConvertToRaid();
         C_PartyInfo.InviteUnit(Ambiguate(playerName, "none"))
     end
@@ -142,7 +142,7 @@ end
 function InviteTools:CHAT_MSG_BN_WHISPER(_, text, _, _, _, _, _, _, _, _, _, _, _, bnSenderID)
     if WillSuggestInvite() or issecretvalue(text) or issecretvalue(bnSenderID) then return end
 
-    if tContains(SLUI.db.global.invite.keywords, text:trim():lower()) then
+    if tContains(self.db.keywords, text:trim():lower()) then
         local accountInfo = C_BattleNet.GetAccountInfoByID(bnSenderID)
         if accountInfo and accountInfo.gameAccountInfo and accountInfo.gameAccountInfo.gameAccountID then
             self:CheckAndConvertToRaid()
@@ -161,7 +161,7 @@ function InviteTools:ShouldPromote(unit)
     if issecretvalue(unit) or self.demotedPlayers[UnitName(unit)] then return false end
 
     local name = Ambiguate(unit, "none")
-    return tContains(self.promoteGuildMembers, name) or tContains(SLUI.db.global.invite.characters, name)
+    return tContains(self.promoteGuildMembers, name) or tContains(self.db.characters, name)
 end
 
 --- Auto-promote players to assistant when they join the raid if they are in the
@@ -182,8 +182,30 @@ function InviteTools:GROUP_ROSTER_UPDATE()
     end
 end
 
+function InviteTools:GROUP_JOINED()
+    wipe(self.demotedPlayers)
+end
+
+function InviteTools:GROUP_FORMED()
+    wipe(self.demotedPlayers)
+end
+
+function InviteTools:GROUP_LEFT()
+    wipe(self.demotedPlayers)
+end
+
+function InviteTools:DemoteAssistant(unit)
+    if unit and not issecretvalue(unit) then
+        local name = UnitName(unit)
+        if name then
+            self.demotedPlayers[name] = true
+        end
+    end
+end
+
 function InviteTools:OnInitialize()
-    self:SetEnabledState(SLUI.db.global.invite.enable)
+    self.db = SLUI.db.global.invite
+    self:SetEnabledState(self.db.enable)
     self.demotedPlayers = {}
     self.promoteGuildMembers = {}
 end
@@ -196,18 +218,11 @@ function InviteTools:OnEnable()
     self:RegisterEvent("CHAT_MSG_WHISPER")
     self:RegisterEvent("CHAT_MSG_BN_WHISPER")
     self:RegisterEvent("GROUP_ROSTER_UPDATE")
-    self:RegisterEvent("GROUP_JOINED", function() wipe(self.demotedPlayers) end)
-    self:RegisterEvent("GROUP_FORMED", function() wipe(self.demotedPlayers) end)
-    self:RegisterEvent("GROUP_LEFT", function() wipe(self.demotedPlayers) end)
+    self:RegisterEvent("GROUP_JOINED")
+    self:RegisterEvent("GROUP_FORMED")
+    self:RegisterEvent("GROUP_LEFT")
 
-    self:SecureHook("DemoteAssistant", function(unit)
-        if unit and not issecretvalue(unit) then
-            local name = UnitName(unit)
-            if name then
-                self.demotedPlayers[name] = true
-            end
-        end
-    end)
+    self:SecureHook("DemoteAssistant")
 end
 
 function InviteTools:OnDisable()

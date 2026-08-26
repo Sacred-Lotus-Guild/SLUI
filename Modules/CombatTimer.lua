@@ -4,11 +4,10 @@ local SLUI = select(2, ...)
 local CombatTimer = SLUI:NewModule("CombatTimer", "AceEvent-3.0")
 local Media = LibStub("LibSharedMedia-3.0")
 
--- Defaults
 SLUI.defaults.global.timer = {
     enable = false,
     lock = true,
-    font = "PT Sans Narrow",
+    font = "Friz Quadrata TT",
     fontSize = 28,
     fontOutline = "OUTLINE",
     showBrackets = true,
@@ -17,10 +16,6 @@ SLUI.defaults.global.timer = {
     }
 }
 
-local function Disabled()
-    return not SLUI.db.global.timer.enable
-end
-
 --- Determine role
 ---@return "TANK" | "HEALER" | "DAMAGER"
 local function GetCurrentSpecRole()
@@ -28,7 +23,7 @@ local function GetCurrentSpecRole()
 end
 
 local currentSpec = GetCurrentSpecRole()
--- Options
+
 SLUI.options.args.timer = {
     name = "Combat Timer",
     type = "group",
@@ -47,9 +42,9 @@ SLUI.options.args.timer = {
             order = 1,
             name = "Lock",
             type = "toggle",
+            disabled = function() return not SLUI.db.global.timer.enable end,
             get = function() return SLUI.db.global.timer.lock end,
             set = function(_, value) CombatTimer:SetLocked(value) end,
-            disabled = Disabled,
         },
         header = {
             type = "header",
@@ -57,22 +52,23 @@ SLUI.options.args.timer = {
             name = "Combat Timer",
         },
         font = {
-            order = 3,
-            type = "select",
-            dialogControl = "LSM30_Font",
+            order = 10,
             name = "Font",
+            dialogControl = "LSM30_Font",
+            type = "select",
+            disabled = function() return not SLUI.db.global.timer.enable end,
             values = Media:HashTable(Media.MediaType.FONT),
             get = function() return SLUI.db.global.timer.font end,
             set = function(_, value)
                 SLUI.db.global.timer.font = value
                 CombatTimer:ApplySettings()
             end,
-            disabled = Disabled,
         },
         fontSize = {
-            order = 4,
+            order = 11,
             name = "Size",
             type = "range",
+            disabled = function() return not SLUI.db.global.timer.enable end,
             min = 5,
             max = 60,
             bigStep = 1,
@@ -81,37 +77,36 @@ SLUI.options.args.timer = {
                 SLUI.db.global.timer.fontSize = value
                 CombatTimer:ApplySettings()
             end,
-            disabled = Disabled,
         },
         fontOutline = {
-            order = 5,
+            order = 12,
             name = "Outline",
             type = "select",
+            disabled = function() return not SLUI.db.global.timer.enable end,
             values = SLUI.OUTLINES,
             get = function() return SLUI.db.global.timer.fontOutline end,
             set = function(_, value)
                 SLUI.db.global.timer.fontOutline = value
                 CombatTimer:ApplySettings()
             end,
-            disabled = Disabled,
         },
         showBrackets = {
-            order = 6,
+            order = 13,
             name = "Brackets",
             type = "toggle",
+            disabled = function() return not SLUI.db.global.timer.enable end,
             get = function() return SLUI.db.global.timer.showBrackets end,
             set = function(_, value)
                 SLUI.db.global.timer.showBrackets = value
                 CombatTimer:ApplySettings()
             end,
-            disabled = Disabled,
         },
         position = {
-            order = 7,
+            order = 20,
             name = "Position",
             type = "group",
             inline = true,
-            disabled = Disabled,
+            disabled = function() return not SLUI.db.global.timer.enable end,
             args = {
                 description = {
                     order = 0,

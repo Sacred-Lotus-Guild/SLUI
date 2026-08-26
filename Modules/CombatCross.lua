@@ -51,7 +51,7 @@ SLUI.options.args.combatCross = {
             name = "Combat Cross",
         },
         font = {
-            order = 3,
+            order = 10,
             name = "Font",
             dialogControl = "LSM30_Font",
             type = "select",
@@ -64,13 +64,13 @@ SLUI.options.args.combatCross = {
             end,
         },
         fontSize = {
-            order = 4,
+            order = 11,
             name = "Size",
             type = "range",
             disabled = function() return not SLUI.db.global.combatCross.enable end,
             min = 10,
             max = 72,
-            step = 1,
+            bigStep = 1,
             get = function() return SLUI.db.global.combatCross.fontSize end,
             set = function(_, value)
                 SLUI.db.global.combatCross.fontSize = value
@@ -78,7 +78,7 @@ SLUI.options.args.combatCross = {
             end,
         },
         fontOutline = {
-            order = 5,
+            order = 12,
             name = "Outline",
             type = "select",
             disabled = function() return not SLUI.db.global.combatCross.enable end,
@@ -90,7 +90,7 @@ SLUI.options.args.combatCross = {
             end,
         },
         color = {
-            order = 6,
+            order = 13,
             name = "Color",
             type = "color",
             disabled = function() return not SLUI.db.global.combatCross.enable end,
@@ -102,7 +102,7 @@ SLUI.options.args.combatCross = {
             end,
         },
         position = {
-            order = 7,
+            order = 20,
             name = "Position",
             type = "group",
             inline = true,

@@ -4,6 +4,17 @@ local SLUI = select(2, ...)
 local BreakTimer = SLUI:NewModule("BreakTimer", "AceEvent-3.0", "AceComm-3.0")
 local media = LibStub("LibSharedMedia-3.0")
 
+SLUI.defaults.global.breakTimer = {
+    enable = true,
+    font = "Friz Quadrata TT",
+    fontSize = 40,
+    fontOutline = "OUTLINE",
+    position = { "CENTER", "UIParent", "CENTER", -400, 100 },
+    size = 200,
+    lowWarning = "",
+    ttsVolume = 100,
+}
+
 SLUI.options.args.breakTimer = {
     name = "Break Timer",
     type = "group",
@@ -20,52 +31,86 @@ SLUI.options.args.breakTimer = {
             end,
             width = "full",
         },
-        lowTimeWarning = {
-            order = 1,
-            name = "60 Seconds Warning",
-            desc = "TTS to play at 60 seconds",
-            type = "input",
-            get = function() return SLUI.db.global.breakTimer.lowWarning end,
-            set = function(_, val)
-                SLUI.db.global.breakTimer.lowWarning = val
-            end,
-            width = "double",
+        header = {
+            type = "header",
+            order = 2,
+            name = "Break Timer",
         },
-        ttsVolume = {
-            order = 3,
-            name = "TTS Volume",
-            desc = "Adds a TTS Message when the timer reaches. 0 disables the message.",
-            type = "range",
-            get = function() return SLUI.db.global.breakTimer.ttsVolume end,
-            set = function(_, val)
-                SLUI.db.global.breakTimer.ttsVolume = val
+        font = {
+            order = 10,
+            name = "Font",
+            dialogControl = "LSM30_Font",
+            type = "select",
+            disabled = function() return not SLUI.db.global.breakTimer.enable end,
+            values = media:HashTable(media.MediaType.FONT),
+            get = function() return SLUI.db.global.breakTimer.font end,
+            set = function(_, value)
+                SLUI.db.global.breakTimer.font = value
+                BreakTimer:ApplySettings()
             end,
-            min = 0,
+        },
+        fontSize = {
+            order = 11,
+            name = "Size",
+            type = "range",
+            disabled = function() return not SLUI.db.global.breakTimer.enable end,
+            min = 10,
             max = 100,
             bigStep = 1,
-            width = "normal",
+            get = function() return SLUI.db.global.breakTimer.fontSize end,
+            set = function(_, value)
+                SLUI.db.global.breakTimer.fontSize = value
+                BreakTimer:ApplySettings()
+            end,
         },
-        ttsTest = {
-            order = 4,
-            name = "Test",
-            type = "execute",
-            func = function() BreakTimer:PlayLowWarningMessage() end,
-            width = "half",
+        fontOutline = {
+            order = 12,
+            name = "Outline",
+            type = "select",
+            disabled = function() return not SLUI.db.global.breakTimer.enable end,
+            values = SLUI.OUTLINES,
+            get = function() return SLUI.db.global.breakTimer.fontOutline end,
+            set = function(_, value)
+                SLUI.db.global.breakTimer.fontOutline = value
+                BreakTimer:ApplySettings()
+            end,
         },
         position = {
             order = 20,
             name = "Position",
             type = "group",
             inline = true,
+            disabled = function() return not SLUI.db.global.breakTimer.enable end,
             args = {
                 point = {
                     order = 2,
-                    name = "Point",
+                    name = "Anchor from",
                     type = "select",
                     values = SLUI.ANCHOR_POINTS,
-                    get = function() return SLUI.db.global.breakTimer.point end,
+                    get = function() return SLUI.db.global.breakTimer.position[1] end,
                     set = function(_, value)
-                        SLUI.db.global.breakTimer.point = value
+                        SLUI.db.global.breakTimer.position[1] = value
+                        BreakTimer:ApplySettings()
+                    end,
+                },
+                relativeTo = {
+                    order = 1,
+                    name = "Anchored to",
+                    type = "input",
+                    get = function() return SLUI.db.global.breakTimer.position[2] end,
+                    set = function(_, value)
+                        SLUI.db.global.breakTimer.position[2] = value
+                        BreakTimer:ApplySettings()
+                    end,
+                },
+                relativePoint = {
+                    order = 3,
+                    name = "to frame's",
+                    type = "select",
+                    values = SLUI.ANCHOR_POINTS,
+                    get = function() return SLUI.db.global.breakTimer.position[3] end,
+                    set = function(_, value)
+                        SLUI.db.global.breakTimer.position[3] = value
                         BreakTimer:ApplySettings()
                     end,
                 },
@@ -76,9 +121,9 @@ SLUI.options.args.breakTimer = {
                     min = -1000,
                     max = 1000,
                     bigStep = 1,
-                    get = function() return SLUI.db.global.breakTimer.offsetX end,
+                    get = function() return SLUI.db.global.breakTimer.position[4] end,
                     set = function(_, value)
-                        SLUI.db.global.breakTimer.offsetX = value
+                        SLUI.db.global.breakTimer.position[4] = value
                         BreakTimer:ApplySettings()
                     end,
                 },
@@ -89,9 +134,9 @@ SLUI.options.args.breakTimer = {
                     min = -1000,
                     max = 1000,
                     bigStep = 1,
-                    get = function() return SLUI.db.global.breakTimer.offsetY end,
+                    get = function() return SLUI.db.global.breakTimer.position[5] end,
                     set = function(_, value)
-                        SLUI.db.global.breakTimer.offsetY = value
+                        SLUI.db.global.breakTimer.position[5] = value
                         BreakTimer:ApplySettings()
                     end,
                 },
@@ -109,49 +154,52 @@ SLUI.options.args.breakTimer = {
                     end,
                 },
             },
-        }
+        },
+        lowTimeWarning = {
+            order = 30,
+            name = "60 Seconds Warning",
+            desc = "TTS to play at 60 seconds",
+            type = "input",
+            get = function() return SLUI.db.global.breakTimer.lowWarning end,
+            set = function(_, val)
+                SLUI.db.global.breakTimer.lowWarning = val
+            end,
+            width = "double",
+        },
+        ttsVolume = {
+            order = 31,
+            name = "TTS Volume",
+            desc = "Adds a TTS Message when the timer reaches. 0 disables the message.",
+            type = "range",
+            get = function() return SLUI.db.global.breakTimer.ttsVolume end,
+            set = function(_, val)
+                SLUI.db.global.breakTimer.ttsVolume = val
+            end,
+            min = 0,
+            max = 100,
+            bigStep = 1,
+            width = "normal",
+        },
+        ttsTest = {
+            order = 32,
+            name = "Test",
+            type = "execute",
+            func = function() BreakTimer:PlayLowWarningMessage() end,
+            width = "half",
+        },
     },
 }
 
-SLUI.defaults.global.breakTimer = {
-    enable = true,
-    point = "CENTER",
-    offsetX = -400,
-    offsetY = 100,
-    size = 200,
-    lowWarning = "",
-    ttsVolume = 100,
-}
-
-function BreakTimer:OnInitialize()
-    self:SetEnabledState(SLUI.db.global.breakTimer.enable)
-
-    self:RegisterComm("SLUI_BreakImage", function(_, index)
-        if BreakTimer:IsEnabled() then
-            BreakTimer:SetImage(SLUI.breakImages[tonumber(index)])
-        end
-    end)
-end
-
-function BreakTimer:OnEnable()
-    self:CreateBreakTimer()
-    self:RegisterEvent("PLAYER_REGEN_ENABLED", function() BreakTimer:UpdateVisibility() end)
-    self:RegisterEvent("PLAYER_REGEN_DISABLED", function() BreakTimer:UpdateVisibility() end)
-    if BigWigsLoader then
-        BigWigsLoader.RegisterMessage(SLUI, "BigWigs_StartBreak", function(_, _, seconds, _, _, reboot) self:StartBreak(seconds, reboot, false) end)
-        BigWigsLoader.RegisterMessage(SLUI, "BigWigs_StopBreak", function(_, _, seconds, _, _, reboot) self:StopBreak() end)
-    end
-
-    self:ApplySettings()
-end
-
-function BreakTimer:OnDisable()
-    self:UnregisterAllEvents()
-    self:UnregisterAllMessages()
-    if BigWigsLoader then
-        BigWigsLoader.UnregisterMessage(SLUI, "BigWigs_StartBreak")
-        BigWigsLoader.UnregisterMessage(SLUI, "BigWigs_StopBreak")
-    end
+function BreakTimer:ApplySettings()
+    local font = media:Fetch(media.MediaType.FONT, self.db.font)
+    local outline = self.db.fontOutline
+    local fontSize = self.db.fontSize or 40
+    local size = self.db.size or 200
+    self.frame.titleText:SetFont(font, fontSize * 0.75, outline)
+    self.frame.timerText:SetFont(font, fontSize, outline)
+    self.frame.titleText:SetText("On Break!")
+    self.frame:SetSize(size, size)
+    self:UpdatePosition()
 end
 
 function BreakTimer:CreateBreakTimer()
@@ -170,18 +218,8 @@ function BreakTimer:CreateBreakTimer()
         frame.timerText:SetPoint("TOP", frame, "BOTTOM", 0, -4)
         frame:Hide()
 
-        BreakTimer.frame = frame
+        self.frame = frame
     end
-end
-
-function BreakTimer:ApplySettings()
-    local font = media:Fetch("font", "Expressway.ttf") or "fonts/frizqt__.ttf"
-    local size = SLUI.db.global.breakTimer.size or 200
-    self.frame.titleText:SetFont(font, size * 0.15, "OUTLINE")
-    self.frame.timerText:SetFont(font, size * 0.2, "OUTLINE")
-    self.frame.titleText:SetText("On Break!")
-    self.frame:SetSize(size, size)
-    self:UpdatePosition()
 end
 
 function BreakTimer:UpdateVisibility()
@@ -202,6 +240,27 @@ function BreakTimer:ClearImage()
     self:UpdateVisibility()
 end
 
+--- Show a placeholder break timer so position/size/font settings can be
+--- previewed while the options page is open. Skipped if a real break is
+--- already in progress so we don't clobber it.
+function BreakTimer:ShowPlaceholder()
+    self:CreateBreakTimer()
+    if self.frame.texture:GetTexture() or self.duration then return end
+
+    self.previewing = true
+    self:ApplySettings()
+    self:SetImage(nil)
+    self.frame.timerText:SetText("0:00")
+end
+
+function BreakTimer:HidePlaceholder()
+    if not self.previewing then return end
+    self.previewing = false
+    if not self.duration then
+        self:ClearImage()
+    end
+end
+
 function BreakTimer:SetTimer(seconds)
     if seconds <= 0 then
         self:ClearTimer()
@@ -210,7 +269,7 @@ function BreakTimer:SetTimer(seconds)
         duration:SetTimeFromStart(GetTime(), seconds)
         self.lowWarningTriggered = false
         self.duration = duration
-        self.timer = C_Timer.NewTicker(0.2, function() BreakTimer:UpdateTimer() end)
+        self.timer = C_Timer.NewTicker(0.2, function() self:UpdateTimer() end)
         self:UpdateTimer()
     end
 end
@@ -223,7 +282,7 @@ function BreakTimer:UpdateTimer()
         else
             if remaining < 60 and not self.lowWarningTriggered then
                 self.lowWarningTriggered = true
-                BreakTimer:PlayLowWarningMessage()
+                self:PlayLowWarningMessage()
             end
             local minute, seconds = math.floor(remaining / 60), math.fmod(remaining, 60)
             if minute > 0 then
@@ -272,12 +331,65 @@ function BreakTimer:StartBreak(seconds, reboot, debug)
 end
 
 function BreakTimer:UpdatePosition()
-    BreakTimer.frame:ClearAllPoints()
-    BreakTimer.frame:SetPoint(SLUI.db.global.breakTimer.point, UIParent, SLUI.db.global.breakTimer.point, SLUI.db.global.breakTimer.offsetX, SLUI.db.global.breakTimer.offsetY)
+    self.frame:ClearAllPoints()
+    self.frame:SetPoint(unpack(self.db.position))
 end
 
 function BreakTimer:PlayLowWarningMessage()
-    if string.trim(SLUI.db.global.breakTimer.lowWarning) ~= "" then
-        C_VoiceChat.SpeakText(0, SLUI.db.global.breakTimer.lowWarning, 1, SLUI.db.global.breakTimer.ttsVolume, false)
+    if string.trim(self.db.lowWarning) ~= "" then
+        C_VoiceChat.SpeakText(0, self.db.lowWarning, 1, self.db.ttsVolume, false)
     end
+end
+
+function BreakTimer:PLAYER_REGEN_DISABLED()
+    self:UpdateVisibility()
+end
+
+function BreakTimer:PLAYER_REGEN_ENABLED()
+    self:UpdateVisibility()
+end
+
+function BreakTimer:OnCommReceived(_, index)
+    if self:IsEnabled() then
+        self:SetImage(SLUI.breakImages[tonumber(index)])
+    end
+end
+
+function BreakTimer:OnInitialize()
+    self.db = SLUI.db.global.breakTimer
+    self:SetEnabledState(self.db.enable)
+
+    self:RegisterComm("SLUI_BreakImage")
+
+    if SLUI.optionsFrame then
+        SLUI.optionsFrame:HookScript("OnShow", function() self:ShowPlaceholder() end)
+        SLUI.optionsFrame:HookScript("OnHide", function() self:HidePlaceholder() end)
+    end
+end
+
+function BreakTimer:OnEnable()
+    self:CreateBreakTimer()
+    self:RegisterEvent("PLAYER_REGEN_DISABLED")
+    self:RegisterEvent("PLAYER_REGEN_ENABLED")
+    if BigWigsLoader then
+        BigWigsLoader.RegisterMessage(SLUI, "BigWigs_StartBreak", function(_, _, seconds, _, _, reboot) self:StartBreak(seconds, reboot, false) end)
+        BigWigsLoader.RegisterMessage(SLUI, "BigWigs_StopBreak", function(_, _, seconds, _, _, reboot) self:StopBreak() end)
+    end
+
+    self:ApplySettings()
+
+    if SLUI.optionsFrame and SLUI.optionsFrame:IsShown() then
+        self:ShowPlaceholder()
+    end
+end
+
+function BreakTimer:OnDisable()
+    self:UnregisterAllEvents()
+    self:UnregisterAllMessages()
+    if BigWigsLoader then
+        BigWigsLoader.UnregisterMessage(SLUI, "BigWigs_StartBreak")
+        BigWigsLoader.UnregisterMessage(SLUI, "BigWigs_StopBreak")
+    end
+
+    self:HidePlaceholder()
 end

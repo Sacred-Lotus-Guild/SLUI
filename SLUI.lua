@@ -73,7 +73,8 @@ end
 function SLUI:OnInitialize()
     SLUI.db = LibStub("AceDB-3.0"):New("SLUIDB", SLUI.defaults, DEFAULT)
     LibStub("AceConfig-3.0"):RegisterOptionsTable("SLUI", SLUI.options)
-    local _, category = LibStub("AceConfigDialog-3.0"):AddToBlizOptions("SLUI")
+    local optionsFrame, category = LibStub("AceConfigDialog-3.0"):AddToBlizOptions("SLUI")
+    SLUI.optionsFrame = optionsFrame
     LibStub("AceConsole-3.0"):RegisterChatCommand("slui", function(input)
         if not input or input:trim() == "" then
             Settings.OpenToCategory(category)
