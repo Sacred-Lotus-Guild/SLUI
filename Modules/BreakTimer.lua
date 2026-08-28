@@ -312,7 +312,7 @@ function BreakTimer:StartBreak(seconds, reboot, debug)
     if not self.frame.texture:GetTexture() then
         if debug then
             self:SetImage(SLUI.breakImages[self:GetRandomImageIndex()])
-        elseif not UnitInRaid("PLAYER") and not UnitInParty("PLAYER") then
+        elseif not IsInGroup() then
             self:SetImage(nil)
         else
             C_Timer.After(1, function()
@@ -322,7 +322,7 @@ function BreakTimer:StartBreak(seconds, reboot, debug)
             end)
 
             if not reboot and UnitIsGroupLeader("player") then
-                self:SendCommMessage("SLUI_BreakImage", tostring(self:GetRandomImageIndex()), UnitInRaid("player") and "RAID" or "PARTY")
+                self:SendCommMessage("SLUI_BreakImage", tostring(self:GetRandomImageIndex()), IsInRaid() and "RAID" or "PARTY")
             end
         end
     end
