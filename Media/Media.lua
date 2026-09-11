@@ -23,6 +23,7 @@ SLUI.breakImages = {
     [[Interface\AddOns\SLUI\Media\Textures\ShcorpAfk.tga]],
     [[Interface\AddOns\SLUI\Media\Textures\PoopdollarBanana.tga]],
     [[Interface\AddOns\SLUI\Media\Textures\Sentinels.tga]],
+    [[Interface\AddOns\SLUI\Media\Textures\PoopdollarOhNo.tga]],
 }
 
 SharedMedia:Register("sound", "|cff00ff98Awoo|r", [[Interface\AddOns\SLUI\Media\Sounds\Awoo.ogg]])
